@@ -1,0 +1,62 @@
+:root {
+  /* Core Colors */
+  --primary-color: #f7931a;  /* Bitcoin orange */
+  --primary-color-transparent: rgba(247, 147, 26, 0.15);  /* Transparent Bitcoin orange */
+  --secondary-color: #2c2c2c;
+  --accent-color: #ffd700;   /* Gold for genesis blocks */
+  --text-color: #ffffff;
+  --text-secondary: #aaaaaa;
+  
+  /* Status Colors */
+  --success-color: #4caf50;
+  --error-color: #f44336;
+  --warning-color: #ff9800;
+  
+  /* Background Colors */
+  --background-color: #1a1a1a;
+  --panel-background: rgba(30, 30, 30, 0.95);
+  --overlay-background: rgba(0, 0, 0, 0.7);
+  --hover-background: rgba(247, 147, 26, 0.2);
+  
+  /* Border Colors */
+  --border-color: rgba(255, 255, 255, 0.1);
+  --border-accent: var(--primary-color);
+  
+  /* Shadows */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 5px 15px rgba(0, 0, 0, 0.3);
+  --shadow-hover: 0 3px 8px rgba(247, 147, 26, 0.3);
+  
+  /* Typography */
+  --font-family-base: system-ui, -apple-system, sans-serif;
+  --font-family-mono: monospace;
+  --font-size-xs: 0.7rem;
+  --font-size-sm: 0.8rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.2rem;
+  --font-size-xl: 1.5rem;
+  --font-size-2xl: 2rem;
+  
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 20px;
+  --spacing-xl: 25px;
+  
+  /* Layout */
+  --border-radius-sm: 3px;
+  --border-radius-md: 4px;
+  --border-radius-lg: 8px;
+  --max-width-container: 2800px;
+  
+  /* Animation */
+  --transition-speed: 0.2s;
+  --transition-timing: ease;
+  
+  /* Z-index */
+  --z-modal: 1000;
+  --z-tooltip: 100;
+  --z-header: 50;
+}

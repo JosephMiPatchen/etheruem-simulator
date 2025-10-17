@@ -1,0 +1,371 @@
+/* UTXO View Styling */
+.utxo-view {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-height: 70vh;
+}
+
+/* Header actions styling */
+.utxo-header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.utxo-title-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.utxo-title {
+  margin: 0;
+  color: var(--primary-color);
+  font-size: var(--font-size-lg);
+}
+
+.utxo-stats {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+}
+
+.utxo-count, .node-total-btc {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.utxo-stat-value {
+  font-weight: bold;
+  color: var(--text-color);
+}
+
+.btc-value {
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+.copy-all-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--overlay-background);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: var(--font-size-sm);
+}
+
+.copy-all-button:hover {
+  background-color: var(--primary-color);
+  color: var(--background-color);
+  border-color: var(--primary-color);
+}
+
+.copied-text {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--success-color);
+}
+
+/* Filter input styling */
+.utxo-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.utxo-filter {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+}
+
+.utxo-filter-full {
+  flex-basis: 100%;
+}
+
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.utxo-filter-label {
+  display: block;
+  margin-bottom: var(--spacing-xs);
+  font-weight: bold;
+  color: var(--primary-color);
+  font-size: var(--font-size-sm);
+}
+
+.utxo-filter-input, .utxo-filter-select {
+  width: 100%;
+  padding: var(--spacing-sm);
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--border-color);
+  background-color: var(--overlay-background);
+  color: var(--text-color);
+  font-size: var(--font-size-sm);
+}
+
+.utxo-filter-input:focus, .utxo-filter-select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(247, 147, 26, 0.2);
+}
+
+/* React Select styling */
+.react-select-container {
+  width: 100%;
+  font-size: var(--font-size-sm);
+}
+
+.react-select__control {
+  background-color: var(--overlay-background) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--border-radius-md) !important;
+  min-height: 38px !important;
+  box-shadow: none !important;
+}
+
+.react-select__control--is-focused {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 2px rgba(247, 147, 26, 0.2) !important;
+}
+
+.react-select__menu {
+  background-color: var(--background-color) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--border-radius-md) !important;
+  z-index: var(--z-modal) !important;
+}
+
+.react-select__option {
+  background-color: transparent !important;
+  color: var(--text-color) !important;
+  cursor: pointer !important;
+}
+
+.react-select__option--is-focused {
+  background-color: rgba(247, 147, 26, 0.1) !important;
+}
+
+.react-select__option--is-selected {
+  background-color: var(--primary-color) !important;
+  color: var(--background-color) !important;
+}
+
+.react-select__multi-value {
+  background-color: rgba(247, 147, 26, 0.1) !important;
+  border-radius: var(--border-radius-sm) !important;
+}
+
+.react-select__multi-value__label {
+  color: var(--primary-color) !important;
+  font-size: var(--font-size-sm) !important;
+}
+
+.react-select__multi-value__remove {
+  color: var(--primary-color) !important;
+  cursor: pointer !important;
+}
+
+.react-select__multi-value__remove:hover {
+  background-color: var(--primary-color) !important;
+  color: var(--background-color) !important;
+}
+
+.react-select__placeholder {
+  color: var(--text-secondary) !important;
+}
+
+.react-select__input-container {
+  color: var(--text-color) !important;
+}
+
+.utxo-filter-clear {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.utxo-filter-clear:hover {
+  color: var(--text-color);
+}
+
+.utxo-filter-reset {
+  background-color: var(--overlay-background);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: var(--font-size-sm);
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.utxo-filter-reset:hover {
+  background-color: var(--primary-color);
+  color: var(--background-color);
+  border-color: var(--primary-color);
+}
+
+/* UTXO header styling */
+.utxo-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 2fr 60px;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  background-color: var(--overlay-background);
+  border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+  border-bottom: 1px solid var(--border-color);
+  font-weight: bold;
+  color: var(--primary-color);
+  font-size: var(--font-size-sm);
+}
+
+.utxo-actions-header {
+  text-align: center;
+}
+
+/* UTXO list styling */
+.utxo-list {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  max-height: 50vh;
+  border: 1px solid var(--border-color);
+  border-top: none;
+  border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
+}
+
+.utxo-item {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 2fr 60px;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color 0.2s;
+}
+
+.utxo-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.copy-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+}
+
+.copy-button:hover {
+  background-color: var(--primary-color);
+  color: var(--background-color);
+  border-color: var(--primary-color);
+}
+
+.copy-button svg {
+  width: 14px;
+  height: 14px;
+}
+
+.utxo-item:last-child {
+  border-bottom: none;
+}
+
+.utxo-item:hover {
+  background-color: var(--overlay-background);
+}
+
+.utxo-id, .utxo-address {
+  font-family: monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.utxo-id {
+  color: var(--primary-color);
+}
+
+.utxo-value {
+  font-weight: bold;
+}
+
+.utxo-empty {
+  padding: var(--spacing-lg);
+  text-align: center;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* Pagination styling */
+.utxo-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+}
+
+.pagination-button {
+  background-color: var(--overlay-background);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pagination-button:hover:not(:disabled) {
+  background-color: var(--primary-color);
+  color: var(--background-color);
+}
+
+.pagination-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}

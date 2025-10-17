@@ -1,0 +1,200 @@
+/* Toolbar Element Widths - ADJUST THESE VALUES TO CHANGE ELEMENT WIDTHS */
+:root {
+  --utxo-button-width: 60px;
+  --transaction-button-width: 40px;
+  --mining-status-width: 80px;
+  --balance-width: 70px;
+}
+
+/* Node Toolbar */
+.node-toolbar {
+  display: flex;
+  align-items: center;
+  flex-direction: row-reverse;
+  background-color: var(--overlay-background);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  box-shadow: var(--shadow-sm);
+  margin-left: var(--spacing-md);
+  overflow: visible; /* Changed from hidden to visible */
+  position: relative;
+  z-index: 100; /* Added z-index to ensure toolbar is above other elements */
+}
+
+/* Toolbar Items */
+/* Base toolbar item - all items inherit these properties */
+.toolbar-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+  position: relative;
+  min-height: 32px; /* Reduced height */
+}
+
+/* UTXO container */
+.utxo-container {
+  width: var(--utxo-button-width);
+}
+
+/* Transaction button container */
+.transaction-button-container {
+  width: var(--transaction-button-width);
+}
+
+/* Divider component */
+.divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--spacing-xs);
+}
+
+.toolbar-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-xs);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  border: none;
+  background: none;
+  color: var(--text-color);
+}
+
+/* Node Status */
+.node-status {
+  font-weight: bold;
+  border-radius: var(--border-radius-sm);
+  width: var(--mining-status-width);
+}
+
+.node-status.mining {
+  color: var(--success-color);
+  animation: pulse 1.5s infinite;
+}
+
+.node-status.mining svg {
+  stroke: var(--success-color);
+  animation: pulse 1.5s infinite;
+}
+
+.node-status.idle {
+  color: var(--text-secondary);
+}
+
+.node-status.idle svg {
+  stroke: var(--text-secondary);
+}
+
+/* UTXO Button */
+.utxo-button {
+  color: var(--primary-color);
+  font-weight: bold;
+}
+
+.utxo-button svg {
+  stroke: var(--primary-color);
+}
+
+.utxo-button:hover {
+  background-color: var(--primary-color-transparent);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Transaction Button */
+.transaction-button {
+  color: var(--orange-color, #ff8c00);
+  font-weight: bold;
+}
+
+.transaction-button svg {
+  color: var(--orange-color, #ff8c00);
+}
+
+.transaction-button:hover {
+  background-color: rgba(255, 140, 0, 0.1);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Node Balance */
+.node-balance {
+  position: relative;
+  padding: 0 var(--spacing-md);
+}
+
+.balance-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.balance-label {
+  color: rgba(170, 170, 170, 0.7);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 1px;
+  font-weight: 300;
+}
+
+/* Balance value container */
+.balance-value-container {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  justify-content: center;
+  width: var(--balance-width);
+}
+
+.balance-value {
+  font-weight: 500; /* Less bold */
+  color: var(--primary-color);
+  font-size: var(--font-size-sm); /* Smaller font */
+  opacity: 0.9; /* Slightly more subtle */
+}
+
+/* Tooltip icon - used in NodeToolbar component */
+.tooltip-icon {
+  cursor: help;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  position: relative;
+  margin-left: var(--spacing-xs);
+  z-index: 101; /* Higher than toolbar */
+}
+
+/* Standalone tooltip - used in NodeToolbar component */
+.standalone-tooltip {
+  background-color: var(--background-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-sm);
+  width: 200px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  font-size: var(--font-size-xs);
+  color: var(--text-color);
+  text-align: left;
+  line-height: 1.4;
+  word-wrap: break-word;
+  white-space: normal;
+  pointer-events: none;
+}
+
+/* Mining Animation */
+@keyframes pulse {
+  0% { opacity: 0.7; }
+  50% { opacity: 1; }
+  100% { opacity: 0.7; }
+}

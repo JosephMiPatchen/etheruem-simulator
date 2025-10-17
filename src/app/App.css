@@ -1,0 +1,79 @@
+.app-container {
+  width: 100%;
+  max-width: var(--max-width-container);
+  margin: 0 auto;
+  padding: var(--spacing-lg);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  font-family: var(--font-family-base);
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+  padding-bottom: var(--spacing-md);
+  border-bottom: 2px solid var(--border-accent);
+  z-index: var(--z-header);
+}
+
+.app-header h1 {
+  color: var(--primary-color);
+  margin: 0;
+  font-size: var(--font-size-2xl);
+}
+
+.mining-control {
+  background-color: var(--primary-color);
+  color: var(--background-color);
+  border: none;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  font-size: var(--font-size-base);
+  border-radius: var(--border-radius-md);
+  font-weight: bold;
+  transition: all var(--transition-speed) var(--transition-timing);
+  box-shadow: var(--shadow-sm);
+}
+
+.mining-control:hover {
+  background-color: var(--primary-color);
+  filter: brightness(90%);
+  box-shadow: var(--shadow-hover);
+}
+
+.mining-control.mining {
+  background-color: var(--error-color);
+}
+
+.nodes-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-xl);
+  width: 100%;
+  flex: 1;
+}
+
+.app-footer {
+  margin-top: var(--spacing-lg);
+  text-align: center;
+  padding: var(--spacing-md) 0;
+  border-top: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+/* Responsive layout */
+@media (max-width: 768px) {
+  .nodes-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .app-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+  }
+}

@@ -1,0 +1,28 @@
+:root {
+  --primary-color: #f7931a; /* Bitcoin orange */
+  --secondary-color: #4d4d4d;
+  --background-color: #1a1a1a;
+  --text-color: #ffffff;
+  --panel-background: #2d2d2d;
+  --success-color: #4caf50;
+  --error-color: #f44336;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button {
+  cursor: pointer;
+}
