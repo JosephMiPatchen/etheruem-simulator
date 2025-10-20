@@ -1,9 +1,9 @@
 :root {
   /* Core Colors */
-  --primary-color: #f7931a;  /* Bitcoin orange */
-  --primary-color-transparent: rgba(247, 147, 26, 0.15);  /* Transparent Bitcoin orange */
+  --primary-color: #627eea;  /* Ethereum blue */
+  --primary-color-transparent: rgba(98, 126, 234, 0.15);  /* Transparent Ethereum blue */
   --secondary-color: #2c2c2c;
-  --accent-color: #ffd700;   /* Gold for genesis blocks */
+  --accent-color: #8c8dfc;   /* Light purple for genesis blocks */
   --text-color: #ffffff;
   --text-secondary: #aaaaaa;
   
@@ -16,7 +16,7 @@
   --background-color: #1a1a1a;
   --panel-background: rgba(30, 30, 30, 0.95);
   --overlay-background: rgba(0, 0, 0, 0.7);
-  --hover-background: rgba(247, 147, 26, 0.2);
+  --hover-background: rgba(98, 126, 234, 0.2);
   
   /* Border Colors */
   --border-color: rgba(255, 255, 255, 0.1);
@@ -26,7 +26,7 @@
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.2);
   --shadow-lg: 0 5px 15px rgba(0, 0, 0, 0.3);
-  --shadow-hover: 0 3px 8px rgba(247, 147, 26, 0.3);
+  --shadow-hover: 0 3px 8px rgba(98, 126, 234, 0.3);
   
   /* Typography */
   --font-family-base: system-ui, -apple-system, sans-serif;

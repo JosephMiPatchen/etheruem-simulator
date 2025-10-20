@@ -83,7 +83,7 @@ const SimulatorContentInner: React.FC = () => {
   return (
     <div className="app-container">
       <header className="app-header">
-        <h1>Bitcoin Simulator</h1>
+        <h1>Ethereum Simulator</h1>
         <button 
           className={`mining-control ${isMining ? 'mining' : ''}`}
           onClick={handleToggleMining}
@@ -102,7 +102,7 @@ const SimulatorContentInner: React.FC = () => {
       </main>
       
       <footer className="app-footer">
-        <p>Simple Bitcoin Simulator</p>
+        <p>Simple Ethereum Simulator</p>
       </footer>
     </div>
   );

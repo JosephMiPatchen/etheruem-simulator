@@ -79,7 +79,7 @@ const UTXOView: React.FC<UTXOViewProps> = ({ utxoSet, allNodeIds = [], nodeId })
     setCurrentPage(1);
   }, [selectedNodes]);
 
-  // Calculate total BTC owned by the current node
+  // Calculate total ETH owned by the current node
   const nodeTotalBtc = useMemo(() => {
     if (!nodeId) return 0;
     
@@ -164,8 +164,8 @@ const UTXOView: React.FC<UTXOViewProps> = ({ utxoSet, allNodeIds = [], nodeId })
               Total UTXOs: <span className="utxo-stat-value">{Object.keys(utxoSet).length}</span>
             </div>
             {nodeId && (
-              <div className="node-total-btc">
-                Node Balance: <span className="btc-value">{nodeTotalBtc.toFixed(2)} BTC</span>
+              <div className="node-total-eth">
+                Node Balance: <span className="eth-value">{nodeTotalBtc.toFixed(2)} ETH</span>
               </div>
             )}
           </div>
@@ -221,7 +221,7 @@ const UTXOView: React.FC<UTXOViewProps> = ({ utxoSet, allNodeIds = [], nodeId })
             <div key={utxoId} className="utxo-item">
               <div className="utxo-id" title={utxoId}>{formatUtxoId(utxoId)}</div>
               <div className="utxo-node">{output.nodeId}</div>
-              <div className="utxo-value">{output.value.toFixed(2)} BTC</div>
+              <div className="utxo-value">{output.value.toFixed(2)} ETH</div>
               <div className="utxo-address" title={output.lock}>{formatAddress(output.lock)}</div>
               <div className="utxo-actions">
                 <button 

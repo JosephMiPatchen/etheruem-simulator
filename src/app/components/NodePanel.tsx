@@ -15,7 +15,7 @@ const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [] }) => 
   const [showUtxoModal, setShowUtxoModal] = useState(false);
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   
-  // Calculate total BTC owned by the node
+  // Calculate total ETH owned by the node
   const nodeTotalBtc = useMemo(() => {
     return Object.values(nodeState.utxo)
       .filter(output => output.nodeId === nodeState.nodeId)

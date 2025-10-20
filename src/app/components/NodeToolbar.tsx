@@ -46,7 +46,7 @@ const NodeToolbar: React.FC<NodeToolbarProps> = ({
           <div className="balance-container">
             <span className="balance-label">Balance</span>
             <div className="balance-value-container">
-              <span className="balance-value">{nodeTotalBtc.toFixed(2)} BTC</span>
+              <span className="balance-value">{nodeTotalBtc.toFixed(2)} ETH</span>
               <div 
                 className="tooltip-icon" 
                 onMouseEnter={(e) => {
@@ -103,7 +103,7 @@ const NodeToolbar: React.FC<NodeToolbarProps> = ({
             zIndex: 9999
           }}
         >
-          This balance represents the total Bitcoin owned by node {nodeId}, calculated as the sum of all unspent transaction outputs (UTXOs) belonging to this node's address.
+          This balance represents the total Ethereum owned by node {nodeId}, calculated as the sum of all unspent transaction outputs (UTXOs) belonging to this node's address.
         </div>
       )}
     </>

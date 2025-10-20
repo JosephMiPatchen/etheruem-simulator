@@ -126,7 +126,7 @@ const TransactionView: React.FC<TransactionViewProps> = ({ transaction, utxoSet 
             return (
               <div key={idx} className={`tx-input ${formattedTx.isCoinbase ? 'coinbase-input' : ''}`} id={inputId}>
                 <div className="node-id">{input.nodeId}</div>
-                <div className="node-value">{input.value.toFixed(2)} BTC</div>
+                <div className="node-value">{input.value.toFixed(2)} ETH</div>
               </div>
             );
           })}
@@ -134,7 +134,7 @@ const TransactionView: React.FC<TransactionViewProps> = ({ transaction, utxoSet 
         
         {/* Total Value Section */}
         <div className="tx-total-section">
-          <div className="tx-total-value" id={`${txId}-total`}>{formattedTx.value.toFixed(2)} BTC</div>
+          <div className="tx-total-value" id={`${txId}-total`}>{formattedTx.value.toFixed(2)} ETH</div>
         </div>
         
         {/* Outputs Section */}
@@ -145,7 +145,7 @@ const TransactionView: React.FC<TransactionViewProps> = ({ transaction, utxoSet 
             return (
               <div key={idx} className="tx-output" id={outputId}>
                 <div className="node-id">{output.nodeId}</div>
-                <div className="node-value">{output.value.toFixed(2)} BTC</div>
+                <div className="node-value">{output.value.toFixed(2)} ETH</div>
               </div>
             );
           })}
