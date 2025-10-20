@@ -1,4 +1,8 @@
-# How Blockchain Protects Against Replay Attacks
+# How Bitcoin Protects Against Replay Attacks
+
+## Note: Bitcoin-Based Security Model
+
+This Ethereum simulator currently uses Bitcoin's transaction security model (UTXO-based with transaction-bound signatures). As we migrate to a full Ethereum implementation, we'll adopt Ethereum's account-based model, but the core principle of signing transaction data remains the same across both systems.
 
 ## The Problem: What is a Replay Attack?
 
