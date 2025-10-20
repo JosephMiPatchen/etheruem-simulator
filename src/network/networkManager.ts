@@ -89,7 +89,6 @@ export class NetworkManager {
       // Each node is connected to all other nodes
       topology.set(nodeId, nodeIds.filter(id => id !== nodeId));
     }
-    
     this.setupNetworkTopology(topology);
     
     return nodeIds;
