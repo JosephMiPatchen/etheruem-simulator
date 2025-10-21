@@ -6,21 +6,10 @@ import { Block, EthereumTransaction, Account } from '../../types/types';
  * This will eventually become a simplified EVM
  */
 export class WorldState {
-  private accounts: Record<string, Account>;
+  public accounts: Record<string, Account>;
 
   constructor(initialAccounts: Record<string, Account> = {}) {
     this.accounts = initialAccounts;
-  }
-
-  /**
-   * Gets all accounts (deep copy)
-   */
-  getAccounts(): Record<string, Account> {
-    const copy: Record<string, Account> = {};
-    for (const [address, account] of Object.entries(this.accounts)) {
-      copy[address] = { ...account };
-    }
-    return copy;
   }
 
   /**

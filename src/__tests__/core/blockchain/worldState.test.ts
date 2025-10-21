@@ -38,8 +38,7 @@ describe('WorldState', () => {
   describe('constructor', () => {
     it('should create empty WorldState', () => {
       const worldState = new WorldState();
-      const accounts = worldState.getAccounts();
-      expect(Object.keys(accounts)).toHaveLength(0);
+      expect(Object.keys(worldState.accounts)).toHaveLength(0);
     });
 
     it('should create WorldState with initial accounts', () => {
@@ -188,8 +187,7 @@ describe('WorldState', () => {
 
     it('should handle empty transaction list', () => {
       const worldState = WorldState.fromTransactions([]);
-      const accounts = worldState.getAccounts();
-      expect(Object.keys(accounts)).toHaveLength(0);
+      expect(Object.keys(worldState.accounts)).toHaveLength(0);
     });
 
     it('should process transactions in order', () => {
@@ -210,34 +208,19 @@ describe('WorldState', () => {
     });
   });
 
-  describe('getAccounts', () => {
-    it('should return copy of accounts', () => {
-      const worldState = new WorldState({
-        'alice': { address: 'alice', balance: 100, nonce: 0 }
-      });
-      
-      const accounts = worldState.getAccounts();
-      
-      // Modify the returned copy
-      accounts['alice'].balance = 999;
-      
-      // Original should be unchanged
-      expect(worldState.getAccount('alice')?.balance ?? 0).toBe(100);
-    });
-
-    it('should return all accounts', () => {
+  describe('accounts property', () => {
+    it('should allow direct access to accounts', () => {
       const worldState = new WorldState({
         'alice': { address: 'alice', balance: 100, nonce: 0 },
         'bob': { address: 'bob', balance: 50, nonce: 0 },
         'charlie': { address: 'charlie', balance: 75, nonce: 0 }
       });
       
-      const accounts = worldState.getAccounts();
-      
-      expect(Object.keys(accounts)).toHaveLength(3);
-      expect(accounts['alice']).toBeDefined();
-      expect(accounts['bob']).toBeDefined();
-      expect(accounts['charlie']).toBeDefined();
+      expect(Object.keys(worldState.accounts)).toHaveLength(3);
+      expect(worldState.accounts['alice']).toBeDefined();
+      expect(worldState.accounts['bob']).toBeDefined();
+      expect(worldState.accounts['charlie']).toBeDefined();
+      expect(worldState.accounts['alice'].balance).toBe(100);
     });
   });
 });
