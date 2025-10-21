@@ -1,29 +1,6 @@
 /**
- * Core type definitions for the Bitcoin simulator
+ * Core type definitions for the Ethereum simulator
  */
-
-export interface TransactionInput {
-  sourceOutputId: string;  // Format: "{txid}-{idx}" or "REWARDER_NODE_ID" for coinbase
-  sourceNodeId?: string;   // Optional: ID of the node that created this output (for UI purposes)
-  key?: {                  // Data needed to verify ownership (not required for coinbase)
-    publicKey: string;     // Public key corresponding to the address in the lock
-    signature: string;     // Signature proving ownership
-  };
-}
-
-export interface TransactionOutput {
-  idx: number;        // Position index in the outputs array
-  nodeId: string;     // Recipient node identifier
-  value: number;      // BTC amount
-  lock: string;       // Bitcoin address of recipient (hash of public key)
-}
-
-export interface Transaction {
-  txid?: string;      // Hash of inputs + outputs (calculated on creation)
-  inputs: TransactionInput[];
-  outputs: TransactionOutput[];
-  timestamp?: number; // When the transaction was created
-}
 
 // ============================================================================
 // Ethereum Account Model Types
@@ -53,12 +30,8 @@ export interface Account {
 }
 
 // ============================================================================
-// Old Bitcoin UTXO Types (will be phased out)
+// Blockchain Types
 // ============================================================================
-
-export interface UTXOSet {
-  [sourceOutputId: string]: TransactionOutput;
-}
 
 export interface BlockHeader { // note: we dont have a field for headers hash, we compute that runtime upon validation to keep process robust
   transactionHash: string;  // SHA256 hash of all transactions
@@ -71,14 +44,14 @@ export interface BlockHeader { // note: we dont have a field for headers hash, w
 
 export interface Block {
   header: BlockHeader;
-  transactions: Transaction[];
+  transactions: EthereumTransaction[];
   hash?: string;      // Calculated hash of the block header
 }
 
 export interface NodeState {
   nodeId: string;
   blockchain: Block[];
-  utxo: UTXOSet;
+  worldState: Record<string, Account>;  // Account-based state instead of UTXO
   isMining: boolean;
   peerIds: string[];
   publicKey: string;
