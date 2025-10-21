@@ -13,10 +13,14 @@ export class WorldState {
   }
 
   /**
-   * Gets all accounts (copy)
+   * Gets all accounts (deep copy)
    */
   getAccounts(): Record<string, Account> {
-    return { ...this.accounts };
+    const copy: Record<string, Account> = {};
+    for (const [address, account] of Object.entries(this.accounts)) {
+      copy[address] = { ...account };
+    }
+    return copy;
   }
 
   /**
