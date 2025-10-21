@@ -1,22 +1,23 @@
-import { Block, UTXOSet } from '../../types/types';
+import { Block, Account } from '../../types/types';
 import { createGenesisBlock } from './block';
-import { rebuildUTXOSetFromBlocks, updateUTXOSet } from './utxo';
+import { WorldState } from './worldState';
 import { validateBlock, calculateBlockHeaderHash } from '../validation/blockValidator';
 import { validateChain } from '../validation/chainValidator';
 
 /**
- * Blockchain class to manage the chain of blocks and UTXO set
+ * Blockchain class to manage the chain of blocks and world state
  * Implements core Nakamoto consensus mechanisms for chain selection and validation
  */
 export class Blockchain {
   private blocks: Block[] = [];
-  private utxoSet: UTXOSet = {};
+  private worldState: WorldState;
   private nodeId: string;
   private minerAddress: string;
   
   constructor(nodeId: string, minerAddress: string) {
     this.nodeId = nodeId;
     this.minerAddress = minerAddress;
+    this.worldState = new WorldState();
     this.initializeChain();
   }
   
@@ -27,8 +28,8 @@ export class Blockchain {
     const genesisBlock = createGenesisBlock(this.nodeId, this.minerAddress);
     this.blocks.push(genesisBlock);
     
-    // Rebuild the UTXO set from all blocks
-    this.utxoSet = rebuildUTXOSetFromBlocks(this.blocks);
+    // Rebuild the world state from all blocks
+    this.worldState = WorldState.fromBlocks(this.blocks);
   }
   
   /**
@@ -39,10 +40,10 @@ export class Blockchain {
   }
   
   /**
-   * Gets the current UTXO set
+   * Gets the current world state accounts
    */
-  getUTXOSet(): UTXOSet {
-    return { ...this.utxoSet };
+  getWorldState(): Record<string, Account> {
+    return this.worldState.accounts;
   }
   
   /**
@@ -94,20 +95,18 @@ export class Blockchain {
     
     // Validate the block against the previous block's hash
     const previousHash = previousBlock.hash || '';
-    const isValid = await validateBlock(block, this.utxoSet, previousHash);
+    const isValid = await validateBlock(block, this.worldState, previousHash);
     if (!isValid) {
       return false;
     }
     
-    // Update UTXO set with all transactions in the block
-    let newUtxoSet = { ...this.utxoSet };
+    // Update world state with all transactions in the block
     for (const transaction of block.transactions) {
-      newUtxoSet = updateUTXOSet(newUtxoSet, transaction);
+      this.worldState.updateWithTransaction(transaction);
     }
     
     // Add the block to the chain
     this.blocks.push(block);
-    this.utxoSet = newUtxoSet;
     
     return true;
   }
@@ -131,8 +130,8 @@ export class Blockchain {
     // Replace the chain
     this.blocks = [...newBlocks];
     
-    // Rebuild the UTXO set
-    this.utxoSet = rebuildUTXOSetFromBlocks(this.blocks);
+    // Rebuild the world state
+    this.worldState = WorldState.fromBlocks(this.blocks);
     
     return true;
   }
