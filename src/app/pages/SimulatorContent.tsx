@@ -12,8 +12,8 @@ const SimulatorContentInner: React.FC = () => {
   const [nodeStates, setNodeStates] = useState<Record<string, NodeState>>({});
   const [isMining, setIsMining] = useState<boolean>(false);
   
-  // Get fork detection from context
-  const { detectForks } = useSimulatorContext();
+  // Get context functions
+  const { detectForks, setAddressToNodeId } = useSimulatorContext();
   
   // Reference to the network manager instance
   const networkManagerRef = useRef<NetworkManager | null>(null);
@@ -28,6 +28,10 @@ const SimulatorContentInner: React.FC = () => {
     
     // Create a fully connected network with 4 nodes
     networkManager.createFullyConnectedNetwork(4);
+    
+    // Build address-to-nodeId mapping for UI
+    const mapping = networkManager.getAddressToNodeIdMapping();
+    setAddressToNodeId(mapping);
     
     // Update the UI with initial node states
     updateNodeStates();

@@ -199,6 +199,21 @@ export class NetworkManager {
   }
   
   /**
+   * Generates a mapping from address to nodeId for UI display
+   * @returns Record mapping address (sha256 of publicKey) to human-readable nodeId
+   */
+  getAddressToNodeIdMapping(): Record<string, string> {
+    const mapping: Record<string, string> = {};
+    
+    for (const [nodeId, node] of this.nodesMap.entries()) {
+      const address = node.getNodeAddress();
+      mapping[address] = nodeId;
+    }
+    
+    return mapping;
+  }
+  
+  /**
    * Simulates periodic height requests between nodes
    * This is a key part of the Nakamoto consensus protocol
    */
