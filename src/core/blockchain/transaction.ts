@@ -1,115 +1,122 @@
-import { Transaction, TransactionInput, TransactionOutput, PeerInfoMap } from '../../types/types';
+import { EthereumTransaction, PeerInfoMap } from '../../types/types';
 import { SimulatorConfig } from '../../config/config';
-import { calculateTxid } from '../validation/transactionValidator';
 import { generateSignature as cryptoGenerateSignature } from '../../utils/cryptoUtils';
+import { sha256 } from '@noble/hashes/sha256';
+import { bytesToHex } from '@noble/hashes/utils';
 
 /**
- * Creates the signature input data for a transaction input
- * This is used for both signing and verification to ensure consistency
+ * Helper function to calculate transaction hash (txid)
  */
-export function createSignatureInput(
-  sourceOutputId: string,
-  allOutputs: TransactionOutput[]
-) {
-  return {
-    sourceOutputId,
-    allOutputs
-  };
+function calculateTxid(
+  from: string,
+  to: string,
+  value: number,
+  nonce: number,
+  timestamp: number,
+  signature: string
+): string {
+  const txString = JSON.stringify({ from, to, value, nonce, timestamp, signature });
+  return bytesToHex(sha256(new TextEncoder().encode(txString)));
 }
 
 /**
- * Creates a coinbase transaction for the given miner and block height
+ * Creates the signature input data for an Ethereum transaction
+ * This is what gets signed to prove authorization
+ */
+export function createSignatureInput(
+  from: string,
+  to: string,
+  value: number,
+  nonce: number,
+  timestamp: number
+) {
+  return { from, to, value, nonce, timestamp };
+}
+
+/**
+ * Creates a coinbase transaction for the miner
+ * This is the reward for mining a block
  */
 export const createCoinbaseTransaction = (
-  minerNodeId: string, 
-  blockHeight: number,
   minerAddress: string
-): Transaction => {
-  const inputs = [{ 
-    sourceOutputId: SimulatorConfig.REWARDER_NODE_ID,
-    sourceNodeId: SimulatorConfig.REWARDER_NODE_ID
-  }];
+): EthereumTransaction => {
+  const timestamp = Date.now();
+  const from = SimulatorConfig.REWARDER_NODE_ID;
+  const to = minerAddress;
+  const value = SimulatorConfig.BLOCK_REWARD;
+  const nonce = 0;
+  const publicKey = '';
+  const signature = `coinbase-${timestamp}`;
   
-  const outputs = [{ 
-    idx: 0, 
-    nodeId: minerNodeId, 
-    value: SimulatorConfig.BLOCK_REWARD,
-    lock: minerAddress // Bitcoin address derived from the miner's public key
-  }];
+  const txid = calculateTxid(from, to, value, nonce, timestamp, signature);
   
   return {
-    inputs,
-    outputs,
-    timestamp: Date.now(),
-    txid: calculateTxid(inputs, outputs, blockHeight)
+    from,
+    to,
+    value,
+    nonce,
+    publicKey,
+    signature,
+    timestamp,
+    txid
   };
 };
 
 /**
- * Creates a transaction that redistributes a portion of the coinbase reward to peers
+ * Creates peer payment transactions - one transaction per peer
+ * In Ethereum account model, we send separate transactions instead of one with multiple outputs
  */
-export const createRedistributionTransaction = async (
-  coinbaseTxid: string,
-  minerNodeId: string, // so we can include in the input which will be needed for the UI
-  blockHeight: number,
-  minerPrivateKey: string, // so we can sign the inputs that we are spending
-  minerPublicKey: string, // so that other nodes can verify signature and verify this is the public key of the address
-  minerAddress: string, // so we can add a lock for portion of the redistribution that goes back to miner
-  peers: PeerInfoMap // Map of peer IDs to their information including addresses
-): Promise<Transaction> => {
-  // Get peer IDs from the peers dictionary
+export const createPeerPaymentTransactions = async (
+  minerAddress: string,
+  minerNonce: number,
+  minerPrivateKey: string,
+  minerPublicKey: string,
+  peers: PeerInfoMap
+): Promise<EthereumTransaction[]> => {
   const peerNodeIds = Object.keys(peers);
   
   // Calculate redistribution amounts
   const redistributionAmount = SimulatorConfig.BLOCK_REWARD * SimulatorConfig.REDISTRIBUTION_RATIO;
   const amountPerPeer = redistributionAmount / peerNodeIds.length;
   
-  // Create input referencing the coinbase output
-  const inputs: TransactionInput[] = [{ 
-    sourceOutputId: `${coinbaseTxid}-0`,
-    sourceNodeId: minerNodeId // for ui
-  }];
+  const transactions: EthereumTransaction[] = [];
   
-  // Create outputs for each peer and a change output for the miner
-  const outputs: TransactionOutput[] = [
-    ...peerNodeIds.map((peerId, idx) => ({
-      idx,
-      nodeId: peerId,
-      value: amountPerPeer,
-      lock: peers[peerId].address // Use the peer's address for the lock
-    })),
-    {
-      idx: peerNodeIds.length,
-      nodeId: minerNodeId,
-      value: SimulatorConfig.BLOCK_REWARD - redistributionAmount,
-      lock: minerAddress // Miner's Bitcoin address
+  // Create one transaction per peer
+  for (let i = 0; i < peerNodeIds.length; i++) {
+    const peerId = peerNodeIds[i];
+    const peerAddress = peers[peerId].address;
+    const timestamp = Date.now();
+    const from = minerAddress;
+    const to = peerAddress;
+    const value = amountPerPeer;
+    const nonce = minerNonce + i; // Increment nonce for each transaction
+    
+    // Create signature input
+    const signatureInput = createSignatureInput(from, to, value, nonce, timestamp);
+    
+    // Generate signature
+    let signature;
+    try {
+      signature = await cryptoGenerateSignature(signatureInput, minerPrivateKey);
+    } catch (error) {
+      console.error('Error generating signature:', error);
+      signature = `error-${timestamp}`;
     }
-  ];
-  
-  // Create the signature input object using shared function
-  const signatureInput = createSignatureInput(inputs[0].sourceOutputId, outputs);
-  
-  // Generate the signature using the cryptoUtils function and await the result
-  // This will block until the signature is generated
-  let signature;
-  try {
-    signature = await cryptoGenerateSignature(signatureInput, minerPrivateKey);
-  } catch (error) {
-    console.error('Error generating signature:', error);
-    // Use a fallback signature in case of error
-    signature = `error-${Date.now()}`;
+    
+    // Calculate txid
+    const txid = calculateTxid(from, to, value, nonce, timestamp, signature);
+    
+    transactions.push({
+      from,
+      to,
+      value,
+      nonce,
+      publicKey: minerPublicKey,
+      signature,
+      timestamp,
+      txid
+    });
   }
   
-  // Add signature data to the input
-  inputs[0].key = {
-    publicKey: minerPublicKey,
-    signature: signature
-  };
-  
-  return {
-    inputs,
-    outputs,
-    timestamp: Date.now(),
-    txid: calculateTxid(inputs, outputs, blockHeight)
-  };
+  return transactions;
 };
