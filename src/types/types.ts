@@ -25,6 +25,37 @@ export interface Transaction {
   timestamp?: number; // When the transaction was created
 }
 
+// ============================================================================
+// Ethereum Account Model Types
+// ============================================================================
+
+/**
+ * Ethereum-style transaction with single from/to addresses
+ */
+export interface EthereumTransaction {
+  from: string;           // Sender address (sha256 of publicKey)
+  to: string;             // Recipient address (sha256 of publicKey)
+  value: number;          // Amount to transfer (decimal ETH)
+  nonce: number;          // Sender's transaction count (prevents replay attacks)
+  publicKey: string;      // Sender's public key (proves from address)
+  signature: string;      // Signature of transaction data (proves authorization)
+  timestamp: number;      // When transaction was created
+  txid: string;           // Transaction hash (required)
+}
+
+/**
+ * Account in the world state
+ */
+export interface Account {
+  address: string;        // Account address (sha256 of publicKey)
+  balance: number;        // Account balance (decimal ETH)
+  nonce: number;          // Transaction count (for replay protection)
+}
+
+// ============================================================================
+// Old Bitcoin UTXO Types (will be phased out)
+// ============================================================================
+
 export interface UTXOSet {
   [sourceOutputId: string]: TransactionOutput;
 }
