@@ -31,20 +31,6 @@ export class WorldState {
   }
 
   /**
-   * Gets account balance
-   */
-  getBalance(address: string): number {
-    return this.accounts[address]?.balance ?? 0;
-  }
-
-  /**
-   * Gets account nonce
-   */
-  getNonce(address: string): number {
-    return this.accounts[address]?.nonce ?? 0;
-  }
-
-  /**
    * Helper function to process a transaction for WorldState updates
    * Updates sender and recipient account balances and nonces
    */
