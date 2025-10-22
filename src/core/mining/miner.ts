@@ -1,8 +1,8 @@
-import { Block, Transaction, PeerInfoMap, BlockHeader } from '../../types/types';
+import { Block, EthereumTransaction, PeerInfoMap, BlockHeader } from '../../types/types';
 import { SimulatorConfig } from '../../config/config';
 import { 
   createCoinbaseTransaction, 
-  createRedistributionTransaction 
+  createPeerPaymentTransactions 
 } from '../blockchain/transaction';
 import { calculateBlockHeaderHash } from '../validation/blockValidator';
 import { isHashBelowCeiling, sha256Hash } from '../../utils/cryptoUtils';
@@ -69,41 +69,38 @@ export class Miner {
    * @param height Block height
    * @returns Promise resolving to array of transactions for the block
    */
-  async createBlockTransactions(height: number): Promise<Transaction[]> {
+  async createBlockTransactions(height: number): Promise<EthereumTransaction[]> {
     
-    // Create coinbase transaction
-    const coinbaseTransaction = createCoinbaseTransaction(
-      this.nodeId, 
-      height,
-      this.node.getAddress() // for lock on the output
-    );
+    // Create coinbase transaction (miner receives block reward)
+    const coinbaseTransaction = createCoinbaseTransaction(this.node.getAddress());
     
-    // If we have peers, create a redistribution transaction
-    if (coinbaseTransaction.txid) {
-      // Get peers with valid addresses
-      const validPeers = this.getValidPeers();
-      
-      if (Object.keys(validPeers).length === 0) {
-        console.warn('No peers with valid addresses available for redistribution');
-        return [coinbaseTransaction];
-      }
-      
-      // Create redistribution transaction - await the async function
-      const redistributionTransaction = await createRedistributionTransaction(
-        coinbaseTransaction.txid,
-        this.nodeId,
-        height,
-        this.node.getPrivateKey(),
-        this.node.getPublicKey(),
-        this.node.getAddress(),
-        validPeers
-      );
-      
-      return [coinbaseTransaction, redistributionTransaction];
+    const transactions: EthereumTransaction[] = [coinbaseTransaction];
+    
+    // Get peers with valid addresses
+    const validPeers = this.getValidPeers();
+    
+    if (Object.keys(validPeers).length === 0) {
+      console.warn('No peers with valid addresses available for peer payments');
+      return transactions;
     }
     
-    // Otherwise, just return the coinbase transaction
-    return [coinbaseTransaction];
+    // Get miner's current nonce from world state
+    // The coinbase transaction will be processed first, so peer payments start at nonce 0
+    const minerNonce = 0; // After coinbase, miner's nonce will be 0
+    
+    // Create peer payment transactions (one per peer)
+    const peerPayments = await createPeerPaymentTransactions(
+      this.node.getAddress(),
+      minerNonce,
+      this.node.getPrivateKey(),
+      this.node.getPublicKey(),
+      validPeers
+    );
+    
+    // Add all peer payment transactions to the block
+    transactions.push(...peerPayments);
+    
+    return transactions;
   }
   
   /**
