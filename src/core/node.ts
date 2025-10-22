@@ -74,7 +74,7 @@ export class Node {
     return {
       nodeId: this.nodeId,
       blockchain: this.blockchain.getBlocks(),
-      utxo: this.blockchain.getUTXOSet(),
+      worldState: this.blockchain.getWorldState(),
       isMining: this.miner.getIsMining(),
       peerIds: Object.keys(this.peers),
       publicKey: this.publicKey,
