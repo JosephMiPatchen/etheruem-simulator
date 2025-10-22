@@ -41,7 +41,7 @@ const TransactionView: React.FC<TransactionViewProps> = ({ transaction }) => {
     <div className="transaction-item">
       <div className="transaction-header">
         <div className={`tx-badge ${isCoinbase ? 'coinbase' : ''}`}>
-          {isCoinbase ? '⛏️ Coinbase' : '💸 Transfer'}
+          {isCoinbase ? 'Coinbase' : 'Transfer'}
         </div>
         <div className="tx-timestamp">{formatTimestamp(transaction.timestamp)}</div>
       </div>
@@ -52,9 +52,6 @@ const TransactionView: React.FC<TransactionViewProps> = ({ transaction }) => {
           <div className="section-title">From</div>
           <div className={`tx-input ${isCoinbase ? 'coinbase-input' : ''}`} id={`${txId}-from`}>
             <div className="node-id">{fromNodeId}</div>
-            {!isCoinbase && (
-              <div className="node-nonce">Nonce: {transaction.nonce}</div>
-            )}
           </div>
         </div>
         
