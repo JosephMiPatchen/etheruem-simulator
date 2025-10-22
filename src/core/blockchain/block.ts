@@ -1,15 +1,14 @@
-import { Block, BlockHeader, Transaction } from '../../types/types';
+import { Block, BlockHeader, EthereumTransaction } from '../../types/types';
 import { SimulatorConfig } from '../../config/config';
 import { calculateTransactionHash, calculateBlockHeaderHash } from '../validation/blockValidator';
-
-
+import { createCoinbaseTransaction } from './transaction';
 
 /**
  * Creates a new block template ready for mining
  */
 export const createBlockTemplate = (
   previousBlock: Block | null,
-  transactions: Transaction[]
+  transactions: EthereumTransaction[]
 ): Block => {
   const height = previousBlock ? previousBlock.header.height + 1 : 0;
   const previousHeaderHash = previousBlock ? previousBlock.hash! : SimulatorConfig.GENESIS_PREV_HASH;
@@ -35,34 +34,13 @@ export const createBlockTemplate = (
 };
 
 /**
- * Creates a simple coinbase transaction for the genesis block
- * This avoids circular dependencies with the transaction module
- */
-const createGenesisCoinbaseTransaction = (minerNodeId: string, minerAddress: string): Transaction => {
-  // Use the actual miner address passed from the node
-  // This ensures consistency with the node's real Bitcoin address
-  
-  return {
-    inputs: [{ sourceOutputId: SimulatorConfig.REWARDER_NODE_ID }],
-    outputs: [{ 
-      idx: 0, 
-      nodeId: minerNodeId, 
-      value: SimulatorConfig.BLOCK_REWARD,
-      lock: minerAddress // Add lock field for consistency with other transactions even tho this wont be verified
-    }],
-    timestamp: Date.now(),
-    txid: 'genesis-coinbase-transaction' // Simple fixed ID for genesis block
-  };
-};
-
-/**
  * Creates the genesis block
- * @param minerNodeId ID of the miner node
- * @param minerAddress Bitcoin address of the miner node
+ * @param minerNodeId ID of the miner node (not used in Ethereum, kept for compatibility)
+ * @param minerAddress Ethereum address of the miner node
  */
 export const createGenesisBlock = (minerNodeId: string, minerAddress: string): Block => {
-  // Create a simple coinbase transaction for the genesis block
-  const coinbaseTransaction = createGenesisCoinbaseTransaction(minerNodeId, minerAddress);
+  // Create a coinbase transaction for the genesis block
+  const coinbaseTransaction = createCoinbaseTransaction(minerAddress);
   const transactions = [coinbaseTransaction];
   
   const block = createBlockTemplate(null, transactions);
