@@ -105,9 +105,10 @@ export class WorldState {
   static fromTransactions(transactions: EthereumTransaction[]): WorldState {
     const worldState = new WorldState();
     
-    // Process transactions in order
+    // Process transactions in order - use updateWithTransaction to ensure
+    // same validation logic as incremental processing
     for (const transaction of transactions) {
-      worldState.processTransaction(transaction);
+      worldState.updateWithTransaction(transaction);
     }
     
     return worldState;
