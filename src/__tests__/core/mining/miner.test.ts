@@ -43,7 +43,10 @@ describe('Miner Module', () => {
       getPublicKey: jest.fn().mockReturnValue('mock-public-key'),
       getAddress: jest.fn().mockReturnValue('mock-address'),
       getNodeId: jest.fn().mockReturnValue(nodeId),
-      getPeerInfos: jest.fn().mockReturnValue(mockPeers)
+      getPeerInfos: jest.fn().mockReturnValue(mockPeers),
+      getWorldState: jest.fn().mockReturnValue({
+        'mock-address': { address: 'mock-address', balance: 100, nonce: 5 }
+      })
     } as unknown as Node;
     
     miner = new Miner(blockMinedCallback, mockNode);
@@ -81,12 +84,15 @@ describe('Miner Module', () => {
       const redistributionAmount = SimulatorConfig.BLOCK_REWARD * SimulatorConfig.REDISTRIBUTION_RATIO;
       const amountPerPeer = redistributionAmount / peerIds.length;
       
+      // The miner's nonce starts at 5 (from the mocked world state)
+      const startingNonce = 5;
+      
       for (let i = 1; i < transactions.length; i++) {
         const peerPayment = transactions[i];
         expect(peerPayment.from).toBeDefined(); // Miner's address
         expect(peerPayment.to).toBeDefined(); // Peer's address
         expect(peerPayment.value).toBeCloseTo(amountPerPeer);
-        expect(peerPayment.nonce).toBe(i - 1); // Nonce increments for each peer payment
+        expect(peerPayment.nonce).toBe(startingNonce + (i - 1)); // Nonce starts at 5 and increments
       }
     });
   });

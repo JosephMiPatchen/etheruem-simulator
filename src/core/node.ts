@@ -1,4 +1,4 @@
-import { Block, NodeState, PeerInfoMap } from '../types/types';
+import { Block, NodeState, PeerInfoMap, Account } from '../types/types';
 import { Blockchain } from './blockchain/blockchain';
 import { Miner } from './mining/miner';
 import { generatePrivateKey, derivePublicKey, generateAddress } from '../utils/cryptoUtils';
@@ -231,5 +231,12 @@ export class Node {
    */
   getPeerInfos(): PeerInfoMap {
     return this.peers;
+  }
+  
+  /**
+   * Gets the current world state from the blockchain
+   */
+  getWorldState(): Record<string, Account> {
+    return this.blockchain.getWorldState();
   }
 }

@@ -85,8 +85,10 @@ export class Miner {
     }
     
     // Get miner's current nonce from world state
-    // The coinbase transaction will be processed first, so peer payments start at nonce 0
-    const minerNonce = 0; // After coinbase, miner's nonce will be 0
+    // Coinbase transactions don't increment nonce, so we use the miner's current nonce
+    const worldState = this.node.getWorldState();
+    const minerAccount = worldState[this.node.getAddress()];
+    const minerNonce = minerAccount ? minerAccount.nonce : 0;
     
     // Create peer payment transactions (one per peer)
     const peerPayments = await createPeerPaymentTransactions(
