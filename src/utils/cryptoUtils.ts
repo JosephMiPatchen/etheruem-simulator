@@ -9,6 +9,7 @@ import { sha256 } from '@noble/hashes/sha2';
 import { bytesToHex, hexToBytes } from '@noble/hashes/utils';
 /**
  * Interface for signature input data (Ethereum transaction data to sign)
+ * Includes txid so signature proves knowledge of the complete transaction
  */
 export interface SignatureInput {
   from: string;
@@ -16,6 +17,7 @@ export interface SignatureInput {
   value: number;
   nonce: number;
   timestamp: number;
+  txid: string;  // Transaction ID is included in what gets signed
 }
 
 /**

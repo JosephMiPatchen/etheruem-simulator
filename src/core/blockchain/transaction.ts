@@ -6,57 +6,67 @@ import { bytesToHex } from '@noble/hashes/utils';
 
 /**
  * Helper function to calculate transaction hash (txid)
+ * NOTE: Does NOT include signature - txid is calculated before signing
  */
-function calculateTxid(
-  from: string,
-  to: string,
-  value: number,
-  nonce: number,
-  timestamp: number,
-  signature: string
-): string {
-  const txString = JSON.stringify({ from, to, value, nonce, timestamp, signature });
+function calculateTxid(tx: Partial<EthereumTransaction>): string {
+  const txString = JSON.stringify({ 
+    from: tx.from, 
+    to: tx.to, 
+    value: tx.value, 
+    nonce: tx.nonce, 
+    timestamp: tx.timestamp 
+  });
   return bytesToHex(sha256(new TextEncoder().encode(txString)));
 }
 
 /**
  * Creates the signature input data for an Ethereum transaction
- * This is what gets signed to prove authorization
+ * This is what gets signed to prove authorization (includes txid)
  */
-export function createSignatureInput(
-  from: string,
-  to: string,
-  value: number,
-  nonce: number,
-  timestamp: number
-) {
-  return { from, to, value, nonce, timestamp };
+export function createSignatureInput(tx: {
+  from: string;
+  to: string;
+  value: number;
+  nonce: number;
+  timestamp: number;
+  txid: string;
+}) {
+  return { 
+    from: tx.from, 
+    to: tx.to, 
+    value: tx.value, 
+    nonce: tx.nonce, 
+    timestamp: tx.timestamp,
+    txid: tx.txid
+  };
 }
 
 /**
  * Creates a coinbase transaction for the miner
  * This is the reward for mining a block
+ * Note: Coinbase transactions don't need real signatures
  */
 export const createCoinbaseTransaction = (
   minerAddress: string
 ): EthereumTransaction => {
   const timestamp = Date.now();
-  const from = SimulatorConfig.REWARDER_NODE_ID;
-  const to = minerAddress;
-  const value = SimulatorConfig.BLOCK_REWARD;
-  const nonce = 0;
-  const publicKey = '';
-  const signature = `coinbase-${timestamp}`;
   
-  const txid = calculateTxid(from, to, value, nonce, timestamp, signature);
+  // Calculate txid first (before signature)
+  const txid = calculateTxid({
+    from: SimulatorConfig.REWARDER_NODE_ID,
+    to: minerAddress,
+    value: SimulatorConfig.BLOCK_REWARD,
+    nonce: 0,
+    timestamp
+  });
   
   return {
-    from,
-    to,
-    value,
-    nonce,
-    publicKey,
-    signature,
+    from: SimulatorConfig.REWARDER_NODE_ID,
+    to: minerAddress,
+    value: SimulatorConfig.BLOCK_REWARD,
+    nonce: 0,
+    publicKey: '',
+    signature: `coinbase-${timestamp}`,  // Placeholder signature for coinbase
     timestamp,
     txid
   };
@@ -86,15 +96,27 @@ export const createPeerPaymentTransactions = async (
     const peerId = peerNodeIds[i];
     const peerAddress = peers[peerId].address;
     const timestamp = Date.now();
-    const from = minerAddress;
-    const to = peerAddress;
-    const value = amountPerPeer;
-    const nonce = minerNonce + i; // Increment nonce for each transaction
     
-    // Create signature input
-    const signatureInput = createSignatureInput(from, to, value, nonce, timestamp);
+    // Step 1: Calculate txid FIRST (before signature)
+    const txid = calculateTxid({
+      from: minerAddress,
+      to: peerAddress,
+      value: amountPerPeer,
+      nonce: minerNonce + i,
+      timestamp
+    });
     
-    // Generate signature
+    // Step 2: Create signature input (includes txid)
+    const signatureInput = createSignatureInput({
+      from: minerAddress,
+      to: peerAddress,
+      value: amountPerPeer,
+      nonce: minerNonce + i,
+      timestamp,
+      txid
+    });
+    
+    // Step 3: Generate signature
     let signature;
     try {
       signature = await cryptoGenerateSignature(signatureInput, minerPrivateKey);
@@ -103,14 +125,12 @@ export const createPeerPaymentTransactions = async (
       signature = `error-${timestamp}`;
     }
     
-    // Calculate txid
-    const txid = calculateTxid(from, to, value, nonce, timestamp, signature);
-    
+    // Step 4: Build complete transaction
     transactions.push({
-      from,
-      to,
-      value,
-      nonce,
+      from: minerAddress,
+      to: peerAddress,
+      value: amountPerPeer,
+      nonce: minerNonce + i,
       publicKey: minerPublicKey,
       signature,
       timestamp,

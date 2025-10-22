@@ -47,14 +47,15 @@ export const validateTransactionSecurity = async (
     return false;
   }
   
-  // 6. Create the signature input object
-  const signatureInput = createSignatureInput(
-    transaction.from,
-    transaction.to,
-    transaction.value,
-    transaction.nonce,
-    transaction.timestamp
-  );
+  // 6. Create the signature input object (pass full transaction)
+  const signatureInput = createSignatureInput({
+    from: transaction.from,
+    to: transaction.to,
+    value: transaction.value,
+    nonce: transaction.nonce,
+    timestamp: transaction.timestamp,
+    txid: transaction.txid
+  });
   
   // 7. Cryptographically verify the signature
   try {
