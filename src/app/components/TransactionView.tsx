@@ -55,6 +55,13 @@ const TransactionView: React.FC<TransactionViewProps> = ({ transaction }) => {
           {isCoinbase ? 'Coinbase' : 'Transfer'}
         </div>
         <div className="tx-timestamp">{formatTimestamp(transaction.timestamp)}</div>
+        <button 
+          className="copy-button" 
+          onClick={() => copyToClipboard(JSON.stringify(transaction, null, 2))}
+          title="Copy transaction data"
+        >
+          {copied ? '✓' : '📋'}
+        </button>
       </div>
       
       <div className="transaction-flow-container">
@@ -111,16 +118,7 @@ const TransactionView: React.FC<TransactionViewProps> = ({ transaction }) => {
         <div className="metadata-grid">
           <div className="metadata-item">
             <div className="metadata-label">Transaction ID</div>
-            <div className="metadata-value-container">
-              <div className="metadata-value monospace">{transaction.txid}</div>
-              <button 
-                className="copy-button" 
-                onClick={() => copyToClipboard(transaction.txid)}
-                title="Copy transaction ID"
-              >
-                {copied ? '✓' : '📋'}
-              </button>
-            </div>
+            <div className="metadata-value monospace">{transaction.txid}</div>
           </div>
           
           <div className="metadata-item">

@@ -14,7 +14,18 @@ interface BlockchainViewProps {
 
 const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks }) => {
   const [selectedBlock, setSelectedBlock] = useState<Block | null>(null);
+  const [copied, setCopied] = useState(false);
   const { forkStartHeight } = useSimulatorContext();
+  
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
   
   // Determine if a block is part of a fork
   const isForkedBlock = (block: Block): boolean => {
@@ -83,11 +94,18 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks }) => {
       {selectedBlock && (
         <div className="block-modal-overlay" onClick={() => setSelectedBlock(null)}>
           <div className="block-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="block-modal-header">
-              <h3>
-                {validateBlockHash(selectedBlock).isGenesis ? 'Genesis Block Details' : 'Block Details'}
-              </h3>
-              <button className="close-button" onClick={() => setSelectedBlock(null)}>×</button>
+            <div className="modal-header">
+              <h3>Block {selectedBlock.header.height}</h3>
+              <div className="modal-header-actions">
+                <button 
+                  className="copy-button" 
+                  onClick={() => copyToClipboard(JSON.stringify(selectedBlock, null, 2))}
+                  title="Copy block data"
+                >
+                  {copied ? '✓' : '📋'}
+                </button>
+                <button className="close-button" onClick={() => setSelectedBlock(null)}>×</button>
+              </div>
             </div>
             
             <div className="block-modal-content">

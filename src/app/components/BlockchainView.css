@@ -171,6 +171,12 @@
   color: var(--primary-color);
 }
 
+.modal-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .close-button {
   background: none;
   border: none;
