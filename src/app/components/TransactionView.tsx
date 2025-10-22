@@ -16,56 +16,69 @@ const TransactionView: React.FC<TransactionViewProps> = ({ transaction }) => {
   const isCoinbase = transaction.from === SimulatorConfig.REWARDER_NODE_ID;
   
   // Get node IDs from addresses
-  const fromNodeId = addressToNodeId[transaction.from] || transaction.from.substring(0, 10);
+  const fromNodeId = isCoinbase ? SimulatorConfig.REWARDER_NODE_ID : (addressToNodeId[transaction.from] || transaction.from.substring(0, 10));
   const toNodeId = addressToNodeId[transaction.to] || transaction.to.substring(0, 10);
+  
+  // Generate unique IDs for this transaction
+  const txId = `tx-${transaction.txid?.substring(0, 6) || Math.random().toString(36).substring(2, 8)}`;
 
   return (
-    <div className="transaction-view">
+    <div className="transaction-item">
       <div className="transaction-header">
-        <h3>Transaction Details</h3>
-        <div className="transaction-id">
-          <span className="label">TX ID:</span>
-          <span className="value">{transaction.txid}</span>
+        <div className={`tx-type ${isCoinbase ? 'coinbase' : ''}`}>
+          {isCoinbase ? 'Coinbase' : 'Transaction'}
         </div>
       </div>
-
-      <div className="transaction-flow">
-        {/* From Node */}
-        <div className="transaction-node from-node" id={`from-${transaction.txid}`}>
-          <div className="node-label">{isCoinbase ? 'Coinbase' : 'From'}</div>
-          <div className="node-id">{fromNodeId}</div>
-          <div className="node-address" title={transaction.from}>
-            {transaction.from.substring(0, 10)}...{transaction.from.substring(transaction.from.length - 8)}
+      
+      <div className="transaction-flow-container">
+        {/* From Section */}
+        <div className="tx-inputs-section">
+          <div className="section-title">From</div>
+          <div className={`tx-input ${isCoinbase ? 'coinbase-input' : ''}`} id={`${txId}-from`}>
+            <div className="node-id">{fromNodeId}</div>
+            {!isCoinbase && (
+              <div className="node-nonce">Nonce: {transaction.nonce}</div>
+            )}
           </div>
-          {!isCoinbase && (
-            <div className="node-nonce">Nonce: {transaction.nonce}</div>
-          )}
         </div>
-
-        {/* Arrow */}
+        
+        {/* Total Value Section */}
+        <div className="tx-total-section" id={`${txId}-total`}>
+          <div className="tx-total-value">{transaction.value.toFixed(2)} ETH</div>
+        </div>
+        
+        {/* To Section */}
+        <div className="tx-outputs-section">
+          <div className="section-title">To</div>
+          <div className="tx-output" id={`${txId}-to`}>
+            <div className="node-id">{toNodeId}</div>
+          </div>
+        </div>
+        
+        {/* Bezier Arrows */}
         <Xarrow
-          start={`from-${transaction.txid}`}
-          end={`to-${transaction.txid}`}
-          color="#4CAF50"
+          key={`arrow-in`}
+          start={`${txId}-from`}
+          end={`${txId}-total`}
+          color="var(--primary-color)"
           strokeWidth={2}
-          headSize={6}
-          labels={{
-            middle: (
-              <div className="arrow-label">
-                <span className="arrow-value">{transaction.value.toFixed(2)} ETH</span>
-              </div>
-            ),
-          }}
+          curveness={0.8}
+          startAnchor="right"
+          endAnchor="left"
+          path="smooth"
         />
-
-        {/* To Node */}
-        <div className="transaction-node to-node" id={`to-${transaction.txid}`}>
-          <div className="node-label">To</div>
-          <div className="node-id">{toNodeId}</div>
-          <div className="node-address" title={transaction.to}>
-            {transaction.to.substring(0, 10)}...{transaction.to.substring(transaction.to.length - 8)}
-          </div>
-        </div>
+        
+        <Xarrow
+          key={`arrow-out`}
+          start={`${txId}-total`}
+          end={`${txId}-to`}
+          color="var(--primary-color)"
+          strokeWidth={2}
+          curveness={0.8}
+          startAnchor="right"
+          endAnchor="left"
+          path="smooth"
+        />
       </div>
 
       <div className="transaction-details">
@@ -73,12 +86,6 @@ const TransactionView: React.FC<TransactionViewProps> = ({ transaction }) => {
           <span className="detail-label">Value:</span>
           <span className="detail-value">{transaction.value.toFixed(2)} ETH</span>
         </div>
-        {!isCoinbase && (
-          <div className="detail-row">
-            <span className="detail-label">Nonce:</span>
-            <span className="detail-value">{transaction.nonce}</span>
-          </div>
-        )}
         <div className="detail-row">
           <span className="detail-label">Timestamp:</span>
           <span className="detail-value">{new Date(transaction.timestamp).toLocaleString()}</span>

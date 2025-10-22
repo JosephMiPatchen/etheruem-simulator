@@ -119,6 +119,13 @@
   border-radius: 12px;
 }
 
+.node-nonce {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-top: 5px;
+  font-style: italic;
+}
+
 .coinbase-input {
   border: 1px solid #ffd700;
   background-color: rgba(255, 215, 0, 0.1);
