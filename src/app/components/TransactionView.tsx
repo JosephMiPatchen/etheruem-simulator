@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { EthereumTransaction } from '../../types/types';
 import { SimulatorConfig } from '../../config/config';
 import { useSimulatorContext } from '../contexts/SimulatorContext';
@@ -11,6 +11,17 @@ interface TransactionViewProps {
 
 const TransactionView: React.FC<TransactionViewProps> = ({ transaction }) => {
   const { addressToNodeId } = useSimulatorContext();
+  const [copied, setCopied] = useState(false);
+  
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
   
   // Check if this is a coinbase transaction
   const isCoinbase = transaction.from === SimulatorConfig.REWARDER_NODE_ID;
@@ -100,7 +111,16 @@ const TransactionView: React.FC<TransactionViewProps> = ({ transaction }) => {
         <div className="metadata-grid">
           <div className="metadata-item">
             <div className="metadata-label">Transaction ID</div>
-            <div className="metadata-value monospace">{transaction.txid}</div>
+            <div className="metadata-value-container">
+              <div className="metadata-value monospace">{transaction.txid}</div>
+              <button 
+                className="copy-button" 
+                onClick={() => copyToClipboard(transaction.txid)}
+                title="Copy transaction ID"
+              >
+                {copied ? '✓' : '📋'}
+              </button>
+            </div>
           </div>
           
           <div className="metadata-item">

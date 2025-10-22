@@ -197,11 +197,18 @@
   font-weight: 600;
 }
 
+.metadata-value-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .metadata-value {
   font-size: 0.85rem;
   color: rgba(255, 255, 255, 0.85);
   word-break: break-all;
   line-height: 1.4;
+  flex: 1;
 }
 
 .metadata-value.monospace {
@@ -212,4 +219,26 @@
   padding: 6px 8px;
   border-radius: 4px;
   border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.copy-button {
+  background: rgba(100, 150, 255, 0.2);
+  border: 1px solid rgba(100, 150, 255, 0.4);
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.copy-button:hover {
+  background: rgba(100, 150, 255, 0.3);
+  border-color: rgba(100, 150, 255, 0.6);
+  transform: scale(1.05);
+}
+
+.copy-button:active {
+  transform: scale(0.95);
 }
