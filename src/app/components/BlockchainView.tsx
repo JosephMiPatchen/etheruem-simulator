@@ -6,6 +6,7 @@ import { SimulatorConfig } from '../../config/config';
 import TransactionView from './TransactionView';
 import { useSimulatorContext } from '../contexts/SimulatorContext';
 import { BiFork } from "react-icons/bi";
+import { MdContentCopy, MdCheck } from 'react-icons/md';
 import './BlockchainView.css';
 
 interface BlockchainViewProps {
@@ -102,7 +103,7 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks }) => {
                   onClick={() => copyToClipboard(JSON.stringify(selectedBlock, null, 2))}
                   title="Copy block data"
                 >
-                  {copied ? '✓' : '📋'}
+                  {copied ? <MdCheck /> : <MdContentCopy />}
                 </button>
                 <button className="close-button" onClick={() => setSelectedBlock(null)}>×</button>
               </div>

@@ -3,6 +3,7 @@ import { EthereumTransaction } from '../../types/types';
 import { SimulatorConfig } from '../../config/config';
 import { useSimulatorContext } from '../contexts/SimulatorContext';
 import Xarrow from 'react-xarrows';
+import { MdContentCopy, MdCheck } from 'react-icons/md';
 import './TransactionView.css';
 
 interface TransactionViewProps {
@@ -60,7 +61,7 @@ const TransactionView: React.FC<TransactionViewProps> = ({ transaction }) => {
           onClick={() => copyToClipboard(JSON.stringify(transaction, null, 2))}
           title="Copy transaction data"
         >
-          {copied ? '✓' : '📋'}
+          {copied ? <MdCheck /> : <MdContentCopy />}
         </button>
       </div>
       
