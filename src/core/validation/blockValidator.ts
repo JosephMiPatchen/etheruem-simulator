@@ -2,7 +2,7 @@ import { Block, BlockHeader } from '../../types/types';
 import { sha256Hash, isHashBelowCeiling } from '../../utils/cryptoUtils';
 import { SimulatorConfig } from '../../config/config';
 import { validateTransaction } from './transactionValidator';
-import { updateUTXOSet } from '../blockchain/utxo';
+import { WorldState } from '../blockchain/worldState';
 
 /**
  * Creates a block header hash by hashing the header
@@ -24,7 +24,7 @@ export const calculateTransactionHash = (transactions: any[]): string => {
  */
 export const validateBlock = async (
   block: Block, 
-  utxoSet: { [key: string]: any },
+  worldState: WorldState,
   previousHeaderHash: string
 ): Promise<boolean> => {
   const { header, transactions } = block;
@@ -35,31 +35,30 @@ export const validateBlock = async (
     return false;
   }
   
-  // Create a temporary UTXO set for sequential validation
-  // This allows transactions within the same block to reference outputs
-  // created by earlier transactions in the block
-  let tempUtxoSet = { ...utxoSet };
+  // Create a temporary world state for sequential validation
+  // This allows transactions within the same block to be validated in order
+  const tempWorldState = new WorldState(worldState.accounts);
   
   // 2. First transaction must be a coinbase transaction
-  const coinbaseValid = await validateTransaction(transactions[0], tempUtxoSet, header.height, true);
+  const coinbaseValid = await validateTransaction(transactions[0], tempWorldState, true);
   if (!coinbaseValid) {
     console.error('Invalid coinbase transaction');
     return false;
   }
   
-  // Update the temporary UTXO set with the coinbase transaction
-  tempUtxoSet = updateUTXOSet(tempUtxoSet, transactions[0]);
+  // Update the temporary world state with the coinbase transaction
+  tempWorldState.updateWithTransaction(transactions[0]);
   
-  // 3. Validate all other transactions sequentially, updating the UTXO set after each one
+  // 3. Validate all other transactions sequentially
   for (let i = 1; i < transactions.length; i++) {
-    const txValid = await validateTransaction(transactions[i], tempUtxoSet, header.height);
+    const txValid = await validateTransaction(transactions[i], tempWorldState, false);
     if (!txValid) {
       console.error(`Invalid transaction at index ${i}`);
       return false;
     }
     
-    // Update the temporary UTXO set with this transaction
-    tempUtxoSet = updateUTXOSet(tempUtxoSet, transactions[i]);
+    // Update the temporary world state with this transaction
+    tempWorldState.updateWithTransaction(transactions[i]);
   }
   
   // 4. Validate transaction hash in header matches the hash of all transactions
