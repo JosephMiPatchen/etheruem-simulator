@@ -15,19 +15,35 @@ const TransactionView: React.FC<TransactionViewProps> = ({ transaction }) => {
   // Check if this is a coinbase transaction
   const isCoinbase = transaction.from === SimulatorConfig.REWARDER_NODE_ID;
   
-  // Get node IDs from addresses
-  const fromNodeId = isCoinbase ? SimulatorConfig.REWARDER_NODE_ID : (addressToNodeId[transaction.from] || transaction.from.substring(0, 10));
-  const toNodeId = addressToNodeId[transaction.to] || transaction.to.substring(0, 10);
+  // Get node IDs from addresses for the visualization
+  const fromNodeId = isCoinbase ? SimulatorConfig.REWARDER_NODE_ID : (addressToNodeId[transaction.from] || 'Unknown');
+  const toNodeId = addressToNodeId[transaction.to] || 'Unknown';
   
   // Generate unique IDs for this transaction
   const txId = `tx-${transaction.txid?.substring(0, 6) || Math.random().toString(36).substring(2, 8)}`;
+  
+  // Format timestamp elegantly
+  const formatTimestamp = (timestamp: number) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffSecs = Math.floor(diffMs / 1000);
+    const diffMins = Math.floor(diffSecs / 60);
+    const diffHours = Math.floor(diffMins / 60);
+    
+    if (diffSecs < 60) return `${diffSecs}s ago`;
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  };
 
   return (
     <div className="transaction-item">
       <div className="transaction-header">
-        <div className={`tx-type ${isCoinbase ? 'coinbase' : ''}`}>
-          {isCoinbase ? 'Coinbase' : 'Transaction'}
+        <div className={`tx-badge ${isCoinbase ? 'coinbase' : ''}`}>
+          {isCoinbase ? '⛏️ Coinbase' : '💸 Transfer'}
         </div>
+        <div className="tx-timestamp">{formatTimestamp(transaction.timestamp)}</div>
       </div>
       
       <div className="transaction-flow-container">
@@ -44,7 +60,8 @@ const TransactionView: React.FC<TransactionViewProps> = ({ transaction }) => {
         
         {/* Total Value Section */}
         <div className="tx-total-section" id={`${txId}-total`}>
-          <div className="tx-total-value">{transaction.value.toFixed(2)} ETH</div>
+          <div className="tx-total-value">{transaction.value.toFixed(4)}</div>
+          <div className="tx-currency">ETH</div>
         </div>
         
         {/* To Section */}
@@ -81,18 +98,30 @@ const TransactionView: React.FC<TransactionViewProps> = ({ transaction }) => {
         />
       </div>
 
-      <div className="transaction-details">
-        <div className="detail-row">
-          <span className="detail-label">Value:</span>
-          <span className="detail-value">{transaction.value.toFixed(2)} ETH</span>
-        </div>
-        <div className="detail-row">
-          <span className="detail-label">Timestamp:</span>
-          <span className="detail-value">{new Date(transaction.timestamp).toLocaleString()}</span>
-        </div>
-        <div className="detail-row">
-          <span className="detail-label">Type:</span>
-          <span className="detail-value">{isCoinbase ? 'Coinbase (Block Reward)' : 'Transfer'}</span>
+      {/* Transaction Details - Elegant and Subtle */}
+      <div className="transaction-metadata">
+        <div className="metadata-grid">
+          <div className="metadata-item">
+            <div className="metadata-label">Transaction ID</div>
+            <div className="metadata-value monospace">{transaction.txid}</div>
+          </div>
+          
+          <div className="metadata-item">
+            <div className="metadata-label">From Address</div>
+            <div className="metadata-value monospace">{transaction.from}</div>
+          </div>
+          
+          <div className="metadata-item">
+            <div className="metadata-label">To Address</div>
+            <div className="metadata-value monospace">{transaction.to}</div>
+          </div>
+          
+          {!isCoinbase && (
+            <div className="metadata-item">
+              <div className="metadata-label">Nonce</div>
+              <div className="metadata-value">{transaction.nonce}</div>
+            </div>
+          )}
         </div>
       </div>
     </div>
