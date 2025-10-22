@@ -1,7 +1,6 @@
 /* Toolbar Element Widths - ADJUST THESE VALUES TO CHANGE ELEMENT WIDTHS */
 :root {
-  --utxo-button-width: 60px;
-  --transaction-button-width: 40px;
+  --utxo-button-width: 120px;
   --mining-status-width: 80px;
   --balance-width: 70px;
 }
@@ -39,11 +38,6 @@
 /* UTXO container */
 .utxo-container {
   width: var(--utxo-button-width);
-}
-
-/* Transaction button container */
-.transaction-button-container {
-  width: var(--transaction-button-width);
 }
 
 /* Divider component */
