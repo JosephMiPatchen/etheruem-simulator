@@ -1,6 +1,6 @@
-import { Block, UTXOSet } from '../../types/types';
+import { Block } from '../../types/types';
 import { validateBlock } from './blockValidator';
-import { updateUTXOSet } from '../blockchain/utxo';
+import { WorldState } from '../blockchain/worldState';
 import { SimulatorConfig } from '../../config/config';
 
 /**
@@ -35,7 +35,7 @@ export const validateChain = async (chain: Block[]): Promise<boolean> => {
   // Each node can have its own unique genesis block hash
   
   // Validate each block in the chain
-  let tempUtxoSet: UTXOSet = {};
+  let tempWorldState = new WorldState();
   
   for (let i = 0; i < chain.length; i++) {
     const block = chain[i];
@@ -50,16 +50,20 @@ export const validateChain = async (chain: Block[]): Promise<boolean> => {
     // Special validation for genesis block
     if (i === 0) {
       // Genesis block validation is already done above
-      // Just update the UTXO set with its transactions
+      // Just update the world state with its transactions
       for (const transaction of block.transactions) {
-        tempUtxoSet = updateUTXOSet(tempUtxoSet, transaction);
+        const success = tempWorldState.updateWithTransaction(transaction);
+        if (!success) {
+          console.error('Failed to process genesis block transaction');
+          return false;
+        }
       }
       continue;
     }
 
     // For non-genesis blocks, validate against the previous block
     const previousHash = previousBlock!.hash || '';
-    const isValid = await validateBlock(block, tempUtxoSet, previousHash);
+    const isValid = await validateBlock(block, tempWorldState, previousHash);
     if (!isValid) {
       console.error(`Block at height ${block.header.height} is invalid`);
       return false;
@@ -71,9 +75,13 @@ export const validateChain = async (chain: Block[]): Promise<boolean> => {
       return false;
     }
     
-    // Incrementally update the UTXO set with this block's transactions
+    // Incrementally update the world state with this block's transactions
     for (const transaction of block.transactions) {
-      tempUtxoSet = updateUTXOSet(tempUtxoSet, transaction);
+      const success = tempWorldState.updateWithTransaction(transaction);
+      if (!success) {
+        console.error(`Failed to process transaction in block at height ${block.header.height}`);
+        return false;
+      }
     }
   }
   

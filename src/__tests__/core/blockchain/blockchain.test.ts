@@ -56,10 +56,14 @@ function createValidNextBlock(blockchain: Blockchain): Block {
   const latestBlock = blockchain.getLatestBlock();
   
   const coinbaseTx: EthereumTransaction = {
-    txid: 'test-coinbase-txid',
-    inputs: [{ sourceOutputId: SimulatorConfig.REWARDER_NODE_ID }],
-    outputs: [{ idx: 0, nodeId: 'test-miner', value: SimulatorConfig.BLOCK_REWARD, lock: 'test-address' }],
-    timestamp: Date.now()
+    from: SimulatorConfig.REWARDER_NODE_ID,
+    to: 'test-miner-address',
+    value: SimulatorConfig.BLOCK_REWARD,
+    nonce: 0,
+    publicKey: 'test-public-key',
+    signature: 'test-signature',
+    timestamp: Date.now(),
+    txid: 'test-coinbase-txid'
   };
   
   // Create the block with transactions

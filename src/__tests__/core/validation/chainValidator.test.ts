@@ -1,5 +1,5 @@
 import { validateChain } from '../../../core/validation/chainValidator';
-import { Block, BlockHeader, Transaction } from '../../../types/types';
+import { Block, BlockHeader, EthereumTransaction } from '../../../types/types';
 import { SimulatorConfig } from '../../../config/config';
 import { sha256Hash } from '../../../utils/cryptoUtils';
 
@@ -78,10 +78,14 @@ describe('Chain Validator', () => {
     timestamp: number = Date.now()
   ): Block => {
     const coinbaseTx: EthereumTransaction = {
-      txid: `coinbase-tx-${height}`,
-      inputs: [{ sourceOutputId: SimulatorConfig.REWARDER_NODE_ID, sourceNodeId: SimulatorConfig.REWARDER_NODE_ID }],
-      outputs: [{ idx: 0, nodeId: 'node1', value: SimulatorConfig.BLOCK_REWARD, lock: 'test-address-1' }],
-      timestamp
+      from: SimulatorConfig.REWARDER_NODE_ID,
+      to: 'test-miner-address',
+      value: SimulatorConfig.BLOCK_REWARD,
+      nonce: 0,
+      publicKey: 'test-public-key',
+      signature: 'test-signature',
+      timestamp,
+      txid: `coinbase-tx-${height}`
     };
     
     const transactions = [coinbaseTx];
