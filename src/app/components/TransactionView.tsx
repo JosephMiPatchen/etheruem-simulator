@@ -1,184 +1,92 @@
 import React from 'react';
-import { Transaction, UTXOSet } from '../../types/types';
+import { EthereumTransaction } from '../../types/types';
 import { SimulatorConfig } from '../../config/config';
+import { useSimulatorContext } from '../contexts/SimulatorContext';
 import Xarrow from 'react-xarrows';
 import './TransactionView.css';
 
 interface TransactionViewProps {
-  transaction: Transaction;
-  utxoSet: UTXOSet;
+  transaction: EthereumTransaction;
 }
 
-interface FormattedTransaction {
-  from: Array<{ nodeId: string; value: number }>;
-  to: Array<{ nodeId: string; value: number }>;
-  value: number;
-  isCoinbase: boolean;
-}
-
-const TransactionView: React.FC<TransactionViewProps> = ({ transaction, utxoSet }) => {
-  // Debug UTXO set and transaction inputs
-  console.log('Transaction:', transaction.txid);
-  console.log('Inputs:', transaction.inputs);
-  console.log('UTXO keys:', Object.keys(utxoSet));
+const TransactionView: React.FC<TransactionViewProps> = ({ transaction }) => {
+  const { addressToNodeId } = useSimulatorContext();
   
-  // Check if any of the transaction inputs exist in the UTXO set
-  if (transaction.inputs.length > 0) {
-    const sourceOutputId = transaction.inputs[0].sourceOutputId;
-    console.log('First input sourceOutputId:', sourceOutputId);
-    console.log('UTXO entry exists:', utxoSet[sourceOutputId] !== undefined);
-  }
+  // Check if this is a coinbase transaction
+  const isCoinbase = transaction.from === SimulatorConfig.REWARDER_NODE_ID;
   
+  // Get node IDs from addresses
+  const fromNodeId = addressToNodeId[transaction.from] || transaction.from.substring(0, 10);
+  const toNodeId = addressToNodeId[transaction.to] || transaction.to.substring(0, 10);
 
-  // Format transaction for display
-  const formatTransaction = (tx: Transaction): FormattedTransaction => {
-    if (tx.inputs.length === 0) {
-      // Coinbase transaction
-      return {
-        from: [{ 
-          nodeId: SimulatorConfig.REWARDER_NODE_ID, 
-          value: tx.outputs.reduce((sum, output) => sum + output.value, 0)
-        }],
-        to: tx.outputs.map(output => ({
-          nodeId: output.nodeId,
-          value: output.value
-        })),
-        value: tx.outputs.reduce((sum, output) => sum + output.value, 0),
-        isCoinbase: true
-      };
-    } else {
-      // For regular transactions, look up the node IDs from the UTXO set
-      // Each input references a previous output by its sourceOutputId
-      
-      // Use the sourceNodeId field if available, otherwise try to extract from UTXO set
-      const inputs = tx.inputs.map(input => {
-        // If sourceNodeId is provided, use it directly (new approach)
-        if (input.sourceNodeId) {
-          return {
-            nodeId: input.sourceNodeId,
-            value: tx.outputs.reduce((sum, output) => sum + output.value, 0) / tx.inputs.length
-          };
-        }
-        
-        // Legacy fallback: Try to get from UTXO set
-        const sourceOutputId = input.sourceOutputId;
-        const utxo = utxoSet[sourceOutputId];
-        
-        if (utxo) {
-          return {
-            nodeId: utxo.nodeId,
-            value: utxo.value
-          };
-        } else {
-          // Final fallback: Extract from sourceOutputId
-          const nodeId = sourceOutputId.split('-')[0];
-          return {
-            nodeId,
-            value: tx.outputs.reduce((sum, output) => sum + output.value, 0) / tx.inputs.length
-          };
-        }
-      });
-      
-      // Group inputs by node ID and sum their values
-      const groupedInputs: { [nodeId: string]: number } = {};
-      inputs.forEach(input => {
-        if (!groupedInputs[input.nodeId]) {
-          groupedInputs[input.nodeId] = 0;
-        }
-        groupedInputs[input.nodeId] += input.value;
-      });
-      
-      // Convert grouped inputs to array format
-      const formattedInputs = Object.entries(groupedInputs).map(([nodeId, value]) => ({
-        nodeId,
-        value
-      }));
-      
-      return {
-        from: formattedInputs,
-        to: tx.outputs.map(output => ({
-          nodeId: output.nodeId,
-          value: output.value
-        })),
-        value: tx.outputs.reduce((sum, output) => sum + output.value, 0),
-        isCoinbase: false
-      };
-    }
-  };
-
-  const formattedTx = formatTransaction(transaction);
-  const txId = `tx-${transaction.txid?.substring(0, 6) || Math.random().toString(36).substring(2, 8)}`;
-  
   return (
-    <div className="transaction-item">
+    <div className="transaction-view">
       <div className="transaction-header">
-        <div className={`tx-type ${formattedTx.isCoinbase ? 'coinbase' : ''}`}>
-          {formattedTx.isCoinbase ? 'Coinbase' : 'Transaction'}
+        <h3>Transaction Details</h3>
+        <div className="transaction-id">
+          <span className="label">TX ID:</span>
+          <span className="value">{transaction.txid}</span>
         </div>
       </div>
-      
-      <div className="transaction-flow-container">
-        {/* Inputs Section */}
-        <div className="tx-inputs-section">
-          <div className="section-title">Inputs</div>
-          {Array.isArray(formattedTx.from) && formattedTx.from.map((input, idx) => {
-            const inputId = `${txId}-input-${idx}`;
-            return (
-              <div key={idx} className={`tx-input ${formattedTx.isCoinbase ? 'coinbase-input' : ''}`} id={inputId}>
-                <div className="node-id">{input.nodeId}</div>
-                <div className="node-value">{input.value.toFixed(2)} ETH</div>
+
+      <div className="transaction-flow">
+        {/* From Node */}
+        <div className="transaction-node from-node" id={`from-${transaction.txid}`}>
+          <div className="node-label">{isCoinbase ? 'Coinbase' : 'From'}</div>
+          <div className="node-id">{fromNodeId}</div>
+          <div className="node-address" title={transaction.from}>
+            {transaction.from.substring(0, 10)}...{transaction.from.substring(transaction.from.length - 8)}
+          </div>
+          {!isCoinbase && (
+            <div className="node-nonce">Nonce: {transaction.nonce}</div>
+          )}
+        </div>
+
+        {/* Arrow */}
+        <Xarrow
+          start={`from-${transaction.txid}`}
+          end={`to-${transaction.txid}`}
+          color="#4CAF50"
+          strokeWidth={2}
+          headSize={6}
+          labels={{
+            middle: (
+              <div className="arrow-label">
+                <span className="arrow-value">{transaction.value.toFixed(2)} ETH</span>
               </div>
-            );
-          })}
+            ),
+          }}
+        />
+
+        {/* To Node */}
+        <div className="transaction-node to-node" id={`to-${transaction.txid}`}>
+          <div className="node-label">To</div>
+          <div className="node-id">{toNodeId}</div>
+          <div className="node-address" title={transaction.to}>
+            {transaction.to.substring(0, 10)}...{transaction.to.substring(transaction.to.length - 8)}
+          </div>
         </div>
-        
-        {/* Total Value Section */}
-        <div className="tx-total-section">
-          <div className="tx-total-value" id={`${txId}-total`}>{formattedTx.value.toFixed(2)} ETH</div>
+      </div>
+
+      <div className="transaction-details">
+        <div className="detail-row">
+          <span className="detail-label">Value:</span>
+          <span className="detail-value">{transaction.value.toFixed(2)} ETH</span>
         </div>
-        
-        {/* Outputs Section */}
-        <div className="tx-outputs-section">
-          <div className="section-title">Outputs</div>
-          {Array.isArray(formattedTx.to) && formattedTx.to.map((output, idx) => {
-            const outputId = `${txId}-output-${idx}`;
-            return (
-              <div key={idx} className="tx-output" id={outputId}>
-                <div className="node-id">{output.nodeId}</div>
-                <div className="node-value">{output.value.toFixed(2)} ETH</div>
-              </div>
-            );
-          })}
+        {!isCoinbase && (
+          <div className="detail-row">
+            <span className="detail-label">Nonce:</span>
+            <span className="detail-value">{transaction.nonce}</span>
+          </div>
+        )}
+        <div className="detail-row">
+          <span className="detail-label">Timestamp:</span>
+          <span className="detail-value">{new Date(transaction.timestamp).toLocaleString()}</span>
         </div>
-        
-        {/* Bezier Arrows */}
-        {Array.isArray(formattedTx.from) && formattedTx.from.map((_, idx) => (
-          <Xarrow
-            key={`arrow-in-${idx}`}
-            start={`${txId}-input-${idx}`}
-            end={`${txId}-total`}
-            color="var(--primary-color)"
-            strokeWidth={2}
-            curveness={0.8}
-            startAnchor="right"
-            endAnchor="left"
-            path="smooth"
-          />
-        ))}
-        
-        {Array.isArray(formattedTx.to) && formattedTx.to.map((_, idx) => (
-          <Xarrow
-            key={`arrow-out-${idx}`}
-            start={`${txId}-total`}
-            end={`${txId}-output-${idx}`}
-            color="var(--primary-color)"
-            strokeWidth={2}
-            curveness={0.8}
-            startAnchor="right"
-            endAnchor="left"
-            path="smooth"
-          />
-        ))}
+        <div className="detail-row">
+          <span className="detail-label">Type:</span>
+          <span className="detail-value">{isCoinbase ? 'Coinbase (Block Reward)' : 'Transfer'}</span>
+        </div>
       </div>
     </div>
   );

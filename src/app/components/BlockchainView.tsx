@@ -134,7 +134,7 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks }) => {
                 <h3>Transactions ({selectedBlock.transactions.length})</h3>
                 
                 {selectedBlock.transactions.map((tx, index) => (
-                  <TransactionView key={index} transaction={tx} utxoSet={{}} />
+                  <TransactionView key={index} transaction={tx} />
                 ))}
               </div>
             </div>

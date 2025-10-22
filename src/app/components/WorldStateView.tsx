@@ -117,14 +117,6 @@ const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, allNodeIds 
     }
   };
 
-  // Format UTXO ID for display (truncate if too long)
-  const formatUtxoId = (utxoId: string) => {
-    if (utxoId.length > 20) {
-      return `${utxoId.substring(0, 10)}...${utxoId.substring(utxoId.length - 10)}`;
-    }
-    return utxoId;
-  };
-
   // Format address for display (truncate if too long)
   const formatAddress = (address: string) => {
     if (address.length > 20) {
@@ -133,26 +125,26 @@ const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, allNodeIds 
     return address;
   };
 
-  // Copy a single UTXO to clipboard
-  const copyToClipboard = (utxoId: string, output: TransactionOutput) => {
-    const utxoData = {
-      id: utxoId,
-      nodeId: output.nodeId,
-      value: output.value,
-      address: output.lock
+  // Copy a single account to clipboard
+  const copyToClipboard = (address: string, account: Account) => {
+    const accountData = {
+      address,
+      nodeId: addressToNodeId[address] || 'Unknown',
+      balance: account.balance,
+      nonce: account.nonce
     };
     
-    navigator.clipboard.writeText(JSON.stringify(utxoData, null, 2))
+    navigator.clipboard.writeText(JSON.stringify(accountData, null, 2))
       .then(() => {
-        setCopiedItem(utxoId);
+        setCopiedItem(address);
         setTimeout(() => setCopiedItem(null), 2000);
       })
       .catch(err => console.error('Failed to copy: ', err));
   };
   
-  // Copy entire UTXO set to clipboard
+  // Copy entire world state to clipboard
   const copyAllToClipboard = () => {
-    navigator.clipboard.writeText(JSON.stringify(utxoSet, null, 2))
+    navigator.clipboard.writeText(JSON.stringify(worldState, null, 2))
       .then(() => {
         setCopiedAll(true);
         setTimeout(() => setCopiedAll(false), 2000);
@@ -164,10 +156,10 @@ const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, allNodeIds 
     <div className="utxo-view">
       <div className="utxo-header-actions">
         <div className="utxo-title-container">
-          <h3 className="utxo-title">UTXO Set</h3>
+          <h3 className="utxo-title">World State</h3>
           <div className="utxo-stats">
             <div className="utxo-count">
-              Total UTXOs: <span className="utxo-stat-value">{Object.keys(utxoSet).length}</span>
+              Total Accounts: <span className="utxo-stat-value">{Object.keys(worldState).length}</span>
             </div>
             {nodeId && (
               <div className="node-total-eth">
@@ -214,28 +206,28 @@ const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, allNodeIds 
       </div>
 
       <div className="utxo-header">
-        <div className="utxo-id-header">UTXO ID</div>
+        <div className="utxo-id-header">Address</div>
         <div className="utxo-node-header">Node ID</div>
-        <div className="utxo-value-header">Value</div>
-        <div className="utxo-address-header">Address</div>
+        <div className="utxo-value-header">Balance</div>
+        <div className="utxo-address-header">Nonce</div>
         <div className="utxo-actions-header">Actions</div>
       </div>
 
       <div className="utxo-list">
-        {currentUtxos.length > 0 ? (
-          currentUtxos.map(([utxoId, output]: [string, TransactionOutput]) => (
-            <div key={utxoId} className="utxo-item">
-              <div className="utxo-id" title={utxoId}>{formatUtxoId(utxoId)}</div>
-              <div className="utxo-node">{output.nodeId}</div>
-              <div className="utxo-value">{output.value.toFixed(2)} ETH</div>
-              <div className="utxo-address" title={output.lock}>{formatAddress(output.lock)}</div>
+        {currentAccounts.length > 0 ? (
+          currentAccounts.map(({ address, account, nodeId: accountNodeId }) => (
+            <div key={address} className="utxo-item">
+              <div className="utxo-id" title={address}>{formatAddress(address)}</div>
+              <div className="utxo-node">{accountNodeId}</div>
+              <div className="utxo-value">{account.balance.toFixed(2)} ETH</div>
+              <div className="utxo-address">{account.nonce}</div>
               <div className="utxo-actions">
                 <button 
                   className="copy-button" 
-                  onClick={() => copyToClipboard(utxoId, output)}
-                  title="Copy UTXO data as JSON"
+                  onClick={() => copyToClipboard(address, account)}
+                  title="Copy account data as JSON"
                 >
-                  {copiedItem === utxoId ? <CheckIcon /> : <CopyIcon />}
+                  {copiedItem === address ? <CheckIcon /> : <CopyIcon />}
                 </button>
               </div>
             </div>
@@ -243,13 +235,13 @@ const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, allNodeIds 
         ) : (
           <div className="utxo-empty">
             {selectedNodes.length > 0 
-              ? 'No UTXOs found for the selected nodes' 
-              : 'No UTXOs available'}
+              ? 'No accounts found for the selected nodes' 
+              : 'No accounts available'}
           </div>
         )}
       </div>
 
-      {filteredUtxos.length > 0 && (
+      {filteredAccounts.length > 0 && (
         <div className="utxo-pagination">
           <button 
             onClick={handlePrevPage} 
@@ -260,7 +252,7 @@ const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, allNodeIds 
           </button>
           <span className="pagination-info">
             Page {currentPage} of {totalPages} 
-            ({filteredUtxos.length} UTXOs)
+            ({filteredAccounts.length} Accounts)
           </span>
           <button 
             onClick={handleNextPage} 
