@@ -1,5 +1,5 @@
 import { calculateTxid, validateTransaction } from '../../../core/validation/transactionValidator';
-import { Transaction, TransactionInput, TransactionOutput } from '../../../types/types';
+import { EthereumTransaction, TransactionInput, TransactionOutput } from '../../../types/types';
 import { SimulatorConfig } from '../../../config/config';
 
 // Mock console methods
@@ -24,7 +24,7 @@ jest.mock('../../../core/validation/securityValidator', () => ({
 }));
 
 describe('Transaction Validator', () => {
-  // Mock UTXO set for testing
+  // Mock world state for testing
   const mockUtxoSet = {
     'tx1-0': {
       idx: 0,
@@ -137,7 +137,7 @@ describe('Transaction Validator', () => {
       expect(result).toBe(true);
     });
 
-    it('should reject a transaction with inputs not in UTXO set', async () => {
+    it('should reject a transaction with inputs not in world state', async () => {
       const tx: Transaction = {
         inputs: [{ sourceOutputId: 'nonexistent-0' }],
         outputs: [{ idx: 0, nodeId: 'node2', value: 5, lock: 'test-lock-2' }],

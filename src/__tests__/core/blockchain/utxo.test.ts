@@ -1,5 +1,5 @@
 import { updateUTXOSet } from '../../../core/blockchain/utxo';
-import { Transaction, UTXOSet } from '../../../types/types';
+import { EthereumTransaction, UTXOSet } from '../../../types/types';
 import { SimulatorConfig } from '../../../config/config';
 
 // Mock console methods
@@ -20,11 +20,11 @@ afterAll(() => {
 
 describe('UTXO Module', () => {
   describe('updateUTXOSet', () => {
-    // Initial UTXO set for testing
+    // Initial world state for testing
     let utxoSet: UTXOSet;
     
     beforeEach(() => {
-      // Reset UTXO set before each test
+      // Reset world state before each test
       utxoSet = {
         'tx1-0': {
           idx: 0,
@@ -162,7 +162,7 @@ describe('UTXO Module', () => {
       expect(updatedUtxo['complex-tx-2'].value).toBe(3);
     });
     
-    it('should ignore transactions with inputs not in the UTXO set', () => {
+    it('should ignore transactions with inputs not in the world state', () => {
       const invalidTx: Transaction = {
         txid: 'invalid-tx',
         inputs: [{ sourceOutputId: 'nonexistent-0' }],
@@ -172,7 +172,7 @@ describe('UTXO Module', () => {
       
       const updatedUtxo = updateUTXOSet(utxoSet, invalidTx);
       
-      // UTXO set should remain unchanged
+      // world state should remain unchanged
       expect(updatedUtxo).toEqual(utxoSet);
       expect(updatedUtxo['invalid-tx-0']).toBeUndefined();
     });

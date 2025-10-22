@@ -154,7 +154,7 @@ describe('Network Integration Tests', () => {
       // Verify the reward amount matches the configured block reward
       expect(selfRewardOutput?.value).toBe(SimulatorConfig.BLOCK_REWARD);
       
-      // Verify the UTXO set contains this output
+      // Verify the world state contains this output
       const outputId = `${coinbaseTransaction?.txid}-${selfRewardOutput?.idx}`;
       expect(state.utxo[outputId]).toBeDefined();
     });

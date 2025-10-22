@@ -15,7 +15,7 @@ afterAll(() => {
   console.warn = originalConsole.warn;
   console.info = originalConsole.info;
 });
-import { Block, BlockHeader, Transaction, UTXOSet } from '../../../types/types';
+import { Block, BlockHeader, EthereumTransaction, UTXOSet } from '../../../types/types';
 import { SimulatorConfig } from '../../../config/config';
 import * as cryptoUtils from '../../../utils/cryptoUtils';
 

@@ -233,7 +233,7 @@ describe('Node Module', () => {
       const mockUtxo = { 'test-utxo': { idx: 0, nodeId: 'test', value: 10 } };
       const mockBlockchain = { 
         getBlocks: jest.fn().mockReturnValue(mockBlocks),
-        getUTXOSet: jest.fn().mockReturnValue(mockUtxo)
+        getWorldState: jest.fn().mockReturnValue(mockUtxo)
       };
       const mockMiner = { getIsMining: jest.fn().mockReturnValue(false) };
       

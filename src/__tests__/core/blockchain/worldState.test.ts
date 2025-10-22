@@ -1,5 +1,5 @@
 import { WorldState } from '../../../core/blockchain/worldState';
-import { EthereumTransaction, Account } from '../../../types/types';
+import { EthereumEthereumTransaction, Account } from '../../../types/types';
 import { SimulatorConfig } from '../../../config/config';
 
 describe('WorldState', () => {

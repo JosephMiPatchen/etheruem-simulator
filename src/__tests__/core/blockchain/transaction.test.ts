@@ -1,4 +1,4 @@
-import { createCoinbaseTransaction, createRedistributionTransaction } from '../../../core/blockchain/transaction';
+import { createCoinbaseEthereumTransaction, createRedistributionTransaction } from '../../../core/blockchain/transaction';
 import { SimulatorConfig } from '../../../config/config';
 import { PeerInfoMap } from '../../../types/types';
 

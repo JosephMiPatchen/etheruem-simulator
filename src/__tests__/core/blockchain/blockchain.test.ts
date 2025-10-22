@@ -15,7 +15,7 @@ afterAll(() => {
   console.warn = originalConsole.warn;
   console.info = originalConsole.info;
 });
-import { Block, Transaction } from '../../../types/types';
+import { Block, EthereumTransaction } from '../../../types/types';
 import { SimulatorConfig } from '../../../config/config';
 import * as blockValidator from '../../../core/validation/blockValidator';
 import * as chainValidator from '../../../core/validation/chainValidator';
@@ -98,14 +98,15 @@ describe('Blockchain Module', () => {
       expect(blockchain.getBlocks()[0].header.previousHeaderHash).toBe(SimulatorConfig.GENESIS_PREV_HASH);
     });
     
-    it('should initialize with a UTXO set containing genesis block outputs', () => {
-      const utxo = blockchain.getUTXOSet();
+    it('should initialize with a world state containing miner account with genesis reward', () => {
+      const worldState = blockchain.getWorldState();
       const genesisBlock = blockchain.getBlocks()[0];
-      const genesisTxid = genesisBlock.transactions[0].txid;
+      const minerAddress = genesisBlock.transactions[0].to;
       
-      // The UTXO set should contain the output from the genesis block
-      expect(utxo[`${genesisTxid}-0`]).toBeDefined();
-      expect(utxo[`${genesisTxid}-0`].value).toBe(SimulatorConfig.BLOCK_REWARD);
+      // The world state should contain the miner's account with the block reward
+      expect(worldState[minerAddress]).toBeDefined();
+      expect(worldState[minerAddress].balance).toBe(SimulatorConfig.BLOCK_REWARD);
+      expect(worldState[minerAddress].nonce).toBe(0);
     });
   });
   
@@ -125,23 +126,23 @@ describe('Blockchain Module', () => {
       expect(blockchain.getBlocks()[initialChainLength]).toEqual(newBlock);
     });
     
-    it('should update the UTXO set when adding a block', async () => {
+    it('should update the world state when adding a block', async () => {
       const newBlock = createValidNextBlock(blockchain);
       
       // Mock the validation function to return true
       jest.spyOn(blockValidator, 'validateBlock').mockResolvedValue(true);
       
-      const initialUtxoSize = Object.keys(blockchain.getUTXOSet()).length;
+      const initialUtxoSize = Object.keys(blockchain.getWorldState()).length;
       
       await blockchain.addBlock(newBlock);
       
-      const updatedUtxoSize = Object.keys(blockchain.getUTXOSet()).length;
+      const updatedUtxoSize = Object.keys(blockchain.getWorldState()).length;
       const coinbaseTxid = newBlock.transactions[0].txid;
       
-      // The UTXO set should have the new coinbase output
+      // The world state should have the new coinbase output
       expect(updatedUtxoSize).toBeGreaterThan(initialUtxoSize);
-      expect(blockchain.getUTXOSet()[`${coinbaseTxid}-0`]).toBeDefined();
-      expect(blockchain.getUTXOSet()[`${coinbaseTxid}-0`].value).toBe(SimulatorConfig.BLOCK_REWARD);
+      expect(blockchain.getWorldState()[`${coinbaseTxid}-0`]).toBeDefined();
+      expect(blockchain.getWorldState()[`${coinbaseTxid}-0`].value).toBe(SimulatorConfig.BLOCK_REWARD);
     });
     
     it('should reject a block with invalid height', async () => {
@@ -239,7 +240,7 @@ describe('Blockchain Module', () => {
       expect(blockchain.getBlocks().length).toBe(1); // Original chain unchanged
     });
     
-    it('should update the UTXO set when replacing the chain', async () => {
+    it('should update the world state when replacing the chain', async () => {
       // Create a new blockchain with a longer chain
       const longerChain = new Blockchain('test-node-2');
       
@@ -251,8 +252,8 @@ describe('Blockchain Module', () => {
       
       await longerChain.addBlock(newBlock);
       
-      // Get the UTXO set from the longer chain
-      const longerChainUtxo = longerChain.getUTXOSet();
+      // Get the world state from the longer chain
+      const longerChainUtxo = longerChain.getWorldState();
       
       // Mock the validation function for the original blockchain
       jest.spyOn(blockchain as any, 'isValidChain').mockResolvedValue(true);
@@ -260,8 +261,8 @@ describe('Blockchain Module', () => {
       // Replace the chain
       await blockchain.replaceChain(longerChain.getBlocks());
       
-      // The UTXO set should be updated to match the longer chain
-      expect(blockchain.getUTXOSet()).toEqual(longerChainUtxo);
+      // The world state should be updated to match the longer chain
+      expect(blockchain.getWorldState()).toEqual(longerChainUtxo);
     });
   });
   

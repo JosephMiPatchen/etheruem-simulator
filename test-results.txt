@@ -1,0 +1,489 @@
+
+> bitcoin-simulator@0.1.0 test
+> jest
+
+FAIL src/__tests__/core/validation/chainValidator.test.ts
+  ● Chain Validator › should validate a valid blockchain
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      147 |     
+      148 |     const result = await validateChain(chain);
+    > 149 |     expect(result).toBe(true);
+          |                    ^
+      150 |   });
+      151 |
+      152 |   it('should validate a blockchain with only genesis block', async () => {
+
+      at Object.<anonymous> (src/__tests__/core/validation/chainValidator.test.ts:149:20)
+
+FAIL src/__tests__/core/mining/miner.test.ts
+  ● Miner Module › createBlockTransactions › should create a coinbase transaction and redistribution transaction
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 2
+    Received: 4
+
+      69 |       
+      70 |       // Should have 2 transactions
+    > 71 |       expect(transactions.length).toBe(2);
+         |                                   ^
+      72 |       
+      73 |       // First transaction should be coinbase
+      74 |       const coinbaseTx = transactions[0];
+
+      at Object.<anonymous> (src/__tests__/core/mining/miner.test.ts:71:35)
+
+FAIL src/__tests__/core/blockchain/block.test.ts
+  ● Block Module › createGenesisBlock › should create a valid genesis block
+
+    TypeError: Cannot read properties of undefined (reading '0')
+
+      39 |       // Check transactions
+      40 |       expect(genesisBlock.transactions.length).toBeGreaterThan(0);
+    > 41 |       expect(genesisBlock.transactions[0].inputs[0].sourceOutputId).toBe(SimulatorConfig.REWARDER_NODE_ID);
+         |                                                 ^
+      42 |     });
+      43 |   });
+      44 |   
+
+      at Object.<anonymous> (src/__tests__/core/blockchain/block.test.ts:41:49)
+
+FAIL src/__tests__/core/validation/transactionValidator.test.ts
+  ● Transaction Validator › calculateTxid › should generate a consistent transaction ID for the same inputs
+
+    TypeError: (0 , transactionValidator_1.calculateTxid) is not a function
+
+      50 |       const blockHeight = 1;
+      51 |
+    > 52 |       const txid1 = calculateTxid(inputs, outputs, blockHeight);
+         |                                  ^
+      53 |       const txid2 = calculateTxid(inputs, outputs, blockHeight);
+      54 |
+      55 |       expect(txid1).toBe(txid2);
+
+      at Object.<anonymous> (src/__tests__/core/validation/transactionValidator.test.ts:52:34)
+
+  ● Transaction Validator › calculateTxid › should generate different IDs for different inputs
+
+    TypeError: (0 , transactionValidator_1.calculateTxid) is not a function
+
+      65 |       const blockHeight = 1;
+      66 |
+    > 67 |       const txid1 = calculateTxid(inputs1, outputs, blockHeight);
+         |                                  ^
+      68 |       const txid2 = calculateTxid(inputs2, outputs, blockHeight);
+      69 |
+      70 |       expect(txid1).not.toBe(txid2);
+
+      at Object.<anonymous> (src/__tests__/core/validation/transactionValidator.test.ts:67:34)
+
+  ● Transaction Validator › calculateTxid › should generate different IDs for different block heights
+
+    TypeError: (0 , transactionValidator_1.calculateTxid) is not a function
+
+      78 |       ];
+      79 |
+    > 80 |       const txid1 = calculateTxid(inputs, outputs, 1);
+         |                                  ^
+      81 |       const txid2 = calculateTxid(inputs, outputs, 2);
+      82 |
+      83 |       expect(txid1).not.toBe(txid2);
+
+      at Object.<anonymous> (src/__tests__/core/validation/transactionValidator.test.ts:80:34)
+
+  ● Transaction Validator › validateTransaction › should validate a valid coinbase transaction
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+       95 |
+       96 |       const result = await validateTransaction(coinbaseTx, mockUtxoSet, 1, true);
+    >  97 |       expect(result).toBe(true);
+          |                      ^
+       98 |     });
+       99 |
+      100 |     it('should reject a coinbase transaction with invalid reward', async () => {
+
+      at Object.<anonymous> (src/__tests__/core/validation/transactionValidator.test.ts:97:22)
+
+  ● Transaction Validator › validateTransaction › should validate a valid regular transaction
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      135 |
+      136 |       const result = await validateTransaction(tx, mockUtxoSet, 1);
+    > 137 |       expect(result).toBe(true);
+          |                      ^
+      138 |     });
+      139 |
+      140 |     it('should reject a transaction with inputs not in world state', async () => {
+
+      at Object.<anonymous> (src/__tests__/core/validation/transactionValidator.test.ts:137:22)
+
+FAIL src/__tests__/core/blockchain/blockchain.test.ts
+  ● Blockchain Module › addBlock › should update the world state when adding a block
+
+    expect(received).toBeGreaterThan(expected)
+
+    Expected: > 1
+    Received:   1
+
+      141 |       
+      142 |       // The world state should have the new coinbase output
+    > 143 |       expect(updatedUtxoSize).toBeGreaterThan(initialUtxoSize);
+          |                               ^
+      144 |       expect(blockchain.getWorldState()[`${coinbaseTxid}-0`]).toBeDefined();
+      145 |       expect(blockchain.getWorldState()[`${coinbaseTxid}-0`].value).toBe(SimulatorConfig.BLOCK_REWARD);
+      146 |     });
+
+      at Object.<anonymous> (src/__tests__/core/blockchain/blockchain.test.ts:143:31)
+
+FAIL src/__tests__/core/validation/blockValidator.test.ts
+  ● Block Validator › should reject a block with future timestamp
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: false
+    Received: true
+
+      390 |     Date.now = originalDateNow;
+      391 |     
+    > 392 |     expect(result).toBe(false);
+          |                    ^
+      393 |   });
+      394 |
+      395 |   it('should reject a block with invalid transactions', async () => {
+
+      at Object.<anonymous> (src/__tests__/core/validation/blockValidator.test.ts:392:20)
+
+FAIL src/__tests__/core/blockchain/transaction.test.ts
+  ● Transaction Module › createCoinbaseTransaction › should create a valid coinbase transaction
+
+    ReferenceError: createCoinbaseTransaction is not defined
+
+      60 |       const minerAddress = 'node1-address';
+      61 |       
+    > 62 |       const transaction = createCoinbaseTransaction(minerNodeId, blockHeight, minerAddress);
+         |                           ^
+      63 |       
+      64 |       // Check structure
+      65 |       expect(transaction).toBeDefined();
+
+      at Object.<anonymous> (src/__tests__/core/blockchain/transaction.test.ts:62:27)
+
+  ● Transaction Module › createCoinbaseTransaction › should create different transactions for different block heights
+
+    ReferenceError: createCoinbaseTransaction is not defined
+
+      82 |       const minerAddress = 'node1-address';
+      83 |       
+    > 84 |       const transaction1 = createCoinbaseTransaction(minerNodeId, 1, minerAddress);
+         |                            ^
+      85 |       const transaction2 = createCoinbaseTransaction(minerNodeId, 2, minerAddress);
+      86 |       
+      87 |       expect(transaction1.txid).not.toBe(transaction2.txid);
+
+      at Object.<anonymous> (src/__tests__/core/blockchain/transaction.test.ts:84:28)
+
+  ● Transaction Module › createCoinbaseTransaction › should create different transactions for different miners
+
+    ReferenceError: createCoinbaseTransaction is not defined
+
+      91 |       const blockHeight = 1;
+      92 |       
+    > 93 |       const transaction1 = createCoinbaseTransaction('node1', blockHeight, 'node1-address');
+         |                            ^
+      94 |       const transaction2 = createCoinbaseTransaction('node2', blockHeight, 'node2-address');
+      95 |       
+      96 |       expect(transaction1.txid).not.toBe(transaction2.txid);
+
+      at Object.<anonymous> (src/__tests__/core/blockchain/transaction.test.ts:93:28)
+
+  ● Transaction Module › createRedistributionTransaction › should create a valid redistribution transaction
+
+    TypeError: (0 , transaction_1.createRedistributionTransaction) is not a function
+
+      121 |       const minerAddress = 'mock-address';
+      122 |       
+    > 123 |       const transaction = await createRedistributionTransaction(
+          |                                                                ^
+      124 |         coinbaseTxid, 
+      125 |         minerNodeId, 
+      126 |         blockHeight,
+
+      at Object.<anonymous> (src/__tests__/core/blockchain/transaction.test.ts:123:64)
+
+  ● Transaction Module › createRedistributionTransaction › should create different transactions for different coinbase txids
+
+    TypeError: (0 , transaction_1.createRedistributionTransaction) is not a function
+
+      154 |       const minerAddress = 'mock-address';
+      155 |       
+    > 156 |       const transaction1 = await createRedistributionTransaction(
+          |                                                                 ^
+      157 |         coinbaseTxid1, 
+      158 |         minerNodeId, 
+      159 |         blockHeight,
+
+      at Object.<anonymous> (src/__tests__/core/blockchain/transaction.test.ts:156:65)
+
+  ● Transaction Module › createRedistributionTransaction › should create different transactions for different block heights
+
+    TypeError: (0 , transaction_1.createRedistributionTransaction) is not a function
+
+      183 |       const minerAddress = 'mock-address';
+      184 |       
+    > 185 |       const transaction1 = await createRedistributionTransaction(
+          |                                                                 ^
+      186 |         coinbaseTxid, 
+      187 |         minerNodeId, 
+      188 |         1,
+
+      at Object.<anonymous> (src/__tests__/core/blockchain/transaction.test.ts:185:65)
+
+  ● Transaction Module › createRedistributionTransaction › should distribute the correct amounts to peers
+
+    TypeError: (0 , transaction_1.createRedistributionTransaction) is not a function
+
+      213 |       const minerAddress = 'mock-address';
+      214 |       
+    > 215 |       const transaction = await createRedistributionTransaction(
+          |                                                                ^
+      216 |         coinbaseTxid, 
+      217 |         minerNodeId, 
+      218 |         blockHeight,
+
+      at Object.<anonymous> (src/__tests__/core/blockchain/transaction.test.ts:215:64)
+
+PASS src/__tests__/utils/cryptoUtils.test.ts
+PASS src/__tests__/core/blockchain/utxo.test.ts
+FAIL src/__tests__/core/node.test.ts
+  ● Node Module › state management › should provide its current state
+
+    expect(received).toEqual(expected) // deep equality
+
+    Expected: {"test-utxo": {"idx": 0, "nodeId": "test", "value": 10}}
+    Received: undefined
+
+      245 |       expect(state.nodeId).toBe(nodeId);
+      246 |       expect(state.blockchain).toEqual(mockBlocks);
+    > 247 |       expect(state.utxo).toEqual(mockUtxo);
+          |                          ^
+      248 |       expect(state.isMining).toBe(false);
+      249 |       expect(state.peerIds).toEqual(peerIds);
+      250 |     });
+
+      at Object.<anonymous> (src/__tests__/core/node.test.ts:247:26)
+
+PASS src/__tests__/core/blockchain/worldState.test.ts
+  ● Console
+
+    console.error
+      Transaction mock-txid-nonexistent-bob-10-0 has missing sender account: nonexistent
+
+      63 |       // Check if sender account exists
+      64 |       if (!this.accounts[transaction.from]) {
+    > 65 |         console.error(`Transaction ${transaction.txid} has missing sender account: ${transaction.from}`);
+         |                 ^
+      66 |         return false;
+      67 |       }
+      68 |       
+
+      at WorldState.updateWithTransaction (src/core/blockchain/worldState.ts:65:17)
+      at Object.<anonymous> (src/__tests__/core/blockchain/worldState.test.ts:121:34)
+
+    console.error
+      Transaction mock-txid-alice-bob-30-0 has insufficient balance
+
+      69 |       // Check if sender has sufficient balance
+      70 |       if (this.accounts[transaction.from].balance < transaction.value) {
+    > 71 |         console.error(`Transaction ${transaction.txid} has insufficient balance`);
+         |                 ^
+      72 |         console.error(`  Sender: ${transaction.from}`);
+      73 |         console.error(`  Balance: ${this.accounts[transaction.from].balance}`);
+      74 |         console.error(`  Required: ${transaction.value}`);
+
+      at WorldState.updateWithTransaction (src/core/blockchain/worldState.ts:71:17)
+      at Object.<anonymous> (src/__tests__/core/blockchain/worldState.test.ts:134:34)
+
+    console.error
+        Sender: alice
+
+      70 |       if (this.accounts[transaction.from].balance < transaction.value) {
+      71 |         console.error(`Transaction ${transaction.txid} has insufficient balance`);
+    > 72 |         console.error(`  Sender: ${transaction.from}`);
+         |                 ^
+      73 |         console.error(`  Balance: ${this.accounts[transaction.from].balance}`);
+      74 |         console.error(`  Required: ${transaction.value}`);
+      75 |         return false;
+
+      at WorldState.updateWithTransaction (src/core/blockchain/worldState.ts:72:17)
+      at Object.<anonymous> (src/__tests__/core/blockchain/worldState.test.ts:134:34)
+
+    console.error
+        Balance: 20
+
+      71 |         console.error(`Transaction ${transaction.txid} has insufficient balance`);
+      72 |         console.error(`  Sender: ${transaction.from}`);
+    > 73 |         console.error(`  Balance: ${this.accounts[transaction.from].balance}`);
+         |                 ^
+      74 |         console.error(`  Required: ${transaction.value}`);
+      75 |         return false;
+      76 |       }
+
+      at WorldState.updateWithTransaction (src/core/blockchain/worldState.ts:73:17)
+      at Object.<anonymous> (src/__tests__/core/blockchain/worldState.test.ts:134:34)
+
+    console.error
+        Required: 30
+
+      72 |         console.error(`  Sender: ${transaction.from}`);
+      73 |         console.error(`  Balance: ${this.accounts[transaction.from].balance}`);
+    > 74 |         console.error(`  Required: ${transaction.value}`);
+         |                 ^
+      75 |         return false;
+      76 |       }
+      77 |     }
+
+      at WorldState.updateWithTransaction (src/core/blockchain/worldState.ts:74:17)
+      at Object.<anonymous> (src/__tests__/core/blockchain/worldState.test.ts:134:34)
+
+FAIL src/__tests__/network/network.test.ts
+  ● Network Communication › Chain Synchronization › should request chain when a longer chain is discovered
+
+    TypeError: Cannot read properties of undefined (reading '0')
+
+      36 |   
+      37 |   // Validate that all non-coinbase inputs exist in the UTXO set
+    > 38 |   const isCoinbase = transaction.inputs[0].sourceOutputId === SimulatorConfig.REWARDER_NODE_ID;
+         |                                        ^
+      39 |   
+      40 |   if (!isCoinbase) {
+      41 |     // Check if all inputs exist in the UTXO set
+
+      at updateUTXOSet (src/core/blockchain/utxo.ts:38:40)
+      at validateChain (src/core/validation/chainValidator.ts:55:36)
+      at Blockchain.isValidChain (src/core/blockchain/blockchain.ts:143:31)
+      at Blockchain.replaceChain (src/core/blockchain/blockchain.ts:120:32)
+      at Node.receiveChain (src/core/node.ts:138:44)
+      at NodeWorker.handleChainResponse (src/network/nodeWorker.ts:164:18)
+      at NodeWorker.receiveIncomingMessage (src/network/nodeWorker.ts:57:14)
+      at NetworkManager.deliverMessageToRecipients (src/network/networkManager.ts:116:20)
+      at Timeout._onTimeout (src/network/networkManager.ts:104:12)
+
+FAIL src/__tests__/integration/networkIntegration.test.ts (92.366 s)
+  ● Console
+
+    console.log
+      Waiting for network convergence...
+
+      at Object.<anonymous> (src/__tests__/integration/networkIntegration.test.ts:256:13)
+
+  ● Network Integration Tests › should have all nodes initialized with genesis blocks at height 0
+
+    TypeError: Cannot read properties of undefined (reading 'find')
+
+      70 |       // Verify the coinbase transaction rewards the node itself
+      71 |       const coinbaseTransaction = genesisBlock?.transactions[0];
+    > 72 |       const selfRewardOutput = coinbaseTransaction?.outputs.find(
+         |                                                            ^
+      73 |         (output: any) => output.nodeId === nodeId
+      74 |       );
+      75 |       
+
+      at src/__tests__/integration/networkIntegration.test.ts:72:60
+          at Array.forEach (<anonymous>)
+      at Object.<anonymous> (src/__tests__/integration/networkIntegration.test.ts:66:34)
+
+  ● Network Integration Tests › should verify genesis blocks have different outputs
+
+    TypeError: Cannot read properties of undefined (reading 'find')
+
+      140 |       // Verify the coinbase transaction rewards the node itself
+      141 |       const coinbaseTransaction = genesisBlock?.transactions[0];
+    > 142 |       const selfRewardOutput = coinbaseTransaction?.outputs.find(
+          |                                                            ^
+      143 |         (output: any) => output.nodeId === nodeId
+      144 |       );
+      145 |       
+
+      at src/__tests__/integration/networkIntegration.test.ts:142:60
+          at Array.forEach (<anonymous>)
+      at Object.<anonymous> (src/__tests__/integration/networkIntegration.test.ts:135:34)
+
+  ● Network Integration Tests › should verify blockchain convergence after mining
+
+    TypeError: Cannot read properties of undefined (reading '0')
+
+      36 |   
+      37 |   // Validate that all non-coinbase inputs exist in the UTXO set
+    > 38 |   const isCoinbase = transaction.inputs[0].sourceOutputId === SimulatorConfig.REWARDER_NODE_ID;
+         |                                        ^
+      39 |   
+      40 |   if (!isCoinbase) {
+      41 |     // Check if all inputs exist in the UTXO set
+
+      at updateUTXOSet (src/core/blockchain/utxo.ts:38:40)
+      at validateChain (src/core/validation/chainValidator.ts:55:36)
+      at Blockchain.isValidChain (src/core/blockchain/blockchain.ts:143:31)
+      at Blockchain.replaceChain (src/core/blockchain/blockchain.ts:120:32)
+      at Node.receiveChain (src/core/node.ts:138:44)
+      at NodeWorker.handleChainResponse (src/network/nodeWorker.ts:164:18)
+      at NodeWorker.receiveIncomingMessage (src/network/nodeWorker.ts:57:14)
+      at NetworkManager.deliverMessageToRecipients (src/network/networkManager.ts:116:20)
+      at Timeout._onTimeout (src/network/networkManager.ts:104:12)
+
+  ● Network Integration Tests › should verify blockchain convergence after mining
+
+    TypeError: Cannot read properties of undefined (reading '0')
+
+      36 |   
+      37 |   // Validate that all non-coinbase inputs exist in the UTXO set
+    > 38 |   const isCoinbase = transaction.inputs[0].sourceOutputId === SimulatorConfig.REWARDER_NODE_ID;
+         |                                        ^
+      39 |   
+      40 |   if (!isCoinbase) {
+      41 |     // Check if all inputs exist in the UTXO set
+
+      at updateUTXOSet (src/core/blockchain/utxo.ts:38:40)
+      at validateChain (src/core/validation/chainValidator.ts:55:36)
+      at Blockchain.isValidChain (src/core/blockchain/blockchain.ts:143:31)
+      at Blockchain.replaceChain (src/core/blockchain/blockchain.ts:120:32)
+      at Node.receiveChain (src/core/node.ts:138:44)
+      at NodeWorker.handleChainResponse (src/network/nodeWorker.ts:164:18)
+      at NodeWorker.receiveIncomingMessage (src/network/nodeWorker.ts:57:14)
+      at NetworkManager.deliverMessageToRecipients (src/network/networkManager.ts:116:20)
+      at Timeout._onTimeout (src/network/networkManager.ts:104:12)
+
+  ● Network Integration Tests › should verify blockchain convergence after mining
+
+    thrown: "Exceeded timeout of 90000 ms for a test.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      234 |   }
+      235 |   
+    > 236 |   test('should verify blockchain convergence after mining', async () => {
+          |   ^
+      237 |     // Configuration parameters
+      238 |     const minBlocksToMine = 6;      // Minimum blocks each node should mine
+      239 |     
+
+      at src/__tests__/integration/networkIntegration.test.ts:236:3
+      at Object.<anonymous> (src/__tests__/integration/networkIntegration.test.ts:13:1)
+
+A worker process has failed to exit gracefully and has been force exited. This is likely caused by tests leaking due to improper teardown. Try running with --detectOpenHandles to find leaks. Active timers can also cause this, ensure that .unref() was called on them.
+Test Suites: 10 failed, 3 passed, 13 total
+Tests:       22 failed, 86 passed, 108 total
+Snapshots:   0 total
+Time:        93.219 s
+Ran all test suites.
