@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { LuPickaxe } from "react-icons/lu";
-import { TiDocumentText } from "react-icons/ti";
 import { RxDividerVertical } from "react-icons/rx";
 import { IoAddCircleSharp } from "react-icons/io5";
+import { FaEarthAmericas } from "react-icons/fa6";
 import './NodeToolbar.css';
 
 // Question mark icon
@@ -71,10 +71,10 @@ const NodeToolbar: React.FC<NodeToolbarProps> = ({
           <button 
             className="toolbar-button utxo-button" 
             onClick={onUtxoClick}
-            title="View UTXO Set"
+            title="View World State"
           >
-            <TiDocumentText size={18} />
-            <span>UTXO</span>
+            <FaEarthAmericas size={18} />
+            <span>World State</span>
           </button>
         </div>
         
@@ -103,7 +103,7 @@ const NodeToolbar: React.FC<NodeToolbarProps> = ({
             zIndex: 9999
           }}
         >
-          This balance represents the total Ethereum owned by node {nodeId}, calculated as the sum of all unspent transaction outputs (UTXOs) belonging to this node's address.
+          This balance represents the total Ethereum owned by node {nodeId}, stored in the account's balance in the World State.
         </div>
       )}
     </>

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { UTXOSet, TransactionOutput } from '../../types/types';
+import { Account } from '../../types/types';
 import Select from 'react-select';
-import './UTXOView.css';
+import { useSimulatorContext } from '../contexts/SimulatorContext';
+import './WorldStateView.css';
 
 // Icons for copy buttons
 const CopyIcon = () => (
@@ -17,8 +18,8 @@ const CheckIcon = () => (
   </svg>
 );
 
-interface UTXOViewProps {
-  utxoSet: UTXOSet;
+interface WorldStateViewProps {
+  worldState: Record<string, Account>; // Address -> Account mapping
   allNodeIds?: string[];
   nodeId?: string; // Current node ID for which the modal is opened
 }
@@ -29,24 +30,22 @@ interface NodeOption {
   label: string;
 }
 
-const UTXOView: React.FC<UTXOViewProps> = ({ utxoSet, allNodeIds = [], nodeId }) => {
+const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, allNodeIds = [], nodeId }) => {
+  const { addressToNodeId } = useSimulatorContext();
   const [selectedNodes, setSelectedNodes] = useState<NodeOption[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [copiedItem, setCopiedItem] = useState<string | null>(null);
   const [copiedAll, setCopiedAll] = useState(false);
   const itemsPerPage = 10;
 
-  // Extract unique node IDs from the UTXO set if not provided
+  // Extract unique node IDs from the world state using address mapping
   const uniqueNodeIds = useMemo(() => {
     if (allNodeIds && allNodeIds.length > 0) return allNodeIds;
     
-    // Extract unique node IDs from UTXO set
-    const nodeIds = new Set<string>();
-    Object.values(utxoSet).forEach(output => {
-      nodeIds.add(output.nodeId);
-    });
+    // Extract unique node IDs from address mapping
+    const nodeIds = new Set(Object.values(addressToNodeId));
     return Array.from(nodeIds).sort();
-  }, [utxoSet, allNodeIds]);
+  }, [addressToNodeId, allNodeIds]);
   
   // Create options for react-select
   const nodeOptions = useMemo(() => {
@@ -56,23 +55,28 @@ const UTXOView: React.FC<UTXOViewProps> = ({ utxoSet, allNodeIds = [], nodeId })
     }));
   }, [uniqueNodeIds]);
   
-  // Use useMemo to calculate filtered UTXOs only when utxoSet or selected nodes change
-  const filteredUtxos = useMemo(() => {
-    const utxoEntries = Object.entries(utxoSet);
-    
-    // If no nodes are selected, show all UTXOs
+  // Convert worldState to array of [address, account] with nodeId for filtering
+  const accountsWithNodeIds = useMemo(() => {
+    return Object.entries(worldState).map(([address, account]) => ({
+      address,
+      account,
+      nodeId: addressToNodeId[address] || 'Unknown'
+    }));
+  }, [worldState, addressToNodeId]);
+  
+  // Filter accounts by selected nodes
+  const filteredAccounts = useMemo(() => {
+    // If no nodes are selected, show all accounts
     if (selectedNodes.length === 0) {
-      return utxoEntries;
+      return accountsWithNodeIds;
     }
     
     // Create a Set of selected node IDs for faster lookup
     const selectedNodeIds = new Set(selectedNodes.map(node => node.value));
     
-    // Filter UTXOs by selected node IDs
-    return utxoEntries.filter(([_, output]) => {
-      return selectedNodeIds.has(output.nodeId);
-    });
-  }, [utxoSet, selectedNodes]);
+    // Filter accounts by selected node IDs
+    return accountsWithNodeIds.filter(item => selectedNodeIds.has(item.nodeId));
+  }, [accountsWithNodeIds, selectedNodes]);
   
   // Reset to page 1 when selected nodes change
   useEffect(() => {
@@ -83,20 +87,22 @@ const UTXOView: React.FC<UTXOViewProps> = ({ utxoSet, allNodeIds = [], nodeId })
   const nodeTotalBtc = useMemo(() => {
     if (!nodeId) return 0;
     
-    return Object.values(utxoSet)
-      .filter(output => output.nodeId === nodeId)
-      .reduce((total, output) => total + output.value, 0);
-  }, [utxoSet, nodeId]);
+    // Find the address for this node and get its balance
+    const nodeAddress = Object.entries(addressToNodeId)
+      .find(([_, nId]) => nId === nodeId)?.[0];
+    
+    return nodeAddress ? (worldState[nodeAddress]?.balance || 0) : 0;
+  }, [worldState, nodeId, addressToNodeId]);
 
   // Calculate pagination values using useMemo to prevent unnecessary recalculations
-  const { totalPages, currentUtxos } = useMemo(() => {
-    const totalPages = Math.ceil(filteredUtxos.length / itemsPerPage);
+  const { totalPages, currentAccounts } = useMemo(() => {
+    const totalPages = Math.ceil(filteredAccounts.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
-    const currentUtxos = filteredUtxos.slice(startIndex, endIndex);
+    const currentAccounts = filteredAccounts.slice(startIndex, endIndex);
     
-    return { totalPages, currentUtxos };
-  }, [filteredUtxos, currentPage, itemsPerPage]);
+    return { totalPages, currentAccounts };
+  }, [filteredAccounts, currentPage, itemsPerPage]);
 
   // Handle pagination
   const handlePrevPage = () => {
@@ -269,4 +275,4 @@ const UTXOView: React.FC<UTXOViewProps> = ({ utxoSet, allNodeIds = [], nodeId })
   );
 };
 
-export default UTXOView;
+export default WorldStateView;

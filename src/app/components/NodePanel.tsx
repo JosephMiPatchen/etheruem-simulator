@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { NodeState } from '../../types/types';
 import BlockchainView from './BlockchainView';
-import UTXOView from './UTXOView';
+import WorldStateView from './WorldStateView';
 import NodeToolbar from './NodeToolbar';
 import TransactionModal from './TransactionModal';
+import { useSimulatorContext } from '../contexts/SimulatorContext';
 import './NodePanel.css';
 
 interface NodePanelProps {
@@ -14,13 +15,17 @@ interface NodePanelProps {
 const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [] }) => {
   const [showUtxoModal, setShowUtxoModal] = useState(false);
   const [showTransactionModal, setShowTransactionModal] = useState(false);
+  const { addressToNodeId } = useSimulatorContext();
   
-  // Calculate total ETH owned by the node
+  // Calculate total ETH owned by the node from WorldState
   const nodeTotalBtc = useMemo(() => {
-    return Object.values(nodeState.utxo)
-      .filter(output => output.nodeId === nodeState.nodeId)
-      .reduce((total, output) => total + output.value, 0);
-  }, [nodeState.utxo, nodeState.nodeId]);
+    // Find THE address for this node (nodeId -> privateKey -> publicKey -> address)
+    const nodeAddress = Object.entries(addressToNodeId)
+      .find(([_, nodeId]) => nodeId === nodeState.nodeId)?.[0];
+    
+    // Get the balance from the account
+    return nodeAddress ? (nodeState.worldState?.[nodeAddress]?.balance || 0) : 0;
+  }, [nodeState.worldState, nodeState.nodeId, addressToNodeId]);
   
   return (
     <div className="node-panel">
@@ -50,8 +55,8 @@ const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [] }) => 
               <button className="close-button" onClick={() => setShowUtxoModal(false)}>×</button>
             </div>
             <div className="modal-content">
-              <UTXOView 
-                utxoSet={nodeState.utxo} 
+              <WorldStateView 
+                worldState={nodeState.worldState || {}} 
                 allNodeIds={allNodeIds} 
                 nodeId={nodeState.nodeId} 
               />
