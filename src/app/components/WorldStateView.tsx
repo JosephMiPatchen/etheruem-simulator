@@ -83,16 +83,15 @@ const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, allNodeIds 
     setCurrentPage(1);
   }, [selectedNodes]);
 
-  // Calculate total ETH owned by the current node
-  const totalEth = useMemo(() => {
-    if (!nodeId) return 0;
-    
-    // Find the address for this node and get its balance
-    const nodeAddress = Object.entries(addressToNodeId)
+  // Find the address for this node
+  const nodeAddress = useMemo(() => {
+    if (!nodeId) return undefined;
+    return Object.entries(addressToNodeId)
       .find(([_, nId]) => nId === nodeId)?.[0];
-    
-    return nodeAddress ? (worldState[nodeAddress]?.balance || 0) : 0;
-  }, [worldState, nodeId, addressToNodeId]);
+  }, [addressToNodeId, nodeId]);
+  
+  // Get the account balance - updates only when the actual balance changes
+  const totalEth = nodeAddress ? (worldState[nodeAddress]?.balance || 0) : 0;
 
   // Calculate pagination values using useMemo to prevent unnecessary recalculations
   const { totalPages, currentAccounts } = useMemo(() => {

@@ -17,14 +17,14 @@ const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [] }) => 
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const { addressToNodeId } = useSimulatorContext();
   
-  // Calculate total ETH owned by the node from WorldState
-  const totalEth = useMemo(() => {
-    // Find THE address for this node (nodeId -> privateKey -> publicKey -> address)
-    const nodeAddress = Object.entries(addressToNodeId)
+  // Find the address for this node
+  const nodeAddress = useMemo(() => {
+    return Object.entries(addressToNodeId)
       .find(([_, nodeId]) => nodeId === nodeState.nodeId)?.[0];
-    
-    return nodeAddress ? (nodeState.worldState?.[nodeAddress]?.balance || 0) : 0;
-  }, [nodeState.worldState, nodeState.nodeId, addressToNodeId]);
+  }, [addressToNodeId, nodeState.nodeId]);
+  
+  // Get the account balance - updates only when the actual balance changes
+  const totalEth = nodeAddress ? (nodeState.worldState?.[nodeAddress]?.balance || 0) : 0;
   
   return (
     <div className="node-panel">

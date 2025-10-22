@@ -43,8 +43,7 @@ export class Blockchain {
    * Gets the current world state accounts
    */
   getWorldState(): Record<string, Account> {
-    // Return a shallow copy so React detects changes
-    return { ...this.worldState.accounts };
+    return this.worldState.accounts;
   }
   
   /**
