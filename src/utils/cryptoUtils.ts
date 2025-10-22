@@ -7,15 +7,15 @@
 import * as secp from 'noble-secp256k1';
 import { sha256 } from '@noble/hashes/sha2';
 import { bytesToHex, hexToBytes } from '@noble/hashes/utils';
-import { TransactionOutput } from '../types/types';
-
 /**
- * Interface for signature input data
+ * Interface for signature input data (Ethereum transaction data to sign)
  */
 export interface SignatureInput {
-  sourceOutputId: string;  // Reference to the UTXO being spent
-  allOutputs: TransactionOutput[];  // All outputs in the transaction
-  txid?: string;  // The transaction ID that will be calculated from the transaction data
+  from: string;
+  to: string;
+  value: number;
+  nonce: number;
+  timestamp: number;
 }
 
 /**
