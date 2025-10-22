@@ -9,7 +9,10 @@ export class WorldState {
   public accounts: Record<string, Account>;
 
   constructor(initialAccounts: Record<string, Account> = {}) {
-    this.accounts = initialAccounts;
+    // Deep copy the accounts to avoid reference issues
+    // When validating blocks, we create a temp world state that should not modify the original
+    // Using structuredClone() for a proper deep copy that handles all data types
+    this.accounts = structuredClone(initialAccounts);
   }
 
   /**
