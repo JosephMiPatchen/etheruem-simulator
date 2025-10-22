@@ -7,6 +7,29 @@ import { EthereumTransaction } from '../../types/types';
 import { SimulatorConfig } from '../../config/config';
 import { generateAddress, verifySignature } from '../../utils/cryptoUtils';
 import { createSignatureInput } from '../blockchain/transaction';
+import { sha256 } from '@noble/hashes/sha256';
+import { bytesToHex } from '@noble/hashes/utils';
+
+/**
+ * Helper to calculate txid for validation
+ * Must match the calculation in transaction.ts
+ */
+function calculateTxid(tx: {
+  from: string;
+  to: string;
+  value: number;
+  nonce: number;
+  timestamp: number;
+}): string {
+  const txString = JSON.stringify({ 
+    from: tx.from, 
+    to: tx.to, 
+    value: tx.value, 
+    nonce: tx.nonce, 
+    timestamp: tx.timestamp 
+  });
+  return bytesToHex(sha256(new TextEncoder().encode(txString)));
+}
 
 /**
  * Validates the security aspects of an Ethereum transaction
@@ -47,17 +70,27 @@ export const validateTransactionSecurity = async (
     return false;
   }
   
-  // 6. Create the signature input object (pass full transaction)
-  const signatureInput = createSignatureInput({
+  // 6. Verify txid matches transaction data (data integrity check)
+  // This ensures the transaction data hasn't been tampered with
+  const calculatedTxid = calculateTxid({
     from: transaction.from,
     to: transaction.to,
     value: transaction.value,
     nonce: transaction.nonce,
-    timestamp: transaction.timestamp,
-    txid: transaction.txid
+    timestamp: transaction.timestamp
   });
   
-  // 7. Cryptographically verify the signature
+  if (calculatedTxid !== transaction.txid) {
+    console.error(`Transaction data tampered: calculated txid ${calculatedTxid} !== ${transaction.txid}`);
+    return false;
+  }
+  
+  // 7. Create signature input (just the txid)
+  // The signature proves authorization of this specific txid
+  const signatureInput = createSignatureInput({ txid: transaction.txid });
+  
+  // 8. Cryptographically verify the signature (authorization check)
+  // This proves the sender has the private key for the from address
   try {
     const isValid = await verifySignature(
       signatureInput,
@@ -65,7 +98,7 @@ export const validateTransactionSecurity = async (
       transaction.publicKey
     );
     
-    // 8. Reject if signature is invalid
+    // 9. Reject if signature is invalid
     if (!isValid) {
       console.error('Invalid signature for transaction');
       return false;

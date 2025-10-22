@@ -21,24 +21,20 @@ function calculateTxid(tx: Partial<EthereumTransaction>): string {
 
 /**
  * Creates the signature input data for an Ethereum transaction
- * This is what gets signed to prove authorization (includes txid)
+ * 
+ * CRYPTOGRAPHIC COMMITMENT PATTERN:
+ * We sign JUST the txid because:
+ * 1. txid = hash(from, to, value, nonce, timestamp) - cryptographically commits to all transaction data
+ * 2. Signing the txid proves you authorized this specific transaction
+ * 3. During validation, we verify:
+ *    a) hash(transaction_data) === txid (data hasn't been tampered with)
+ *    b) signature is valid for txid (proves authorization with private key)
+ * 
+ * This is simpler and more efficient than signing all the transaction data separately.
  */
-export function createSignatureInput(tx: {
-  from: string;
-  to: string;
-  value: number;
-  nonce: number;
-  timestamp: number;
-  txid: string;
-}) {
-  return { 
-    from: tx.from, 
-    to: tx.to, 
-    value: tx.value, 
-    nonce: tx.nonce, 
-    timestamp: tx.timestamp,
-    txid: tx.txid
-  };
+export function createSignatureInput(tx: { txid: string }) {
+  // Return just the txid - it cryptographically represents the entire transaction
+  return tx.txid;
 }
 
 /**
@@ -106,17 +102,11 @@ export const createPeerPaymentTransactions = async (
       timestamp
     });
     
-    // Step 2: Create signature input (includes txid)
-    const signatureInput = createSignatureInput({
-      from: minerAddress,
-      to: peerAddress,
-      value: amountPerPeer,
-      nonce: minerNonce + i,
-      timestamp,
-      txid
-    });
+    // Step 2: Create signature input (just the txid)
+    // The txid already cryptographically commits to all transaction data
+    const signatureInput = createSignatureInput({ txid });
     
-    // Step 3: Generate signature
+    // Step 3: Generate signature (signing the txid proves authorization)
     let signature;
     try {
       signature = await cryptoGenerateSignature(signatureInput, minerPrivateKey);

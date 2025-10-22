@@ -8,17 +8,17 @@ import * as secp from 'noble-secp256k1';
 import { sha256 } from '@noble/hashes/sha2';
 import { bytesToHex, hexToBytes } from '@noble/hashes/utils';
 /**
- * Interface for signature input data (Ethereum transaction data to sign)
- * Includes txid so signature proves knowledge of the complete transaction
+ * Signature input data for Ethereum transactions
+ * 
+ * We sign just the txid (transaction ID) because:
+ * - txid = hash(from, to, value, nonce, timestamp)
+ * - The txid cryptographically commits to all transaction data
+ * - Signing the txid proves authorization of the complete transaction
+ * - During validation, we verify both:
+ *   1. hash(transaction_data) === txid (data integrity)
+ *   2. signature is valid for txid (authorization)
  */
-export interface SignatureInput {
-  from: string;
-  to: string;
-  value: number;
-  nonce: number;
-  timestamp: number;
-  txid: string;  // Transaction ID is included in what gets signed
-}
+export type SignatureInput = string;  // Just the txid
 
 /**
  * Hashes data with SHA-256
