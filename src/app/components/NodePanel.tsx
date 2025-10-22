@@ -23,8 +23,18 @@ const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [] }) => 
     const nodeAddress = Object.entries(addressToNodeId)
       .find(([_, nodeId]) => nodeId === nodeState.nodeId)?.[0];
     
+    const balance = nodeAddress ? (nodeState.worldState?.[nodeAddress]?.balance || 0) : 0;
+    
+    // Debug logging
+    console.log(`[${nodeState.nodeId}] Balance calculation:`, {
+      nodeAddress,
+      balance,
+      worldStateKeys: Object.keys(nodeState.worldState || {}),
+      addressToNodeId
+    });
+    
     // Get the balance from the account
-    return nodeAddress ? (nodeState.worldState?.[nodeAddress]?.balance || 0) : 0;
+    return balance;
   }, [nodeState.worldState, nodeState.nodeId, addressToNodeId]);
   
   return (
@@ -47,23 +57,29 @@ const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [] }) => 
       <BlockchainView blocks={nodeState.blockchain} />
       
       {/* UTXO Modal */}
-      {showUtxoModal && (
-        <div className="modal-overlay" onClick={() => setShowUtxoModal(false)}>
-          <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>{nodeState.nodeId} Node</h3>
-              <button className="close-button" onClick={() => setShowUtxoModal(false)}>×</button>
-            </div>
-            <div className="modal-content">
-              <WorldStateView 
-                worldState={nodeState.worldState || {}} 
-                allNodeIds={allNodeIds} 
-                nodeId={nodeState.nodeId} 
-              />
+      {showUtxoModal && (() => {
+        console.log(`[NodePanel - ${nodeState.nodeId}] Passing worldState to modal:`, {
+          worldStateKeys: Object.keys(nodeState.worldState || {}),
+          worldStateBalances: Object.entries(nodeState.worldState || {}).map(([addr, acc]) => ({ addr, balance: acc.balance }))
+        });
+        return (
+          <div className="modal-overlay" onClick={() => setShowUtxoModal(false)}>
+            <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h3>{nodeState.nodeId} Node</h3>
+                <button className="close-button" onClick={() => setShowUtxoModal(false)}>×</button>
+              </div>
+              <div className="modal-content">
+                <WorldStateView 
+                  worldState={nodeState.worldState || {}} 
+                  allNodeIds={allNodeIds} 
+                  nodeId={nodeState.nodeId} 
+                />
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Transaction Modal */}
       <TransactionModal 

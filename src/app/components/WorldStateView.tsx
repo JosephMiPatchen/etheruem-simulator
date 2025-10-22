@@ -91,7 +91,18 @@ const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, allNodeIds 
     const nodeAddress = Object.entries(addressToNodeId)
       .find(([_, nId]) => nId === nodeId)?.[0];
     
-    return nodeAddress ? (worldState[nodeAddress]?.balance || 0) : 0;
+    const balance = nodeAddress ? (worldState[nodeAddress]?.balance || 0) : 0;
+    
+    // Debug logging
+    console.log(`[WorldStateView - ${nodeId}] Balance calculation:`, {
+      nodeAddress,
+      balance,
+      worldStateKeys: Object.keys(worldState),
+      worldStateBalances: Object.entries(worldState).map(([addr, acc]) => ({ addr, balance: acc.balance })),
+      addressToNodeId
+    });
+    
+    return balance;
   }, [worldState, nodeId, addressToNodeId]);
 
   // Calculate pagination values using useMemo to prevent unnecessary recalculations
