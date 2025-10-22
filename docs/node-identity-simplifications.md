@@ -1,5 +1,0 @@
-# Node Identity Simplifications
-
-## NodeID: The IP Address and Seed Phrase
-
-In this simulator, the `nodeId` (e.g., "Alpha", "Bravo", "Charlie", "Delta") serves a dual purpose that would be separate concerns in a real blockchain system. First, it acts as the **network identifier** - similar to an IP address, the NetworkManager uses it to route messages between nodes. Second, it functions as the **seed phrase** - the nodeId is passed to `generatePrivateKey(nodeId)` to deterministically derive the node's cryptographic keypair. This means the nodeId is the "root" of the entire cryptographic identity: `nodeId → privateKey → publicKey → address`. In a real system, the network address (IP) would be completely separate from the seed phrase, and the seed phrase would expand into a hierarchical tree of keys (BIP32/BIP44) allowing multiple addresses. Here, we have one nodeId that is both the network routing identifier and the single source of cryptographic entropy - a major security concern in production, but a useful simplification for a simulator where deterministic, human-readable identities ("Alpha" owns this address) make debugging and learning easier.

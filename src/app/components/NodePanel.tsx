@@ -3,7 +3,6 @@ import { NodeState } from '../../types/types';
 import BlockchainView from './BlockchainView';
 import WorldStateView from './WorldStateView';
 import NodeToolbar from './NodeToolbar';
-import TransactionModal from './TransactionModal';
 import { useSimulatorContext } from '../contexts/SimulatorContext';
 import './NodePanel.css';
 
@@ -14,7 +13,6 @@ interface NodePanelProps {
 
 const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [] }) => {
   const [showUtxoModal, setShowUtxoModal] = useState(false);
-  const [showTransactionModal, setShowTransactionModal] = useState(false);
   const { addressToNodeId } = useSimulatorContext();
   
   // Find the address for this node
@@ -37,7 +35,6 @@ const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [] }) => 
             isMining={nodeState.isMining}
             totalEth={totalEth}
             onUtxoClick={() => setShowUtxoModal(true)}
-            onAddTransactionClick={() => setShowTransactionModal(true)}
             nodeId={nodeState.nodeId}
           />
         </div>
@@ -64,12 +61,7 @@ const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [] }) => 
         </div>
       )}
 
-      {/* Transaction Modal */}
-      <TransactionModal 
-        isOpen={showTransactionModal}
-        onClose={() => setShowTransactionModal(false)}
-        nodeId={nodeState.nodeId}
-      />
+
     </div>
   );
 };

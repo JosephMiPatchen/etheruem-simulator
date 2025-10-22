@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { LuPickaxe } from "react-icons/lu";
 import { RxDividerVertical } from "react-icons/rx";
-import { IoAddCircleSharp } from "react-icons/io5";
 import { FaEarthAmericas } from "react-icons/fa6";
 import './NodeToolbar.css';
 
@@ -18,7 +17,6 @@ interface NodeToolbarProps {
   isMining: boolean;
   totalEth: number;
   onUtxoClick: () => void;
-  onAddTransactionClick: () => void;
   nodeId: string;
 }
 
@@ -26,7 +24,6 @@ const NodeToolbar: React.FC<NodeToolbarProps> = ({
   isMining, 
   totalEth, 
   onUtxoClick,
-  onAddTransactionClick,
   nodeId
 }) => {
   const [showTooltip, setShowTooltip] = useState(false);
@@ -75,19 +72,6 @@ const NodeToolbar: React.FC<NodeToolbarProps> = ({
           >
             <FaEarthAmericas size={18} />
             <span>World State</span>
-          </button>
-        </div>
-        
-        <div className="divider"><RxDividerVertical size={20} color="var(--border-color)" /></div>
-        
-        <div className="toolbar-item transaction-button-container">
-          <button 
-            className="toolbar-button transaction-button" 
-            onClick={onAddTransactionClick}
-            title="Create New Transaction"
-          >
-            <IoAddCircleSharp size={18} />
-            <span>Tx</span>
           </button>
         </div>
       </div>
