@@ -16,7 +16,7 @@ const QuestionIcon = () => (
 
 interface NodeToolbarProps {
   isMining: boolean;
-  nodeTotalBtc: number;
+  totalEth: number;
   onUtxoClick: () => void;
   onAddTransactionClick: () => void;
   nodeId: string;
@@ -24,7 +24,7 @@ interface NodeToolbarProps {
 
 const NodeToolbar: React.FC<NodeToolbarProps> = ({ 
   isMining, 
-  nodeTotalBtc, 
+  totalEth, 
   onUtxoClick,
   onAddTransactionClick,
   nodeId
@@ -46,7 +46,7 @@ const NodeToolbar: React.FC<NodeToolbarProps> = ({
           <div className="balance-container">
             <span className="balance-label">Balance</span>
             <div className="balance-value-container">
-              <span className="balance-value">{nodeTotalBtc.toFixed(2)} ETH</span>
+              <span className="balance-value">{totalEth.toFixed(2)} ETH</span>
               <div 
                 className="tooltip-icon" 
                 onMouseEnter={(e) => {

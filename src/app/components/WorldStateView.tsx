@@ -84,7 +84,7 @@ const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, allNodeIds 
   }, [selectedNodes]);
 
   // Calculate total ETH owned by the current node
-  const nodeTotalBtc = useMemo(() => {
+  const totalEth = useMemo(() => {
     if (!nodeId) return 0;
     
     // Find the address for this node and get its balance
@@ -163,7 +163,7 @@ const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, allNodeIds 
             </div>
             {nodeId && (
               <div className="node-total-eth">
-                Node Balance: <span className="eth-value">{nodeTotalBtc.toFixed(2)} ETH</span>
+                Node Balance: <span className="eth-value">{totalEth.toFixed(2)} ETH</span>
               </div>
             )}
           </div>

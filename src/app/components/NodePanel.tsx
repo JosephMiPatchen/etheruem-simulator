@@ -18,7 +18,7 @@ const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [] }) => 
   const { addressToNodeId } = useSimulatorContext();
   
   // Calculate total ETH owned by the node from WorldState
-  const nodeTotalBtc = useMemo(() => {
+  const totalEth = useMemo(() => {
     // Find THE address for this node (nodeId -> privateKey -> publicKey -> address)
     const nodeAddress = Object.entries(addressToNodeId)
       .find(([_, nodeId]) => nodeId === nodeState.nodeId)?.[0];
@@ -35,7 +35,7 @@ const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [] }) => 
           </div>
           <NodeToolbar 
             isMining={nodeState.isMining}
-            nodeTotalBtc={nodeTotalBtc}
+            totalEth={totalEth}
             onUtxoClick={() => setShowUtxoModal(true)}
             onAddTransactionClick={() => setShowTransactionModal(true)}
             nodeId={nodeState.nodeId}
