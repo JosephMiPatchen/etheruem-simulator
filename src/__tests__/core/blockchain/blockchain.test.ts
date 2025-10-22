@@ -132,17 +132,17 @@ describe('Blockchain Module', () => {
       // Mock the validation function to return true
       jest.spyOn(blockValidator, 'validateBlock').mockResolvedValue(true);
       
-      const initialUtxoSize = Object.keys(blockchain.getWorldState()).length;
+      const initialWorldStateSize = Object.keys(blockchain.getWorldState()).length;
       
       await blockchain.addBlock(newBlock);
       
-      const updatedUtxoSize = Object.keys(blockchain.getWorldState()).length;
-      const coinbaseTxid = newBlock.transactions[0].txid;
+      const updatedWorldStateSize = Object.keys(blockchain.getWorldState()).length;
+      const minerAddress = newBlock.transactions[0].to;
       
-      // The world state should have the new coinbase output
-      expect(updatedUtxoSize).toBeGreaterThan(initialUtxoSize);
-      expect(blockchain.getWorldState()[`${coinbaseTxid}-0`]).toBeDefined();
-      expect(blockchain.getWorldState()[`${coinbaseTxid}-0`].value).toBe(SimulatorConfig.BLOCK_REWARD);
+      // The world state should have the miner's account with the block reward
+      expect(updatedWorldStateSize).toBeGreaterThanOrEqual(initialWorldStateSize);
+      expect(blockchain.getWorldState()[minerAddress]).toBeDefined();
+      expect(blockchain.getWorldState()[minerAddress].balance).toBeGreaterThanOrEqual(SimulatorConfig.BLOCK_REWARD);
     });
     
     it('should reject a block with invalid height', async () => {

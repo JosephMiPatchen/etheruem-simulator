@@ -375,14 +375,14 @@ describe('Block Validator', () => {
     // Create a block with a future timestamp
     const block = createValidBlock(previousBlock.hash, 1);
     
-    // Set timestamp to 3 hours in the future (beyond the 2-hour limit)
-    const threeHoursInMs = 3 * 60 * 60 * 1000;
-    const futureTime = Date.now() + threeHoursInMs;
+    // Set timestamp to 6 hours in the future (beyond the 5-hour validation window)
+    const sixHoursInMs = 6 * 60 * 60 * 1000;
+    const futureTime = Date.now() + sixHoursInMs;
     block.header.timestamp = futureTime;
     
     // Mock Date.now to return a consistent value
     const originalDateNow = Date.now;
-    Date.now = jest.fn(() => futureTime - threeHoursInMs);
+    Date.now = jest.fn(() => futureTime - sixHoursInMs);
     
     const result = await validateBlock(block, mockUtxoSet, previousBlock.hash);
     
