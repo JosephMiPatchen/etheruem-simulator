@@ -244,7 +244,7 @@ describe('Node Module', () => {
       
       expect(state.nodeId).toBe(nodeId);
       expect(state.blockchain).toEqual(mockBlocks);
-      expect(state.utxo).toEqual(mockUtxo);
+      expect(state.worldState).toEqual(mockUtxo); // Now returns world state instead of UTXO
       expect(state.isMining).toBe(false);
       expect(state.peerIds).toEqual(peerIds);
     });

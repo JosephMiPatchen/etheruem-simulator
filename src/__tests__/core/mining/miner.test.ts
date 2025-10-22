@@ -63,39 +63,31 @@ describe('Miner Module', () => {
   });
   
   describe('createBlockTransactions', () => {
-    it('should create a coinbase transaction and redistribution transaction', async () => {
+    it('should create a coinbase transaction and peer payment transactions', async () => {
       const height = 1;
       const transactions = await (miner as any).createBlockTransactions(height);
       
-      // Should have 2 transactions
-      expect(transactions.length).toBe(2);
+      // Should have 1 coinbase + N peer payment transactions (one per peer)
+      // We have 3 peers, so expect 1 + 3 = 4 transactions
+      expect(transactions.length).toBe(4);
       
       // First transaction should be coinbase
       const coinbaseTx = transactions[0];
-      expect(coinbaseTx.inputs[0].sourceOutputId).toBe(SimulatorConfig.REWARDER_NODE_ID);
-      expect(coinbaseTx.outputs[0].nodeId).toBe(nodeId);
-      expect(coinbaseTx.outputs[0].value).toBe(SimulatorConfig.BLOCK_REWARD);
+      expect(coinbaseTx.from).toBe(SimulatorConfig.REWARDER_NODE_ID);
+      expect(coinbaseTx.to).toBeDefined(); // Miner's address
+      expect(coinbaseTx.value).toBe(SimulatorConfig.BLOCK_REWARD);
       
-      // Second transaction should redistribute coins
-      const redistributionTx = transactions[1];
-      expect(redistributionTx.inputs[0].sourceOutputId).toBe(`${coinbaseTx.txid}-0`);
-      
-      // Should have outputs for each peer plus change back to miner
-      expect(redistributionTx.outputs.length).toBe(peerIds.length + 1);
-      
-      // Check peer outputs
+      // Remaining transactions should be peer payments from miner to peers
       const redistributionAmount = SimulatorConfig.BLOCK_REWARD * SimulatorConfig.REDISTRIBUTION_RATIO;
       const amountPerPeer = redistributionAmount / peerIds.length;
       
-      for (let i = 0; i < peerIds.length; i++) {
-        expect(redistributionTx.outputs[i].nodeId).toBe(peerIds[i]);
-        expect(redistributionTx.outputs[i].value).toBeCloseTo(amountPerPeer);
+      for (let i = 1; i < transactions.length; i++) {
+        const peerPayment = transactions[i];
+        expect(peerPayment.from).toBeDefined(); // Miner's address
+        expect(peerPayment.to).toBeDefined(); // Peer's address
+        expect(peerPayment.value).toBeCloseTo(amountPerPeer);
+        expect(peerPayment.nonce).toBe(i - 1); // Nonce increments for each peer payment
       }
-      
-      // Check change output
-      const changeOutput = redistributionTx.outputs[peerIds.length];
-      expect(changeOutput.nodeId).toBe(nodeId);
-      expect(changeOutput.value).toBeCloseTo(SimulatorConfig.BLOCK_REWARD - redistributionAmount);
     });
   });
   

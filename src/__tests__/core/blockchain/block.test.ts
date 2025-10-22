@@ -1,5 +1,5 @@
 import { createGenesisBlock, createBlockTemplate } from '../../../core/blockchain/block';
-import { Block, Transaction } from '../../../types/types';
+import { Block, EthereumTransaction } from '../../../types/types';
 import { SimulatorConfig } from '../../../config/config';
 import { sha256Hash } from '../../../utils/cryptoUtils';
 
@@ -38,7 +38,8 @@ describe('Block Module', () => {
       
       // Check transactions
       expect(genesisBlock.transactions.length).toBeGreaterThan(0);
-      expect(genesisBlock.transactions[0].inputs[0].sourceOutputId).toBe(SimulatorConfig.REWARDER_NODE_ID);
+      expect(genesisBlock.transactions[0].from).toBe(SimulatorConfig.REWARDER_NODE_ID);
+      expect(genesisBlock.transactions[0].value).toBe(SimulatorConfig.BLOCK_REWARD);
     });
   });
   
@@ -57,7 +58,7 @@ describe('Block Module', () => {
       hash: 'mock-previous-hash'
     };
     
-    const mockTransactions: Transaction[] = [
+    const mockTransactions: EthereumTransaction[] = [
       {
         txid: 'mock-tx-1',
         inputs: [{ sourceOutputId: SimulatorConfig.REWARDER_NODE_ID }],

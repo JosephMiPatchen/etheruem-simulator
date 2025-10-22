@@ -116,7 +116,7 @@ describe('Block Validator', () => {
   const coinbaseOutputs = [{ idx: 0, nodeId: 'node1', value: SimulatorConfig.BLOCK_REWARD, lock: 'test-address-1' }];
   const coinbaseTxid = 'coinbase-tx-1'; // Mock txid
   
-  const validCoinbaseTx: Transaction = {
+  const validCoinbaseTx: EthereumTransaction = {
     txid: coinbaseTxid,
     inputs: coinbaseInputs,
     outputs: coinbaseOutputs,
@@ -130,7 +130,7 @@ describe('Block Validator', () => {
   ];
   const regularTxid = 'regular-tx-1'; // Mock txid
   
-  const validRegularTx: Transaction = {
+  const validRegularTx: EthereumTransaction = {
     txid: regularTxid,
     inputs: regularInputs,
     outputs: regularOutputs,
@@ -285,7 +285,7 @@ describe('Block Validator', () => {
     const invalidCoinbaseOutputs = [{ idx: 0, nodeId: 'node1', value: SimulatorConfig.BLOCK_REWARD + 5, lock: 'test-address-1' }];
     const invalidCoinbaseTxid = 'invalid-coinbase-tx-1'; // Mock txid
     
-    const invalidCoinbaseTx: Transaction = {
+    const invalidCoinbaseTx: EthereumTransaction = {
       txid: invalidCoinbaseTxid,
       inputs: coinbaseInputs,
       outputs: invalidCoinbaseOutputs,
@@ -413,7 +413,7 @@ describe('Block Validator', () => {
     // Create an invalid regular transaction (output exceeds input)
     const invalidRegularOutputs = [{ idx: 0, nodeId: 'node2', value: 15, lock: 'test-address-2' }]; // Total exceeds input value of 10
     
-    const invalidRegularTx: Transaction = {
+    const invalidRegularTx: EthereumTransaction = {
       inputs: [{ sourceOutputId: 'tx1-0', sourceNodeId: 'node1' }],
       outputs: invalidRegularOutputs,
       timestamp: Date.now(),

@@ -55,7 +55,7 @@ function createValidNextBlock(blockchain: Blockchain): Block {
   // Get the latest block from the blockchain
   const latestBlock = blockchain.getLatestBlock();
   
-  const coinbaseTx: Transaction = {
+  const coinbaseTx: EthereumTransaction = {
     txid: 'test-coinbase-txid',
     inputs: [{ sourceOutputId: SimulatorConfig.REWARDER_NODE_ID }],
     outputs: [{ idx: 0, nodeId: 'test-miner', value: SimulatorConfig.BLOCK_REWARD, lock: 'test-address' }],
