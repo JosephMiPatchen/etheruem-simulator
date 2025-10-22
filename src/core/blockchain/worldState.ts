@@ -26,6 +26,9 @@ export class WorldState {
   private processTransaction(transaction: EthereumTransaction): void {
     const { from, to, value } = transaction;
     
+    // Check if this is a coinbase transaction (block reward)
+    const isCoinbase = from === SimulatorConfig.REWARDER_NODE_ID;
+    
     // Create recipient account if it doesn't exist
     if (!this.accounts[to]) {
       this.accounts[to] = {
@@ -35,8 +38,9 @@ export class WorldState {
       };
     }
     
+    // For regular transactions (not coinbase):
     // Update sender: deduct balance, increment nonce
-    if (this.accounts[from]) {
+    if (!isCoinbase && this.accounts[from]) {
       this.accounts[from] = {
         ...this.accounts[from],
         balance: this.accounts[from].balance - value,
@@ -44,7 +48,7 @@ export class WorldState {
       };
     }
     
-    // Update recipient: add balance
+    // Update recipient: add balance (for both coinbase and regular transactions)
     this.accounts[to] = {
       ...this.accounts[to],
       balance: this.accounts[to].balance + value
