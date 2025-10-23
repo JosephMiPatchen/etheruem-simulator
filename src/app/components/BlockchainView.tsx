@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Block, Account } from '../../types/types';
+import { ReceiptsDatabase } from '../../types/receipt';
 import { calculateBlockHeaderHash } from '../../core/validation/blockValidator';
 import { isHashBelowCeiling } from '../../utils/cryptoUtils';
 import { SimulatorConfig } from '../../config/config';
@@ -12,9 +13,10 @@ import './BlockchainView.css';
 interface BlockchainViewProps {
   blocks: Block[];
   worldState?: Record<string, Account>; // Optional world state for smart contract display
+  receipts?: ReceiptsDatabase; // Optional receipts database
 }
 
-const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState }) => {
+const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, receipts }) => {
   const [selectedBlock, setSelectedBlock] = useState<Block | null>(null);
   const [copied, setCopied] = useState(false);
   const { forkStartHeight } = useSimulatorContext();
@@ -153,9 +155,21 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState }) =
               <div className="transactions-container">
                 <h3>Transactions ({selectedBlock.transactions.length})</h3>
                 
-                {selectedBlock.transactions.map((tx, index) => (
-                  <TransactionView key={index} transaction={tx} worldState={worldState} />
-                ))}
+                {selectedBlock.transactions.map((tx, index) => {
+                  // Look up receipt for this transaction
+                  const receipt = receipts && selectedBlock.hash && receipts[selectedBlock.hash] 
+                    ? receipts[selectedBlock.hash][tx.txid] 
+                    : undefined;
+                  
+                  return (
+                    <TransactionView 
+                      key={index} 
+                      transaction={tx} 
+                      worldState={worldState}
+                      receipt={receipt}
+                    />
+                  );
+                })}
               </div>
             </div>
           </div>
