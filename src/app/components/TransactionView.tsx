@@ -40,7 +40,9 @@ const TransactionView: React.FC<TransactionViewProps> = ({ transaction, worldSta
   
   // Get node IDs from addresses for the visualization
   const fromNodeId = isCoinbase ? SimulatorConfig.REWARDER_NODE_ID : (addressToNodeId[transaction.from] || 'Unknown');
-  const toNodeId = isSmartContract ? 'Smart Contract' : (addressToNodeId[transaction.to] || 'Unknown');
+  const toNodeId = isSmartContract ? 'Smart Contract' : 
+                   transaction.to === '0x0' ? 'PROTOCOL' :
+                   (addressToNodeId[transaction.to] || 'Unknown');
   
   // Generate unique IDs for this transaction
   const txId = `tx-${transaction.txid?.substring(0, 6) || Math.random().toString(36).substring(2, 8)}`;
@@ -104,7 +106,16 @@ const TransactionView: React.FC<TransactionViewProps> = ({ transaction, worldSta
                 {toNodeId}
               </button>
             ) : (
-              <div className="node-id">{toNodeId}</div>
+              <div 
+                className="node-id"
+                style={toNodeId === 'PROTOCOL' ? { 
+                  color: '#ff9800', 
+                  fontWeight: 600,
+                  borderColor: '#ff9800'
+                } : {}}
+              >
+                {toNodeId}
+              </div>
             )}
           </div>
         </div>
@@ -150,13 +161,7 @@ const TransactionView: React.FC<TransactionViewProps> = ({ transaction, worldSta
           
           <div className="metadata-item">
             <div className="metadata-label">To Address</div>
-            <div className="metadata-value monospace">
-              {transaction.to === '0x0' ? (
-                <span style={{ color: '#ff9800', fontWeight: 600 }}>PROTOCOL</span>
-              ) : (
-                transaction.to
-              )}
-            </div>
+            <div className="metadata-value monospace">{transaction.to}</div>
           </div>
           
           {!isCoinbase && (
