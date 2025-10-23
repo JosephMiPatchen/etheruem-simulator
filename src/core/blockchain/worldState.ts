@@ -1,5 +1,7 @@
 import { SimulatorConfig } from '../../config/config';
 import { Block, EthereumTransaction, Account } from '../../types/types';
+import { createEPMContract } from '../epm/epmInit';
+import { EPM } from '../epm/EPM';
 
 /**
  * WorldState class for Ethereum account model
@@ -9,10 +11,7 @@ export class WorldState {
   public accounts: Record<string, Account>;
 
   constructor(initialAccounts: Record<string, Account> = {}) {
-    // Deep copy the accounts to avoid reference issues
-    // When validating blocks, we create a temp world state that should not modify the original
-    // Using structuredClone() for a proper deep copy that handles all data types
-    this.accounts = structuredClone(initialAccounts);
+    this.accounts = initialAccounts;
   }
 
   /**
@@ -25,14 +24,75 @@ export class WorldState {
   /**
    * Helper function to process a transaction for WorldState updates
    * Updates sender and recipient account balances and nonces
+   * Also handles EPM contract deployment
    */
   private processTransaction(transaction: EthereumTransaction): void {
-    const { from, to, value } = transaction;
+    const { from, to, value, data } = transaction;
     
     // Check if this is a coinbase transaction (block reward)
     const isCoinbase = from === SimulatorConfig.REWARDER_NODE_ID;
     
-    // Create recipient account if it doesn't exist
+    // Check if this is a paint transaction to EPM contract
+    const isPaintTransaction = to === '0xEPM_PAINT_CONTRACT' && data === 'paint';
+    
+    // Handle paint transactions to EPM contract
+    if (isPaintTransaction && this.accounts[to]) {
+      // Get the block hash from the transaction context
+      // In a real implementation, this would come from the block being processed
+      // For now, we'll use the transaction ID as a proxy for block hash
+      const blockHash = transaction.txid;
+      
+      // Try to execute the paint transaction
+      const result = EPM.executeTransaction(this.accounts[to], transaction, blockHash);
+      
+      if (result.success) {
+        // Transaction succeeded - update the contract account
+        this.accounts[to] = result.account;
+        
+        // Deduct ETH from sender and increment nonce
+        if (this.accounts[from]) {
+          this.accounts[from] = {
+            ...this.accounts[from],
+            balance: this.accounts[from].balance - value,
+            nonce: this.accounts[from].nonce + 1
+          };
+        }
+      } else {
+        // Transaction rejected by contract (e.g., painting complete)
+        // Don't deduct ETH from sender, but still increment nonce
+        if (this.accounts[from]) {
+          this.accounts[from] = {
+            ...this.accounts[from],
+            nonce: this.accounts[from].nonce + 1
+          };
+        }
+      }
+      
+      // Early return - paint transaction processed
+      return;
+    }
+    
+    // Check if this is a contract creation (to address is 0x0)
+    const isContractCreation = to === '0x0';
+    let contractAddress = to;
+    
+    // If creating a contract, generate the contract address
+    if (isContractCreation && data) {
+      // For EPM contracts, use a static well-known address
+      // This makes it easy to send paint transactions to the contract
+      contractAddress = '0xEPM_PAINT_CONTRACT';
+      
+      // Create the EPM contract account
+      const epmAccount = createEPMContract(contractAddress, data);
+      
+      // Add the contract account to world state
+      this.accounts[contractAddress] = epmAccount;
+      
+      // Don't process the rest of the transaction logic for contract creation
+      return;
+    }
+    
+    // Create recipient account if it doesn't exist (for regular transactions)
     if (!this.accounts[to]) {
       this.accounts[to] = {
         address: to,

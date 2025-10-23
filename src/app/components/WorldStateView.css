@@ -369,3 +369,89 @@
   font-size: var(--font-size-sm);
   color: var(--text-secondary);
 }
+
+/* Smart Contract Button */
+.smart-contract-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.smart-contract-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+}
+
+/* Smart Contract Modal */
+.smart-contract-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.smart-contract-modal {
+  background: var(--background-primary);
+  border-radius: var(--border-radius-lg);
+  max-width: 800px;
+  width: 90%;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+}
+
+.smart-contract-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.smart-contract-modal-header h2 {
+  margin: 0;
+  color: white;
+  font-size: 1.5rem;
+}
+
+.smart-contract-modal-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 2rem;
+  cursor: pointer;
+  padding: 0;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.smart-contract-modal-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.smart-contract-modal-content {
+  padding: 2rem;
+  overflow-y: auto;
+  flex: 1;
+}

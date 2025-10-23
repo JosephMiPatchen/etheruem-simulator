@@ -41,7 +41,23 @@ export const createBlockTemplate = (
 export const createGenesisBlock = (minerNodeId: string, minerAddress: string): Block => {
   // Create a coinbase transaction for the genesis block
   const coinbaseTransaction = createCoinbaseTransaction(minerAddress);
-  const transactions = [coinbaseTransaction];
+  
+  // Create a special transaction to deploy the EPM contract
+  // This is a genesis-only transaction that creates the contract account
+  // In Ethereum, sending to 0x0 creates a new contract
+  const epmDeployTransaction: EthereumTransaction = {
+    from: SimulatorConfig.REWARDER_NODE_ID, // System deploys the contract
+    to: '0x0', // Contract creation address
+    value: 0, // No ETH transferred
+    nonce: 0,
+    data: 'hippo.png', // Image filename for the EPM contract
+    publicKey: 'genesis',
+    signature: 'genesis',
+    timestamp: Date.now(),
+    txid: 'genesis-epm-deploy'
+  };
+  
+  const transactions = [coinbaseTransaction, epmDeployTransaction];
   
   const block = createBlockTemplate(null, transactions);
   

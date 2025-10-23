@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Account } from '../../types/types';
 import Select from 'react-select';
 import { useSimulatorContext } from '../contexts/SimulatorContext';
+import EPMDisplay from './EPMDisplay';
 import './WorldStateView.css';
 
 // Icons for copy buttons
@@ -36,6 +37,7 @@ const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, allNodeIds 
   const [currentPage, setCurrentPage] = useState(1);
   const [copiedItem, setCopiedItem] = useState<string | null>(null);
   const [copiedAll, setCopiedAll] = useState(false);
+  const [selectedContract, setSelectedContract] = useState<Account | null>(null);
   const itemsPerPage = 10;
 
   // Extract unique node IDs from the world state using address mapping
@@ -152,8 +154,9 @@ const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, allNodeIds 
   };
 
   return (
-    <div className="utxo-view">
-      <div className="utxo-header-actions">
+    <>
+      <div className="utxo-view">
+        <div className="utxo-header-actions">
         <div className="utxo-title-container">
           <h3 className="utxo-title">World State</h3>
           <div className="utxo-stats">
@@ -214,23 +217,41 @@ const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, allNodeIds 
 
       <div className="utxo-list">
         {currentAccounts.length > 0 ? (
-          currentAccounts.map(({ address, account, nodeId: accountNodeId }) => (
-            <div key={address} className="utxo-item">
-              <div className="utxo-id" title={address}>{formatAddress(address)}</div>
-              <div className="utxo-node">{accountNodeId}</div>
-              <div className="utxo-value">{account.balance.toFixed(2)} ETH</div>
-              <div className="utxo-address">{account.nonce}</div>
-              <div className="utxo-actions">
-                <button 
-                  className="copy-button" 
-                  onClick={() => copyToClipboard(address, account)}
-                  title="Copy account data as JSON"
-                >
-                  {copiedItem === address ? <CheckIcon /> : <CopyIcon />}
-                </button>
+          currentAccounts.map(({ address, account, nodeId: accountNodeId }) => {
+            // Check if this is a smart contract (has code field)
+            const isSmartContract = account.code && account.code.length > 0;
+            const displayNodeId = isSmartContract ? 'Smart Contract' : accountNodeId;
+            
+            return (
+              <div key={address} className="utxo-item">
+                <div className="utxo-id" title={address}>{formatAddress(address)}</div>
+                <div className="utxo-node">
+                  {isSmartContract ? (
+                    <button 
+                      className="smart-contract-button"
+                      onClick={() => setSelectedContract(account)}
+                      title="View Smart Contract"
+                    >
+                      {displayNodeId}
+                    </button>
+                  ) : (
+                    displayNodeId
+                  )}
+                </div>
+                <div className="utxo-value">{account.balance.toFixed(2)} ETH</div>
+                <div className="utxo-address">{account.nonce}</div>
+                <div className="utxo-actions">
+                  <button 
+                    className="copy-button" 
+                    onClick={() => copyToClipboard(address, account)}
+                    title="Copy account data as JSON"
+                  >
+                    {copiedItem === address ? <CheckIcon /> : <CopyIcon />}
+                  </button>
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         ) : (
           <div className="utxo-empty">
             {selectedNodes.length > 0 
@@ -262,7 +283,28 @@ const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, allNodeIds 
           </button>
         </div>
       )}
-    </div>
+      </div>
+      
+      {/* Smart Contract Modal */}
+      {selectedContract && (
+        <div className="smart-contract-modal-overlay" onClick={() => setSelectedContract(null)}>
+          <div className="smart-contract-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="smart-contract-modal-header">
+              <h2>Smart Contract: {selectedContract.code}</h2>
+              <button 
+                className="smart-contract-modal-close"
+                onClick={() => setSelectedContract(null)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="smart-contract-modal-content">
+              <EPMDisplay account={selectedContract} />
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
