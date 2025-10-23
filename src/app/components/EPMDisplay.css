@@ -1,0 +1,16 @@
+.epm-display {
+  display: inline-block;
+}
+
+.epm-canvas {
+  display: block;
+  max-width: 500px;
+  height: auto;
+  border: 2px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+}
+
+.epm-display-error {
+  color: var(--text-error);
+  padding: 1rem;
+}

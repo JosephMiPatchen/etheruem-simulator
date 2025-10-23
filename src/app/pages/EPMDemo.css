@@ -1,0 +1,30 @@
+/* EPM Demo Page Styles */
+
+.epm-demo-page {
+  padding: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.epm-demo-page h1 {
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.epm-demo-page p {
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+}
+
+.epm-stats {
+  margin-top: 2rem;
+  padding: 1rem;
+  background: var(--background-secondary);
+  border-radius: var(--border-radius-md);
+}
+
+.epm-stats p {
+  margin: 0.5rem 0;
+  color: var(--text-primary);
+}
