@@ -342,8 +342,10 @@ const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, receipts, a
             </div>
             <div className="smart-contract-modal-content receipts-content">
               <div className="receipts-info">
-                <p>Ethereum-style transaction receipts stored in chaindata.</p>
-                <p>Total Blocks: {Object.keys(receipts).length}</p>
+                <p><strong>Transaction Receipts</strong> - Results of all executed transactions</p>
+                <p>Each receipt shows: transaction hash, status (1=success, 0=reverted), gas used, sender, recipient, and revert reason (if failed).</p>
+                <p>Total Blocks with Receipts: <strong>{Object.keys(receipts).length}</strong></p>
+                <p>Total Transactions: <strong>{Object.values(receipts).reduce((sum: number, block: any) => sum + Object.keys(block).length, 0)}</strong></p>
               </div>
               <div className="receipts-data">
                 <pre>{JSON.stringify(receipts, null, 2)}</pre>
