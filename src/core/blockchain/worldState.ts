@@ -299,12 +299,22 @@ export class WorldState {
    * This is used when switching to a new chain
    */
   static fromBlocks(blocks: Block[]): WorldState {
-    // Extract all transactions from blocks
-    // TODO: Need to update Block type to support EthereumTransaction
-    const transactions = blocks.flatMap(block => 
-      block.transactions as unknown as EthereumTransaction[] // Temporary cast until Block type is updated
-    );
-    return WorldState.fromTransactions(transactions);
+    const worldState = new WorldState();
+    
+    // Process each block's transactions with block context for receipt creation
+    for (const block of blocks) {
+      const transactions = block.transactions as unknown as EthereumTransaction[];
+      for (let i = 0; i < transactions.length; i++) {
+        worldState.updateWithTransaction(
+          transactions[i],
+          block.hash,
+          block.header.height,
+          i
+        );
+      }
+    }
+    
+    return worldState;
   }
 
   /**
