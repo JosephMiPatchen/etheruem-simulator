@@ -212,6 +212,8 @@ const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, allNodeIds 
         <div className="utxo-node-header">Node ID</div>
         <div className="utxo-value-header">Balance</div>
         <div className="utxo-address-header">Nonce</div>
+        <div className="utxo-code-header">Code</div>
+        <div className="utxo-storage-header">Storage</div>
         <div className="utxo-actions-header">Actions</div>
       </div>
 
@@ -240,6 +242,12 @@ const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, allNodeIds 
                 </div>
                 <div className="utxo-value">{account.balance.toFixed(2)} ETH</div>
                 <div className="utxo-address">{account.nonce}</div>
+                <div className="utxo-code" title={account.code || 'None'}>
+                  {account.code || '-'}
+                </div>
+                <div className="utxo-storage" title={account.storage ? 'Has storage' : 'None'}>
+                  {account.storage ? '✓' : '-'}
+                </div>
                 <div className="utxo-actions">
                   <button 
                     className="copy-button" 

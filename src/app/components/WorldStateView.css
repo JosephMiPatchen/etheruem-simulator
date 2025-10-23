@@ -239,7 +239,7 @@
 /* UTXO header styling */
 .utxo-header {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 2fr 60px;
+  grid-template-columns: 2fr 1.5fr 1fr 0.8fr 1.2fr 1.2fr 60px;
   gap: var(--spacing-sm);
   padding: var(--spacing-sm);
   background-color: var(--overlay-background);
@@ -267,7 +267,7 @@
 
 .utxo-item {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 2fr 60px;
+  grid-template-columns: 2fr 1.5fr 1fr 0.8fr 1.2fr 1.2fr 60px;
   gap: var(--spacing-sm);
   padding: var(--spacing-sm);
   border-bottom: 1px solid var(--border-color);

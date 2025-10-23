@@ -2,11 +2,14 @@ import { Block, EthereumTransaction, PeerInfoMap, BlockHeader } from '../../type
 import { SimulatorConfig } from '../../config/config';
 import { 
   createCoinbaseTransaction, 
-  createPeerPaymentTransactions 
+  createPeerPaymentTransactions,
+  createSignatureInput
 } from '../blockchain/transaction';
 import { calculateBlockHeaderHash } from '../validation/blockValidator';
-import { isHashBelowCeiling, sha256Hash } from '../../utils/cryptoUtils';
+import { isHashBelowCeiling, sha256Hash, generateSignature as cryptoGenerateSignature } from '../../utils/cryptoUtils';
 import { Node } from '../node';
+import { sha256 } from '@noble/hashes/sha256';
+import { bytesToHex } from '@noble/hashes/utils';
 
 /**
  * Miner class responsible for creating and mining new blocks
@@ -102,7 +105,70 @@ export class Miner {
     // Add all peer payment transactions to the block
     transactions.push(...peerPayments);
     
+    // After peer payments, create a paint transaction with remaining ETH (truncated to integer)
+    const paintTransaction = await this.createPaintTransaction(minerNonce + peerPayments.length);
+    if (paintTransaction) {
+      transactions.push(paintTransaction);
+    }
+    
     return transactions;
+  }
+  
+  /**
+   * Creates a paint transaction to send remaining ETH (truncated to integer) to EPM contract
+   * @param nonce The nonce to use for this transaction
+   * @returns Paint transaction or null if insufficient balance
+   */
+  private async createPaintTransaction(nonce: number): Promise<EthereumTransaction | null> {
+    // Get miner's current account state
+    const worldState = this.node.getWorldState();
+    const minerAccount = worldState[this.node.getAddress()];
+    
+    if (!minerAccount) return null;
+    
+    // Calculate ETH to send (truncate to integer)
+    const ethToSend = Math.floor(minerAccount.balance);
+    
+    // Only send if we have at least 1 ETH
+    if (ethToSend < 1) return null;
+    
+    const timestamp = Date.now();
+    
+    // Calculate txid (hash of transaction data)
+    const txString = JSON.stringify({ 
+      from: this.node.getAddress(), 
+      to: '0xEPM_PAINT_CONTRACT', 
+      value: ethToSend, 
+      nonce, 
+      timestamp,
+      data: 'paint'
+    });
+    const txid = bytesToHex(sha256(new TextEncoder().encode(txString)));
+    
+    // Create signature input (just the txid)
+    const signatureInput = createSignatureInput({ txid });
+    
+    // Generate signature
+    let signature;
+    try {
+      signature = await cryptoGenerateSignature(signatureInput, this.node.getPrivateKey());
+    } catch (error) {
+      console.error('Error generating signature for paint transaction:', error);
+      signature = `error-${timestamp}`;
+    }
+    
+    // Build complete paint transaction
+    return {
+      from: this.node.getAddress(),
+      to: '0xEPM_PAINT_CONTRACT',
+      value: ethToSend,
+      nonce,
+      data: 'paint',
+      publicKey: this.node.getPublicKey(),
+      signature,
+      timestamp,
+      txid
+    };
   }
   
   /**
