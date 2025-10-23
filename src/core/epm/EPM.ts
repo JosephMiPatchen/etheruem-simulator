@@ -53,6 +53,12 @@ export interface EPMStorage {
     [PaintColor.YELLOW]: number;
   };
   
+  // Track which addresses painted each color and how many pixels
+  // Format: { "blue": { "0xAddress1": 50, "0xAddress2": 30 }, ... }
+  colorPainters: {
+    [color: string]: { [address: string]: number };
+  };
+  
   // Total pixels in the image
   totalPixels: number;
   
@@ -121,6 +127,12 @@ export class EPM {
         [PaintColor.RED]: 0,
         [PaintColor.YELLOW]: 0
       },
+      colorPainters: {
+        'blue': {},
+        'green': {},
+        'red': {},
+        'yellow': {}
+      },
       totalPixels,
       width,
       height,
@@ -135,13 +147,15 @@ export class EPM {
    * @param value - ETH amount sent (determines % of pixels to paint)
    * @param data - Transaction data containing color choice
    * @param blockHash - Block hash for deterministic randomness
+   * @param painterAddress - Address of the painter (for tracking)
    * @returns Paint result and updated storage
    */
   static paint(
     storage: EPMStorage,
     value: number,
     data: string,
-    blockHash: string
+    blockHash: string,
+    painterAddress: string
   ): { result: PaintResult; newStorage: EPMStorage } {
     // Parse transaction data
     let paintData: PaintTransactionData;
@@ -240,6 +254,12 @@ export class EPM {
       ...storage,
       pixels: storage.pixels.map(row => [...row]),
       colorCounts: { ...storage.colorCounts },
+      colorPainters: {
+        'blue': { ...storage.colorPainters['blue'] },
+        'green': { ...storage.colorPainters['green'] },
+        'red': { ...storage.colorPainters['red'] },
+        'yellow': { ...storage.colorPainters['yellow'] }
+      },
       balance: storage.balance + value
     };
     
@@ -257,6 +277,13 @@ export class EPM {
     
     // Update color count
     newStorage.colorCounts[colorId] += actualPixelsToPaint;
+    
+    // Track which address painted these pixels
+    const colorName = paintData.color; // 'blue', 'green', 'red', or 'yellow'
+    if (!newStorage.colorPainters[colorName][painterAddress]) {
+      newStorage.colorPainters[colorName][painterAddress] = 0;
+    }
+    newStorage.colorPainters[colorName][painterAddress] += actualPixelsToPaint;
     
     return {
       result: {
@@ -327,8 +354,7 @@ export class EPM {
   static executeTransaction(
     account: Account,
     transaction: EthereumTransaction,
-    blockHash: string,
-    worldState?: { [address: string]: Account }
+    blockHash: string
   ): { success: boolean; account: Account; error?: string; winnerReward?: { address: string; amount: number } } {
     // Validate account has EPM storage
     if (!account.storage || !account.storage.pixels) {
@@ -353,7 +379,8 @@ export class EPM {
       account.storage as EPMStorage,
       transaction.value,
       transaction.data,
-      blockHash
+      blockHash,
+      transaction.from  // Track who painted these pixels
     );
     
     if (!result.success) {
@@ -382,33 +409,17 @@ export class EPM {
       // Determine winner (color with most pixels)
       const winner = this.getWinner(newStorage);
       
-      if (winner && worldState) {
-        // Find the address that paints the winning color
-        // Each node paints a specific color, so we need to find which address
-        // has been painting this winning color
+      if (winner) {
+        // Find the address that painted the most pixels of the winning color
+        // Look in colorPainters storage to find who painted the most
+        const painters = newStorage.colorPainters[winner.color];
         let winnerAddress: string | null = null;
+        let maxPixelsPainted = 0;
         
-        // Look through all addresses to find one that paints the winning color
-        for (const [address] of Object.entries(worldState)) {
-          // Skip the contract itself
-          if (address === '0xEPM_PAINT_CONTRACT') continue;
-          
-          // Check recent transactions from this address to see what color they paint
-          // For now, we'll use a simpler approach: map color to node name
-          // Blue node paints blue, Green node paints green, etc.
-          const nodeId = address.split('_')[0]; // Extract node name from address
-          
-          // Map node names to colors (matches our nodeColorUtils)
-          const nodeColorMap: { [key: string]: string } = {
-            'Blue': 'blue',
-            'Green': 'green',
-            'Red': 'red',
-            'Yellow': 'yellow'
-          };
-          
-          if (nodeColorMap[nodeId] === winner.color) {
+        for (const [address, pixelCount] of Object.entries(painters)) {
+          if (pixelCount > maxPixelsPainted) {
+            maxPixelsPainted = pixelCount;
             winnerAddress = address;
-            break;
           }
         }
         

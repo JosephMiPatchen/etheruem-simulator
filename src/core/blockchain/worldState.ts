@@ -57,8 +57,7 @@ export class WorldState {
       console.log(`Contract balance before: ${this.accounts[to].balance}`);
       
       // Try to execute the paint transaction
-      // Pass worldState so EPM can find the correct winner address by color
-      const result = EPM.executeTransaction(this.accounts[to], transaction, blockHash, this.accounts);
+      const result = EPM.executeTransaction(this.accounts[to], transaction, blockHash);
       
       if (result.success) {
         // Transaction succeeded - update the contract account
