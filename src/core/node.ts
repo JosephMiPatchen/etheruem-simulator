@@ -75,6 +75,7 @@ export class Node {
       nodeId: this.nodeId,
       blockchain: this.blockchain.getBlocks(),
       worldState: this.blockchain.getWorldState(),
+      receipts: this.blockchain.getReceipts(),
       isMining: this.miner.getIsMining(),
       peerIds: Object.keys(this.peers),
       publicKey: this.publicKey,

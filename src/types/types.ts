@@ -59,6 +59,7 @@ export interface NodeState {
   nodeId: string;
   blockchain: Block[];
   worldState: Record<string, Account>;  // Account-based state instead of UTXO
+  receipts?: any;  // Transaction receipts database
   isMining: boolean;
   peerIds: string[];
   publicKey: string;

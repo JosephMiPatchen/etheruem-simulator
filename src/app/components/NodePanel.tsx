@@ -56,6 +56,7 @@ const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [] }) => 
             <div className="modal-content">
               <WorldStateView 
                 worldState={nodeState.worldState || {}} 
+                receipts={nodeState.receipts}
                 allNodeIds={allNodeIds} 
                 nodeId={nodeState.nodeId} 
               />

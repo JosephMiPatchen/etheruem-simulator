@@ -47,6 +47,13 @@ export class Blockchain {
   }
   
   /**
+   * Gets the transaction receipts database
+   */
+  getReceipts(): any {
+    return this.worldState.receipts;
+  }
+  
+  /**
    * Gets the latest block in the chain
    */
   getLatestBlock(): Block {
