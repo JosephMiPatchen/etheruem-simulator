@@ -441,10 +441,12 @@ export class EPM {
         };
         
         // Set contract balance to 0 (all ETH goes to winner)
+        // Increment contract nonce for the internal transfer
         updatedAccount = {
           ...updatedAccount,
           storage: finalStorage,
-          balance: 0
+          balance: 0,
+          nonce: updatedAccount.nonce + 1
         };
         
         // Return winner reward info so WorldState can update winner's balance
