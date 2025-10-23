@@ -3,29 +3,29 @@
  */
 
 // Color names for node IDs (matches paint colors)
-const PHONETIC_WORDS = [
+const NODE_NAMES = [
   'Blue', 'Green', 'Red', 'Yellow'
 ];
 
 /**
- * Generates a random node ID using a military phonetic word
+ * Generates a random node ID using a color name
  */
 export function generateNodeId(): string {
-  // Pick a random word from the phonetic alphabet
-  const randomIndex = Math.floor(Math.random() * PHONETIC_WORDS.length);
-  return PHONETIC_WORDS[randomIndex];
+  // Pick a random color name
+  const randomIndex = Math.floor(Math.random() * NODE_NAMES.length);
+  return NODE_NAMES[randomIndex];
 }
 
 /**
  * Generates an array of unique node IDs
- * @throws Error if count exceeds the number of available phonetic words
+ * @throws Error if count exceeds the number of available node names
  */
 export function generateUniqueNodeIds(count: number): string[] {
-  if (count > PHONETIC_WORDS.length) {
-    throw new Error(`Cannot generate more than ${PHONETIC_WORDS.length} unique node IDs without duplicates`);
+  if (count > NODE_NAMES.length) {
+    throw new Error(`Cannot generate more than ${NODE_NAMES.length} unique node IDs without duplicates`);
   }
   
-  // Simply take the first N words from the phonetic alphabet
-  // This ensures deterministic naming: first node is always Alpha, second is Bravo, etc.
-  return PHONETIC_WORDS.slice(0, count);
+  // Simply take the first N color names
+  // This ensures deterministic naming: first node is Blue, second is Green, etc.
+  return NODE_NAMES.slice(0, count);
 }
