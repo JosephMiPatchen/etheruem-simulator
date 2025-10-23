@@ -229,7 +229,7 @@ const EPMDisplay: React.FC<EPMDisplayProps> = ({ account }) => {
               <span className="stat-label">Blue:</span>
               <span className="stat-value">{bluePercent}%</span>
               {isPaintingComplete && storage.winnerColor === 'blue' && storage.rewardAmount !== undefined && (
-                <span className="reward-badge">+{storage.rewardAmount.toFixed(2)} ETH</span>
+                <span className="reward-badge">🏆 Winner +{storage.rewardAmount.toFixed(2)} ETH</span>
               )}
             </div>
             <div className={`stat-item ${isPaintingComplete && storage.winnerColor === 'green' ? 'winner-row' : ''}`}>
@@ -237,7 +237,7 @@ const EPMDisplay: React.FC<EPMDisplayProps> = ({ account }) => {
               <span className="stat-label">Green:</span>
               <span className="stat-value">{greenPercent}%</span>
               {isPaintingComplete && storage.winnerColor === 'green' && storage.rewardAmount !== undefined && (
-                <span className="reward-badge">+{storage.rewardAmount.toFixed(2)} ETH</span>
+                <span className="reward-badge">🏆 Winner +{storage.rewardAmount.toFixed(2)} ETH</span>
               )}
             </div>
             <div className={`stat-item ${isPaintingComplete && storage.winnerColor === 'red' ? 'winner-row' : ''}`}>
@@ -245,7 +245,7 @@ const EPMDisplay: React.FC<EPMDisplayProps> = ({ account }) => {
               <span className="stat-label">Red:</span>
               <span className="stat-value">{redPercent}%</span>
               {isPaintingComplete && storage.winnerColor === 'red' && storage.rewardAmount !== undefined && (
-                <span className="reward-badge">+{storage.rewardAmount.toFixed(2)} ETH</span>
+                <span className="reward-badge">🏆 Winner +{storage.rewardAmount.toFixed(2)} ETH</span>
               )}
             </div>
             <div className={`stat-item ${isPaintingComplete && storage.winnerColor === 'yellow' ? 'winner-row' : ''}`}>
@@ -253,7 +253,7 @@ const EPMDisplay: React.FC<EPMDisplayProps> = ({ account }) => {
               <span className="stat-label">Yellow:</span>
               <span className="stat-value">{yellowPercent}%</span>
               {isPaintingComplete && storage.winnerColor === 'yellow' && storage.rewardAmount !== undefined && (
-                <span className="reward-badge">+{storage.rewardAmount.toFixed(2)} ETH</span>
+                <span className="reward-badge">🏆 Winner +{storage.rewardAmount.toFixed(2)} ETH</span>
               )}
             </div>
             <div className="stat-item">
