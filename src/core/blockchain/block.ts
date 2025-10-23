@@ -50,7 +50,7 @@ export const createGenesisBlock = (minerNodeId: string, minerAddress: string): B
     to: '0x0', // Contract creation address
     value: 0, // No ETH transferred
     nonce: 0,
-    data: 'hippo.png', // Image filename for the EPM contract
+    data: 'bulbasaur.png', // Image filename for the EPM contract
     publicKey: 'genesis',
     signature: 'genesis',
     timestamp: Date.now(),

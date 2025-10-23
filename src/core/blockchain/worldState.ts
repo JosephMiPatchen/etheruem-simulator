@@ -2,6 +2,7 @@ import { SimulatorConfig } from '../../config/config';
 import { Block, EthereumTransaction, Account } from '../../types/types';
 import { createEPMContract } from '../epm/epmInit';
 import { EPM } from '../epm/EPM';
+import { ReceiptsDatabase, TransactionReceipt } from '../../types/receipt';
 
 /**
  * WorldState class for Ethereum account model
@@ -9,11 +10,13 @@ import { EPM } from '../epm/EPM';
  */
 export class WorldState {
   public accounts: Record<string, Account>;
+  public receipts: ReceiptsDatabase;  // Chaindata: transaction receipts
 
   constructor(initialAccounts: Record<string, Account> = {}) {
     // Deep copy the accounts to avoid reference issues
     // When validating blocks, we create a temp world state that should not modify the original
     this.accounts = structuredClone(initialAccounts);
+    this.receipts = {};  // Initialize empty receipts database
   }
 
   /**
@@ -24,11 +27,53 @@ export class WorldState {
   }
 
   /**
+   * Creates a transaction receipt and stores it in the receipts database
+   */
+  private createReceipt(
+    transaction: EthereumTransaction,
+    blockHash: string,
+    blockNumber: number,
+    txIndex: number,
+    status: 0 | 1,
+    gasUsed: number,
+    cumulativeGasUsed: number,
+    contractAddress: string | null = null,
+    revertReason?: string
+  ): void {
+    const receipt: TransactionReceipt = {
+      transactionHash: transaction.txid,
+      transactionIndex: txIndex,
+      blockHash: blockHash,
+      blockNumber: blockNumber,
+      from: transaction.from,
+      to: transaction.to === '0x0' ? null : transaction.to,
+      status: status,
+      gasUsed: gasUsed,
+      cumulativeGasUsed: cumulativeGasUsed,
+      contractAddress: contractAddress,
+      logs: [], // Empty for now
+      revertReason: revertReason
+    };
+
+    // Store receipt in receipts database
+    if (!this.receipts[blockHash]) {
+      this.receipts[blockHash] = {};
+    }
+    this.receipts[blockHash][transaction.txid] = receipt;
+  }
+
+  /**
    * Helper function to process a transaction for WorldState updates
    * Updates sender and recipient account balances and nonces
-   * Also handles EPM contract deployment
+   * Also handles EPM contract deployment and creates transaction receipts
    */
-  private processTransaction(transaction: EthereumTransaction): void {
+  private processTransaction(
+    transaction: EthereumTransaction, 
+    blockHash?: string, 
+    blockNumber?: number, 
+    txIndex?: number,
+    cumulativeGasUsed?: number
+  ): { gasUsed: number; status: 0 | 1; revertReason?: string } {
     const { from, to, value, data } = transaction;
     
     // Check if this is a coinbase transaction (block reward)
@@ -48,16 +93,15 @@ export class WorldState {
     
     // Handle paint transactions to EPM contract
     if (isPaintTransaction && this.accounts[to]) {
-      // Get the block hash from the transaction context
-      // In a real implementation, this would come from the block being processed
-      // For now, we'll use the transaction ID as a proxy for block hash
-      const blockHash = transaction.txid;
-      
       console.log(`Processing paint transaction: ${value} ETH from ${from} to ${to}`);
       console.log(`Contract balance before: ${this.accounts[to].balance}`);
       
       // Try to execute the paint transaction
-      const result = EPM.executeTransaction(this.accounts[to], transaction, blockHash);
+      // Use transaction ID as block hash if not provided
+      const txBlockHash = blockHash || transaction.txid;
+      const result = EPM.executeTransaction(this.accounts[to], transaction, txBlockHash);
+      
+      const gasUsed = 21000; // Simplified gas for now
       
       if (result.success) {
         // Transaction succeeded - update the contract account
@@ -85,6 +129,22 @@ export class WorldState {
             };
           }
         }
+        
+        // Create success receipt (only if block context available)
+        if (blockHash && blockNumber !== undefined && txIndex !== undefined && cumulativeGasUsed !== undefined) {
+          this.createReceipt(
+            transaction,
+            blockHash,
+            blockNumber,
+            txIndex,
+            1, // success
+            gasUsed,
+            cumulativeGasUsed + gasUsed,
+            null
+          );
+        }
+        
+        return { gasUsed, status: 1 };
       } else {
         // Transaction rejected by contract (e.g., painting complete)
         // Don't deduct ETH from sender, but still increment nonce
@@ -95,10 +155,24 @@ export class WorldState {
             nonce: this.accounts[from].nonce + 1
           };
         }
+        
+        // Create failure receipt (only if block context available)
+        if (blockHash && blockNumber !== undefined && txIndex !== undefined && cumulativeGasUsed !== undefined) {
+          this.createReceipt(
+            transaction,
+            blockHash,
+            blockNumber,
+            txIndex,
+            0, // failure
+            gasUsed,
+            cumulativeGasUsed + gasUsed,
+            null,
+            result.error
+          );
+        }
+        
+        return { gasUsed, status: 0, revertReason: result.error };
       }
-      
-      // Early return - paint transaction processed
-      return;
     }
     
     // Check if this is a contract creation (to address is 0x0)
@@ -117,8 +191,23 @@ export class WorldState {
       // Add the contract account to world state
       this.accounts[contractAddress] = epmAccount;
       
-      // Don't process the rest of the transaction logic for contract creation
-      return;
+      const gasUsed = 53000; // Contract creation gas
+      
+      // Create success receipt for contract creation (only if block context available)
+      if (blockHash && blockNumber !== undefined && txIndex !== undefined && cumulativeGasUsed !== undefined) {
+        this.createReceipt(
+          transaction,
+          blockHash,
+          blockNumber,
+          txIndex,
+          1, // success
+          gasUsed,
+          cumulativeGasUsed + gasUsed,
+          contractAddress // Contract address created
+        );
+      }
+      
+      return { gasUsed, status: 1 };
     }
     
     // Create recipient account if it doesn't exist (for regular transactions)
@@ -145,6 +234,24 @@ export class WorldState {
       ...this.accounts[to],
       balance: this.accounts[to].balance + value
     };
+    
+    const gasUsed = 21000; // Standard transfer gas
+    
+    // Create success receipt for regular transfer (only if block context available)
+    if (blockHash && blockNumber !== undefined && txIndex !== undefined && cumulativeGasUsed !== undefined) {
+      this.createReceipt(
+        transaction,
+        blockHash,
+        blockNumber,
+        txIndex,
+        1, // success
+        gasUsed,
+        cumulativeGasUsed + gasUsed,
+        null
+      );
+    }
+    
+    return { gasUsed, status: 1 };
   }
 
   /**
