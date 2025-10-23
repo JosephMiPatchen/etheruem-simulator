@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Account } from '../../types/types';
+import { ReceiptsDatabase } from '../../types/receipt';
 import Select from 'react-select';
 import { useSimulatorContext } from '../contexts/SimulatorContext';
 import EPMDisplay from './EPMDisplay';
@@ -21,6 +22,7 @@ const CheckIcon = () => (
 
 interface WorldStateViewProps {
   worldState: Record<string, Account>; // Address -> Account mapping
+  receipts?: ReceiptsDatabase; // Optional receipts database
   allNodeIds?: string[];
   nodeId?: string; // Current node ID for which the modal is opened
 }
@@ -31,13 +33,14 @@ interface NodeOption {
   label: string;
 }
 
-const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, allNodeIds = [], nodeId }) => {
+const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, receipts, allNodeIds = [], nodeId }) => {
   const { addressToNodeId } = useSimulatorContext();
   const [selectedNodes, setSelectedNodes] = useState<NodeOption[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [copiedItem, setCopiedItem] = useState<string | null>(null);
   const [copiedAll, setCopiedAll] = useState(false);
   const [selectedContract, setSelectedContract] = useState<Account | null>(null);
+  const [showReceipts, setShowReceipts] = useState(false);
   const itemsPerPage = 10;
 
   // Extract unique node IDs from the world state using address mapping
@@ -170,13 +173,24 @@ const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, allNodeIds 
             )}
           </div>
         </div>
-        <button 
-          className="copy-all-button" 
-          onClick={copyAllToClipboard}
-          title="Copy entire UTXO set as JSON"
-        >
-          {copiedAll ? <span className="copied-text"><CheckIcon /> Copied!</span> : <span><CopyIcon /> Copy All</span>}
-        </button>
+        <div className="header-buttons">
+          {receipts && (
+            <button 
+              className="view-receipts-button" 
+              onClick={() => setShowReceipts(true)}
+              title="View transaction receipts"
+            >
+              📋 View Receipts
+            </button>
+          )}
+          <button 
+            className="copy-all-button" 
+            onClick={copyAllToClipboard}
+            title="Copy entire UTXO set as JSON"
+          >
+            {copiedAll ? <span className="copied-text"><CheckIcon /> Copied!</span> : <span><CopyIcon /> Copy All</span>}
+          </button>
+        </div>
       </div>
       <div className="utxo-filters">
         <div className="utxo-filter utxo-filter-full">
@@ -308,6 +322,32 @@ const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, allNodeIds 
             </div>
             <div className="smart-contract-modal-content">
               <EPMDisplay account={selectedContract} />
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Receipts Modal */}
+      {showReceipts && receipts && (
+        <div className="smart-contract-modal-overlay" onClick={() => setShowReceipts(false)}>
+          <div className="smart-contract-modal receipts-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="smart-contract-modal-header">
+              <h2>📋 Transaction Receipts (Chaindata)</h2>
+              <button 
+                className="smart-contract-modal-close"
+                onClick={() => setShowReceipts(false)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="smart-contract-modal-content receipts-content">
+              <div className="receipts-info">
+                <p>Ethereum-style transaction receipts stored in chaindata.</p>
+                <p>Total Blocks: {Object.keys(receipts).length}</p>
+              </div>
+              <div className="receipts-data">
+                <pre>{JSON.stringify(receipts, null, 2)}</pre>
+              </div>
             </div>
           </div>
         </div>
