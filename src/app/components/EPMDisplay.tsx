@@ -167,22 +167,6 @@ const EPMDisplay: React.FC<EPMDisplayProps> = ({ account }) => {
   // Determine if painting is complete
   const isPaintingComplete = unpaintedCount === 0;
   
-  // Find winner (color with most pixels)
-  let winner: string | null = null;
-  if (isPaintingComplete) {
-    const maxCount = Math.max(
-      colorCounts[PaintColor.BLUE],
-      colorCounts[PaintColor.GREEN],
-      colorCounts[PaintColor.RED],
-      colorCounts[PaintColor.YELLOW]
-    );
-    
-    if (colorCounts[PaintColor.BLUE] === maxCount) winner = 'Blue 🔵';
-    else if (colorCounts[PaintColor.GREEN] === maxCount) winner = 'Green 🟢';
-    else if (colorCounts[PaintColor.RED] === maxCount) winner = 'Red 🔴';
-    else if (colorCounts[PaintColor.YELLOW] === maxCount) winner = 'Yellow 🟡';
-  }
-  
   return (
     <div className="epm-display">
       <div className="epm-content">
@@ -240,25 +224,37 @@ const EPMDisplay: React.FC<EPMDisplayProps> = ({ account }) => {
           
           {/* Color percentages */}
           <div className="epm-color-stats">
-            <div className="stat-item">
+            <div className={`stat-item ${isPaintingComplete && storage.winnerColor === 'blue' ? 'winner-row' : ''}`}>
               <span className="stat-color" style={{ backgroundColor: '#3b82f6' }}>🔵</span>
               <span className="stat-label">Blue:</span>
               <span className="stat-value">{bluePercent}%</span>
+              {isPaintingComplete && storage.winnerColor === 'blue' && storage.rewardAmount !== undefined && (
+                <span className="reward-badge">+{storage.rewardAmount.toFixed(2)} ETH</span>
+              )}
             </div>
-            <div className="stat-item">
+            <div className={`stat-item ${isPaintingComplete && storage.winnerColor === 'green' ? 'winner-row' : ''}`}>
               <span className="stat-color" style={{ backgroundColor: '#22c55e' }}>🟢</span>
               <span className="stat-label">Green:</span>
               <span className="stat-value">{greenPercent}%</span>
+              {isPaintingComplete && storage.winnerColor === 'green' && storage.rewardAmount !== undefined && (
+                <span className="reward-badge">+{storage.rewardAmount.toFixed(2)} ETH</span>
+              )}
             </div>
-            <div className="stat-item">
+            <div className={`stat-item ${isPaintingComplete && storage.winnerColor === 'red' ? 'winner-row' : ''}`}>
               <span className="stat-color" style={{ backgroundColor: '#ef4444' }}>🔴</span>
               <span className="stat-label">Red:</span>
               <span className="stat-value">{redPercent}%</span>
+              {isPaintingComplete && storage.winnerColor === 'red' && storage.rewardAmount !== undefined && (
+                <span className="reward-badge">+{storage.rewardAmount.toFixed(2)} ETH</span>
+              )}
             </div>
-            <div className="stat-item">
+            <div className={`stat-item ${isPaintingComplete && storage.winnerColor === 'yellow' ? 'winner-row' : ''}`}>
               <span className="stat-color" style={{ backgroundColor: '#eab308' }}>🟡</span>
               <span className="stat-label">Yellow:</span>
               <span className="stat-value">{yellowPercent}%</span>
+              {isPaintingComplete && storage.winnerColor === 'yellow' && storage.rewardAmount !== undefined && (
+                <span className="reward-badge">+{storage.rewardAmount.toFixed(2)} ETH</span>
+              )}
             </div>
             <div className="stat-item">
               <span className="stat-color" style={{ backgroundColor: '#6b7280' }}>⚪</span>
@@ -266,22 +262,6 @@ const EPMDisplay: React.FC<EPMDisplayProps> = ({ account }) => {
               <span className="stat-value">{unpaintedPercent}%</span>
             </div>
           </div>
-          
-          {/* Winner display */}
-          {isPaintingComplete && winner && (
-            <div className="epm-winner">
-              <h2>🎉 Winner: {winner}! 🎉</h2>
-              <p>Painting Complete!</p>
-              {storage.rewardAmount !== undefined && (
-                <div className="winner-reward">
-                  <p className="reward-amount">💰 Reward: {storage.rewardAmount.toFixed(4)} ETH</p>
-                  {storage.winnerAddress && (
-                    <p className="reward-address">Winner: {storage.winnerAddress.substring(0, 16)}...</p>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </div>
     </div>

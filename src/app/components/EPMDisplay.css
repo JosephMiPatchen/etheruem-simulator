@@ -84,6 +84,12 @@
   background: rgba(255, 255, 255, 0.08);
 }
 
+.stat-item.winner-row {
+  background: linear-gradient(90deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.05) 100%);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.2);
+}
+
 .stat-color {
   font-size: 1.2rem;
   width: 24px;
@@ -104,6 +110,17 @@
   color: white;
   font-weight: 600;
   font-size: 1.1rem;
+}
+
+.reward-badge {
+  color: #ffd700;
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-left: 0.5rem;
+  padding: 0.2rem 0.5rem;
+  background: rgba(255, 215, 0, 0.15);
+  border-radius: var(--border-radius-sm);
+  white-space: nowrap;
 }
 
 /* Winner Display */
