@@ -1,13 +1,10 @@
 /**
- * Utility for generating memorable node IDs using military phonetic alphabet
+ * Utility for generating memorable node IDs using color names
  */
 
-// NATO phonetic alphabet
+// Color names for node IDs (matches paint colors)
 const PHONETIC_WORDS = [
-  'Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo', 'Foxtrot', 'Golf', 'Hotel',
-  'India', 'Juliet', 'Kilo', 'Lima', 'Mike', 'November', 'Oscar', 'Papa',
-  'Quebec', 'Romeo', 'Sierra', 'Tango', 'Uniform', 'Victor', 'Whiskey',
-  'X-ray', 'Yankee', 'Zulu'
+  'Blue', 'Green', 'Red', 'Yellow'
 ];
 
 /**

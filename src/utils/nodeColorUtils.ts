@@ -29,14 +29,10 @@ export const COLOR_CSS: Record<PaintColorName, string> = {
  * Static map of node IDs to paint colors
  */
 const NODE_COLOR_MAP: Record<string, PaintColorName> = {
-  'Alpha': 'blue',
-  'Bravo': 'green',
-  'Charlie': 'red',
-  'Delta': 'yellow',
-  'Echo': 'blue',
-  'Foxtrot': 'green',
-  'Golf': 'red',
-  'Hotel': 'yellow'
+  'Blue': 'blue',
+  'Green': 'green',
+  'Red': 'red',
+  'Yellow': 'yellow'
 };
 
 /**
