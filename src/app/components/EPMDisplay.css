@@ -7,16 +7,16 @@
 
 .epm-content {
   display: flex;
-  gap: 2rem;
+  gap: 1.5rem;
   align-items: flex-start;
-  min-height: 400px;
+  min-height: 300px;
   width: 100%;
 }
 
 .epm-canvas-container {
   flex: 1 1 auto;
-  min-width: 300px;
-  max-width: 600px;
+  min-width: 250px;
+  max-width: 500px;
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -36,25 +36,25 @@
 }
 
 .epm-stats {
-  flex: 0 0 350px;
+  flex: 0 0 320px;
   background: rgba(30, 30, 35, 0.8);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-md);
-  padding: 1.5rem;
+  padding: 1rem;
   backdrop-filter: blur(10px);
 }
 
 .epm-stats h3 {
-  margin: 0 0 1rem 0;
+  margin: 0 0 0.75rem 0;
   color: var(--primary-color);
-  font-size: 1.2rem;
+  font-size: 1.1rem;
 }
 
 /* Pie Chart */
 .epm-pie-chart {
-  width: 200px;
-  height: 200px;
-  margin: 0 auto 1.5rem;
+  width: 160px;
+  height: 160px;
+  margin: 0 auto 1rem;
 }
 
 .pie-svg {
@@ -67,14 +67,14 @@
 .epm-color-stats {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .stat-item {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem;
+  padding: 0.4rem 0.6rem;
   background: rgba(255, 255, 255, 0.05);
   border-radius: var(--border-radius-sm);
   transition: background 0.2s;
@@ -108,54 +108,54 @@
 
 /* Winner Display */
 .epm-winner {
-  margin-top: 1.5rem;
-  padding: 2rem;
+  margin-top: 1rem;
+  padding: 1.25rem;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: var(--border-radius-lg);
+  border-radius: var(--border-radius-md);
   text-align: center;
   animation: winnerPulse 2s ease-in-out infinite;
   box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
 }
 
 .epm-winner h2 {
-  margin: 0 0 0.75rem 0;
+  margin: 0 0 0.5rem 0;
   color: white;
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   font-weight: 800;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   letter-spacing: 0.5px;
 }
 
 .epm-winner > p {
-  margin: 0 0 1rem 0;
+  margin: 0 0 0.75rem 0;
   color: rgba(255, 255, 255, 0.95);
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
 }
 
 .winner-reward {
-  margin-top: 1.25rem;
-  padding: 1.25rem;
+  margin-top: 0.75rem;
+  padding: 1rem;
   background: rgba(255, 255, 255, 0.1);
   border-radius: var(--border-radius-md);
   backdrop-filter: blur(10px);
 }
 
 .reward-amount {
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   font-weight: 800;
   color: #ffd700;
-  margin: 0 0 0.75rem 0;
+  margin: 0 0 0.5rem 0;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   letter-spacing: 0.5px;
 }
 
 .reward-address {
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   font-family: monospace;
   color: rgba(255, 255, 255, 0.9);
   background: rgba(0, 0, 0, 0.2);
-  padding: 0.5rem 1rem;
+  padding: 0.4rem 0.75rem;
   border-radius: var(--border-radius-sm);
   margin: 0;
   word-break: break-all;
