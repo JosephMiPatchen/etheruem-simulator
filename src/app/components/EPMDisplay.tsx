@@ -208,6 +208,16 @@ const EPMDisplay: React.FC<EPMDisplayProps> = ({ account }) => {
                   <strong>Dimensions:</strong> {storage.width} x {storage.height}
                 </div>
                 <div className="storage-section">
+                  <strong>Pixels Array:</strong>
+                  <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.7)' }}>
+                    {storage.height} x {storage.width} grid stored on-chain
+                  </div>
+                  <pre style={{ maxHeight: '150px', overflow: 'auto' }}>
+                    {JSON.stringify(storage.pixels.slice(0, 10), null, 2)}
+                    {storage.pixels.length > 10 && '\n... (showing first 10 rows)'}
+                  </pre>
+                </div>
+                <div className="storage-section">
                   <strong>Color Counts:</strong>
                   <pre>{JSON.stringify(storage.colorCounts, null, 2)}</pre>
                 </div>
