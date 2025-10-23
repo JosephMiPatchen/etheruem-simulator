@@ -150,7 +150,13 @@ const TransactionView: React.FC<TransactionViewProps> = ({ transaction, worldSta
           
           <div className="metadata-item">
             <div className="metadata-label">To Address</div>
-            <div className="metadata-value monospace">{transaction.to}</div>
+            <div className="metadata-value monospace">
+              {transaction.to === '0x0' ? (
+                <span style={{ color: '#ff9800', fontWeight: 600 }}>PROTOCOL</span>
+              ) : (
+                transaction.to
+              )}
+            </div>
           </div>
           
           {!isCoinbase && (
