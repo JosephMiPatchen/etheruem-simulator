@@ -1,33 +1,38 @@
 .epm-display {
   width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
 }
 
 .epm-content {
   display: flex;
   gap: 2rem;
   align-items: flex-start;
+  min-height: 400px;
 }
 
 .epm-canvas-container {
-  flex: 1;
-  min-width: 0;
+  flex: 1 1 auto;
+  min-width: 300px;
+  max-width: 600px;
 }
 
 .epm-canvas {
   display: block;
   width: 100%;
-  max-width: 500px;
   height: auto;
   border: 2px solid var(--border-color);
   border-radius: var(--border-radius-sm);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .epm-stats {
-  flex: 0 0 300px;
-  background: rgba(30, 30, 35, 0.5);
+  flex: 0 0 350px;
+  background: rgba(30, 30, 35, 0.8);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-md);
   padding: 1.5rem;
+  backdrop-filter: blur(10px);
 }
 
 .epm-stats h3 {
@@ -95,43 +100,56 @@
 /* Winner Display */
 .epm-winner {
   margin-top: 1.5rem;
-  padding: 1.5rem;
+  padding: 2rem;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: var(--border-radius-md);
+  border-radius: var(--border-radius-lg);
   text-align: center;
   animation: winnerPulse 2s ease-in-out infinite;
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
 }
 
 .epm-winner h2 {
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.75rem 0;
   color: white;
-  font-size: 1.5rem;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  font-size: 1.8rem;
+  font-weight: 800;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  letter-spacing: 0.5px;
 }
 
-.epm-winner p {
-  margin: 0;
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 1rem;
+.epm-winner > p {
+  margin: 0 0 1rem 0;
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 1.1rem;
+  font-weight: 600;
 }
 
 .winner-reward {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  margin-top: 1.25rem;
+  padding: 1.25rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--border-radius-md);
+  backdrop-filter: blur(10px);
 }
 
 .reward-amount {
-  font-size: 1.2rem;
-  font-weight: 700;
+  font-size: 1.5rem;
+  font-weight: 800;
   color: #ffd700;
-  margin-bottom: 0.5rem;
+  margin: 0 0 0.75rem 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  letter-spacing: 0.5px;
 }
 
 .reward-address {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-family: monospace;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0.5rem 1rem;
+  border-radius: var(--border-radius-sm);
+  margin: 0;
+  word-break: break-all;
 }
 
 @keyframes winnerPulse {
@@ -151,13 +169,33 @@
 }
 
 /* Responsive layout */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .epm-content {
     flex-direction: column;
+  }
+  
+  .epm-canvas-container {
+    max-width: 100%;
   }
   
   .epm-stats {
     flex: 1 1 auto;
     width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .epm-stats {
+    max-width: 100%;
+  }
+  
+  .epm-winner h2 {
+    font-size: 1.5rem;
+  }
+  
+  .reward-amount {
+    font-size: 1.3rem;
   }
 }
