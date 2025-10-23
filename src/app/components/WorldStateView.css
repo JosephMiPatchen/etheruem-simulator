@@ -407,8 +407,8 @@
   background: var(--background-primary);
   background-color: #1a1a1a; /* Fallback solid background */
   border-radius: var(--border-radius-lg);
-  max-width: 800px;
-  width: 90%;
+  max-width: 1200px;
+  width: 95%;
   max-height: 90vh;
   overflow: hidden;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
