@@ -39,10 +39,17 @@ interface EPMDisplayProps {
  */
 const EPMDisplay: React.FC<EPMDisplayProps> = ({ account }) => {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
+  const [layoutReady, setLayoutReady] = React.useState(false);
   const storage = account.storage as EPMStorage;
   
+  // Force layout recalculation after mount to fix initial render glitch
   React.useEffect(() => {
-    if (!canvasRef.current || !storage) return;
+    const timer = setTimeout(() => setLayoutReady(true), 10);
+    return () => clearTimeout(timer);
+  }, []);
+  
+  React.useEffect(() => {
+    if (!canvasRef.current || !storage || !layoutReady) return;
     
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
@@ -139,7 +146,7 @@ const EPMDisplay: React.FC<EPMDisplayProps> = ({ account }) => {
         }
       }
     };
-  }, [storage]);
+  }, [storage, layoutReady]);
   
   if (!storage) {
     return <div className="epm-display-error">No EPM contract storage found</div>;
