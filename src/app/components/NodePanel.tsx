@@ -40,7 +40,7 @@ const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [] }) => 
         </div>
       </div>
       
-      <BlockchainView blocks={nodeState.blockchain} />
+      <BlockchainView blocks={nodeState.blockchain} worldState={nodeState.worldState} />
       
       {/* UTXO Modal */}
       {showUtxoModal && (

@@ -1,18 +1,21 @@
 import React, { useState } from 'react';
-import { EthereumTransaction } from '../../types/types';
+import { EthereumTransaction, Account } from '../../types/types';
 import { SimulatorConfig } from '../../config/config';
 import { useSimulatorContext } from '../contexts/SimulatorContext';
 import Xarrow from 'react-xarrows';
 import { MdContentCopy, MdCheck } from 'react-icons/md';
+import EPMDisplay from './EPMDisplay';
 import './TransactionView.css';
 
 interface TransactionViewProps {
   transaction: EthereumTransaction;
+  worldState?: Record<string, Account>; // Optional world state for smart contract display
 }
 
-const TransactionView: React.FC<TransactionViewProps> = ({ transaction }) => {
+const TransactionView: React.FC<TransactionViewProps> = ({ transaction, worldState }) => {
   const { addressToNodeId } = useSimulatorContext();
   const [copied, setCopied] = useState(false);
+  const [selectedContract, setSelectedContract] = useState<Account | null>(null);
   
   const copyToClipboard = async (text: string) => {
     try {
@@ -27,9 +30,17 @@ const TransactionView: React.FC<TransactionViewProps> = ({ transaction }) => {
   // Check if this is a coinbase transaction
   const isCoinbase = transaction.from === SimulatorConfig.REWARDER_NODE_ID;
   
+  // Check if this is a smart contract transaction
+  const isSmartContract = transaction.to === '0xEPM_PAINT_CONTRACT';
+  
+  // Get the contract account if this is a smart contract transaction
+  const contractAccount = isSmartContract && worldState 
+    ? worldState[transaction.to]
+    : null;
+  
   // Get node IDs from addresses for the visualization
   const fromNodeId = isCoinbase ? SimulatorConfig.REWARDER_NODE_ID : (addressToNodeId[transaction.from] || 'Unknown');
-  const toNodeId = addressToNodeId[transaction.to] || 'Unknown';
+  const toNodeId = isSmartContract ? 'Smart Contract' : (addressToNodeId[transaction.to] || 'Unknown');
   
   // Generate unique IDs for this transaction
   const txId = `tx-${transaction.txid?.substring(0, 6) || Math.random().toString(36).substring(2, 8)}`;
@@ -84,7 +95,17 @@ const TransactionView: React.FC<TransactionViewProps> = ({ transaction }) => {
         <div className="tx-outputs-section">
           <div className="section-title">To</div>
           <div className="tx-output" id={`${txId}-to`}>
-            <div className="node-id">{toNodeId}</div>
+            {isSmartContract && contractAccount ? (
+              <button 
+                className="smart-contract-button"
+                onClick={() => setSelectedContract(contractAccount)}
+                title="View Smart Contract"
+              >
+                {toNodeId}
+              </button>
+            ) : (
+              <div className="node-id">{toNodeId}</div>
+            )}
           </div>
         </div>
         
@@ -140,6 +161,26 @@ const TransactionView: React.FC<TransactionViewProps> = ({ transaction }) => {
           )}
         </div>
       </div>
+
+      {/* Smart Contract Modal */}
+      {selectedContract && (
+        <div className="smart-contract-modal-overlay" onClick={() => setSelectedContract(null)}>
+          <div className="smart-contract-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="smart-contract-modal-header">
+              <h2>Smart Contract</h2>
+              <button 
+                className="smart-contract-modal-close"
+                onClick={() => setSelectedContract(null)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="smart-contract-modal-content">
+              <EPMDisplay account={selectedContract} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
