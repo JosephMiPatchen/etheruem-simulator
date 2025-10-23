@@ -327,7 +327,8 @@ export class EPM {
   static executeTransaction(
     account: Account,
     transaction: EthereumTransaction,
-    blockHash: string
+    blockHash: string,
+    worldState?: { [address: string]: Account }
   ): { success: boolean; account: Account; error?: string; winnerReward?: { address: string; amount: number } } {
     // Validate account has EPM storage
     if (!account.storage || !account.storage.pixels) {
@@ -381,10 +382,42 @@ export class EPM {
       // Determine winner (color with most pixels)
       const winner = this.getWinner(newStorage);
       
-      if (winner) {
-        // Find the address that painted this winning color
-        // The sender of this transaction is the one who completed the painting
-        const winnerAddress = transaction.from;
+      if (winner && worldState) {
+        // Find the address that paints the winning color
+        // Each node paints a specific color, so we need to find which address
+        // has been painting this winning color
+        let winnerAddress: string | null = null;
+        
+        // Look through all addresses to find one that paints the winning color
+        for (const [address] of Object.entries(worldState)) {
+          // Skip the contract itself
+          if (address === '0xEPM_PAINT_CONTRACT') continue;
+          
+          // Check recent transactions from this address to see what color they paint
+          // For now, we'll use a simpler approach: map color to node name
+          // Blue node paints blue, Green node paints green, etc.
+          const nodeId = address.split('_')[0]; // Extract node name from address
+          
+          // Map node names to colors (matches our nodeColorUtils)
+          const nodeColorMap: { [key: string]: string } = {
+            'Blue': 'blue',
+            'Green': 'green',
+            'Red': 'red',
+            'Yellow': 'yellow'
+          };
+          
+          if (nodeColorMap[nodeId] === winner.color) {
+            winnerAddress = address;
+            break;
+          }
+        }
+        
+        // Fallback: if we can't find the winner address, use transaction sender
+        if (!winnerAddress) {
+          winnerAddress = transaction.from;
+          console.warn(`Could not find address for winning color ${winner.color}, using transaction sender`);
+        }
+        
         const rewardAmount = updatedAccount.balance;
         
         // Update storage with winner information
