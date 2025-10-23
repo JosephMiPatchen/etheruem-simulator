@@ -11,9 +11,10 @@
  */
 export interface EthereumTransaction {
   from: string;           // Sender address (sha256 of publicKey)
-  to: string;             // Recipient address (sha256 of publicKey)
+  to: string;             // Recipient address (sha256 of publicKey or contract address)
   value: number;          // Amount to transfer (decimal ETH)
   nonce: number;          // Sender's transaction count (prevents replay attacks)
+  data?: string;          // Contract call data
   publicKey: string;      // Sender's public key (proves from address)
   signature: string;      // Signature of transaction data (proves authorization)
   timestamp: number;      // When transaction was created
@@ -22,11 +23,17 @@ export interface EthereumTransaction {
 
 /**
  * Account in the world state
+ * Can be either an Externally Owned Account (EOA) or a Contract Account
  */
 export interface Account {
-  address: string;        // Account address (sha256 of publicKey)
+  address: string;        // Account address (sha256 of publicKey or contract address)
   balance: number;        // Account balance (decimal ETH)
   nonce: number;          // Transaction count (for replay protection)
+  
+  // Smart contract fields (undefined for EOAs)
+  code?: string;          // Contract bytecode/code (if this is a contract account)
+  storage?: any;          // Contract storage (arbitrary data structure)
+  codeHash?: string;      // Hash of the contract code (for verification)
 }
 
 // ============================================================================
