@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { EthereumTransaction, Account } from '../../types/types';
+import { TransactionReceipt } from '../../types/receipt';
 import { SimulatorConfig } from '../../config/config';
 import { useSimulatorContext } from '../contexts/SimulatorContext';
 import Xarrow from 'react-xarrows';
@@ -10,9 +11,10 @@ import './TransactionView.css';
 interface TransactionViewProps {
   transaction: EthereumTransaction;
   worldState?: Record<string, Account>; // Optional world state for smart contract display
+  receipt?: TransactionReceipt; // Optional receipt to show status
 }
 
-const TransactionView: React.FC<TransactionViewProps> = ({ transaction, worldState }) => {
+const TransactionView: React.FC<TransactionViewProps> = ({ transaction, worldState, receipt }) => {
   const { addressToNodeId } = useSimulatorContext();
   const [copied, setCopied] = useState(false);
   const [selectedContract, setSelectedContract] = useState<Account | null>(null);
@@ -148,6 +150,17 @@ const TransactionView: React.FC<TransactionViewProps> = ({ transaction, worldSta
 
       {/* Transaction Details - Elegant and Subtle */}
       <div className="transaction-metadata">
+        {/* Reverted Status Banner */}
+        {receipt && receipt.status === 0 && (
+          <div className="reverted-banner">
+            <span className="reverted-icon">⚠️</span>
+            <span className="reverted-text">Transaction Reverted</span>
+            {receipt.revertReason && (
+              <span className="revert-reason">: {receipt.revertReason}</span>
+            )}
+          </div>
+        )}
+        
         <div className="metadata-grid">
           <div className="metadata-item">
             <div className="metadata-label">Transaction ID</div>
