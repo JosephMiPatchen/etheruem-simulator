@@ -126,10 +126,19 @@ export class Miner {
     
     if (!minerAccount) return null;
     
-    // Calculate ETH to send (truncate to integer)
-    const ethToSend = Math.floor(minerAccount.balance);
+    // Calculate how much ETH will be spent on peer payments
+    const validPeers = this.getValidPeers();
+    const peerCount = Object.keys(validPeers).length;
+    const redistributionAmount = SimulatorConfig.BLOCK_REWARD * SimulatorConfig.REDISTRIBUTION_RATIO;
+    const totalPeerPayments = peerCount > 0 ? redistributionAmount : 0;
     
-    // Only send if we have at least 1 ETH
+    // Calculate remaining balance after peer payments
+    const balanceAfterPeerPayments = minerAccount.balance - totalPeerPayments;
+    
+    // Calculate ETH to send (truncate to integer)
+    const ethToSend = Math.floor(balanceAfterPeerPayments);
+    
+    // Only send if we have at least 1 ETH after peer payments
     if (ethToSend < 1) return null;
     
     const timestamp = Date.now();
