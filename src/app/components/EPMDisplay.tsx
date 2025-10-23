@@ -40,6 +40,7 @@ interface EPMDisplayProps {
 const EPMDisplay: React.FC<EPMDisplayProps> = ({ account }) => {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const [layoutReady, setLayoutReady] = React.useState(false);
+  const [showStorage, setShowStorage] = React.useState(false);
   const storage = account.storage as EPMStorage;
   
   // Force layout recalculation after mount to fix initial render glitch
@@ -175,8 +176,66 @@ const EPMDisplay: React.FC<EPMDisplayProps> = ({ account }) => {
         </div>
         
         <div className="epm-stats">
-          <h3>Paint Statistics</h3>
+          <div className="stats-header">
+            <h3>Paint Statistics</h3>
+            <button 
+              className="storage-toggle-btn"
+              onClick={() => setShowStorage(!showStorage)}
+              title="View full contract storage"
+            >
+              {showStorage ? '📊 Stats' : '🔍 Storage'}
+            </button>
+          </div>
           
+          {showStorage ? (
+            /* Full Storage View */
+            <div className="storage-view">
+              <h4>Contract Storage</h4>
+              <div className="storage-content">
+                <div className="storage-section">
+                  <strong>Balance:</strong> {account.balance} ETH
+                </div>
+                <div className="storage-section">
+                  <strong>Nonce:</strong> {account.nonce}
+                </div>
+                <div className="storage-section">
+                  <strong>Code:</strong> {account.code || 'N/A'}
+                </div>
+                <div className="storage-section">
+                  <strong>Total Pixels:</strong> {storage.totalPixels}
+                </div>
+                <div className="storage-section">
+                  <strong>Dimensions:</strong> {storage.width} x {storage.height}
+                </div>
+                <div className="storage-section">
+                  <strong>Color Counts:</strong>
+                  <pre>{JSON.stringify(storage.colorCounts, null, 2)}</pre>
+                </div>
+                <div className="storage-section">
+                  <strong>Color Painters:</strong>
+                  <pre>{JSON.stringify(storage.colorPainters, null, 2)}</pre>
+                </div>
+                {storage.winnerColor && (
+                  <>
+                    <div className="storage-section">
+                      <strong>Winner Color:</strong> {storage.winnerColor}
+                    </div>
+                    <div className="storage-section">
+                      <strong>Winner Address:</strong> {storage.winnerAddress}
+                    </div>
+                    <div className="storage-section">
+                      <strong>Reward Amount:</strong> {storage.rewardAmount} ETH
+                    </div>
+                    <div className="storage-section">
+                      <strong>Completed At Block:</strong> {storage.completedAtBlock?.substring(0, 16)}...
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          ) : (
+            /* Stats View */
+            <>
           {/* Pie Chart */}
           <div className="epm-pie-chart">
             <svg viewBox="0 0 100 100" className="pie-svg">
@@ -262,6 +321,8 @@ const EPMDisplay: React.FC<EPMDisplayProps> = ({ account }) => {
               <span className="stat-value">{unpaintedPercent}%</span>
             </div>
           </div>
+          </>
+          )}
         </div>
       </div>
     </div>

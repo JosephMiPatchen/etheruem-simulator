@@ -44,10 +44,72 @@
   backdrop-filter: blur(10px);
 }
 
+.stats-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
 .epm-stats h3 {
-  margin: 0 0 0.75rem 0;
+  margin: 0;
   color: var(--primary-color);
   font-size: 1.1rem;
+}
+
+.storage-toggle-btn {
+  background: rgba(102, 126, 234, 0.2);
+  border: 1px solid rgba(102, 126, 234, 0.4);
+  color: var(--primary-color);
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.storage-toggle-btn:hover {
+  background: rgba(102, 126, 234, 0.3);
+  border-color: rgba(102, 126, 234, 0.6);
+}
+
+.storage-view {
+  margin-top: 0.5rem;
+}
+
+.storage-view h4 {
+  margin: 0 0 0.75rem 0;
+  color: var(--primary-color);
+  font-size: 1rem;
+}
+
+.storage-content {
+  max-height: 400px;
+  overflow-y: auto;
+  font-size: 0.85rem;
+}
+
+.storage-section {
+  margin-bottom: 0.75rem;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--border-radius-sm);
+}
+
+.storage-section strong {
+  color: var(--primary-color);
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.storage-section pre {
+  margin: 0.25rem 0 0 0;
+  padding: 0.5rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: var(--border-radius-sm);
+  overflow-x: auto;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 /* Pie Chart */
