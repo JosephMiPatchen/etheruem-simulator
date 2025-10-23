@@ -15,8 +15,10 @@ import React, { useState, useEffect } from 'react';
 import { Account } from '../../types/types';
 import { EPM } from '../../core/epm/EPM';
 import EPMDisplay from '../components/EPMDisplay';
-import pokemonImage from '../../core/epm/image_to_paint.png';
 import './EPMDemo.css';
+
+// Import Pokemon image for loading pixel data
+import hippoImage from '../../core/epm/pokemon/hippo.png';
 
 /**
  * Demo wrapper that creates an EPM contract and executes mock transactions
@@ -27,7 +29,7 @@ const EPMDemo: React.FC = () => {
   useEffect(() => {
     // Load the Pokemon PNG and extract pixel data
     const img = new Image();
-    img.src = pokemonImage;
+    img.src = hippoImage;
     
     img.onload = () => {
       // Create canvas to read pixel data
@@ -69,20 +71,19 @@ const EPMDemo: React.FC = () => {
       const initialStorage = EPM.initialize(grid);
       
       // Create EPM contract account
+      // The 'code' field stores the Pokemon image filename
       let account: Account = {
         address: '0xEPM_CONTRACT',
         balance: 0,
         nonce: 0,
-        code: 'EPM',
+        code: 'hippo.png', // Specifies which Pokemon to paint
         storage: initialStorage,
         codeHash: 'epm-v1'
       };
       
       // Mock transactions to paint the Pokemon
       const transactions = [
-        { color: 'blue', eth: 5, blockHash: '0xfff' },
-        { color: 'yellow', eth: 21, blockHash: '0xabc123' },
-        { color: 'red', eth: 21, blockHash: '0xdef456' },
+        { color: 'red', eth: 50, blockHash: '0xfff' },
       ];
       
       // Execute each transaction using the clean EPM interface

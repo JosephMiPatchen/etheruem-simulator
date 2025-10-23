@@ -14,8 +14,21 @@
 import React from 'react';
 import { Account } from '../../types/types';
 import { EPMStorage, PaintColor } from '../../core/epm/EPM';
-import pokemonImage from '../../core/epm/image_to_paint.png';
 import './EPMDisplay.css';
+
+// Import all Pokemon images
+import bulbasaur from '../../core/epm/pokemon/bulbasaur.png';
+import charmander from '../../core/epm/pokemon/charmander.png';
+import hippo from '../../core/epm/pokemon/hippo.png';
+import squirtle from '../../core/epm/pokemon/squirtle.png';
+
+// Map image filenames to imported images
+const POKEMON_IMAGES: Record<string, string> = {
+  'bulbasaur.png': bulbasaur,
+  'charmander.png': charmander,
+  'hippo.png': hippo,
+  'squirtle.png': squirtle,
+};
 
 interface EPMDisplayProps {
   account: Account;
@@ -35,9 +48,18 @@ const EPMDisplay: React.FC<EPMDisplayProps> = ({ account }) => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     
+    // Get the Pokemon image based on the account's code field
+    const imageFilename = account.code || 'squirtle.png'; // Default to squirtle
+    const imageSrc = POKEMON_IMAGES[imageFilename];
+    
+    if (!imageSrc) {
+      console.error(`Unknown Pokemon image: ${imageFilename}`);
+      return;
+    }
+    
     // Load the Pokemon PNG
     const img = new Image();
-    img.src = pokemonImage;
+    img.src = imageSrc;
     
     img.onload = () => {
       // Set canvas size to match image
