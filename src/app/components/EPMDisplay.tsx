@@ -265,6 +265,14 @@ const EPMDisplay: React.FC<EPMDisplayProps> = ({ account }) => {
             <div className="epm-winner">
               <h2>🎉 Winner: {winner}! 🎉</h2>
               <p>Painting Complete!</p>
+              {storage.rewardAmount !== undefined && (
+                <div className="winner-reward">
+                  <p className="reward-amount">💰 Reward: {storage.rewardAmount.toFixed(4)} ETH</p>
+                  {storage.winnerAddress && (
+                    <p className="reward-address">Winner: {storage.winnerAddress.substring(0, 16)}...</p>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>

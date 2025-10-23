@@ -72,6 +72,19 @@ export class WorldState {
             nonce: this.accounts[from].nonce + 1
           };
         }
+        
+        // If painting completed, credit winner with reward
+        if (result.winnerReward) {
+          const { address, amount } = result.winnerReward;
+          console.log(`💰 Crediting winner ${address} with ${amount} ETH reward!`);
+          
+          if (this.accounts[address]) {
+            this.accounts[address] = {
+              ...this.accounts[address],
+              balance: this.accounts[address].balance + amount
+            };
+          }
+        }
       } else {
         // Transaction rejected by contract (e.g., painting complete)
         // Don't deduct ETH from sender, but still increment nonce

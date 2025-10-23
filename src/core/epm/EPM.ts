@@ -62,6 +62,12 @@ export interface EPMStorage {
   
   // Contract balance (total ETH sent to contract)
   balance: number;
+  
+  // Winner information (set when painting is complete)
+  winnerColor?: string;           // Winning color name
+  winnerAddress?: string;          // Address that received the reward
+  rewardAmount?: number;           // Amount of ETH rewarded to winner
+  completedAtBlock?: string;       // Block hash when painting completed
 }
 
 /**
@@ -322,7 +328,7 @@ export class EPM {
     account: Account,
     transaction: EthereumTransaction,
     blockHash: string
-  ): { success: boolean; account: Account; error?: string } {
+  ): { success: boolean; account: Account; error?: string; winnerReward?: { address: string; amount: number } } {
     // Validate account has EPM storage
     if (!account.storage || !account.storage.pixels) {
       return {
@@ -358,15 +364,59 @@ export class EPM {
     }
     
     // Update account with new storage and balance
-    const updatedAccount = {
+    let updatedAccount = {
       ...account,
       storage: newStorage,
       balance: account.balance + transaction.value
     };
     
+    // Check if painting is now complete (all pixels painted)
+    const totalPainted = Object.values(newStorage.colorCounts).reduce((sum, count) => sum + count, 0);
+    const isPaintingComplete = totalPainted === newStorage.totalPixels;
+    
+    let winnerReward: { address: string; amount: number } | undefined;
+    
+    // If painting just completed, reward the winner
+    if (isPaintingComplete && !newStorage.winnerAddress) {
+      // Determine winner (color with most pixels)
+      const winner = this.getWinner(newStorage);
+      
+      if (winner) {
+        // Find the address that painted this winning color
+        // The sender of this transaction is the one who completed the painting
+        const winnerAddress = transaction.from;
+        const rewardAmount = updatedAccount.balance;
+        
+        // Update storage with winner information
+        const finalStorage = {
+          ...newStorage,
+          winnerColor: winner.color,
+          winnerAddress: winnerAddress,
+          rewardAmount: rewardAmount,
+          completedAtBlock: blockHash
+        };
+        
+        // Set contract balance to 0 (all ETH goes to winner)
+        updatedAccount = {
+          ...updatedAccount,
+          storage: finalStorage,
+          balance: 0
+        };
+        
+        // Return winner reward info so WorldState can update winner's balance
+        winnerReward = {
+          address: winnerAddress,
+          amount: rewardAmount
+        };
+        
+        console.log(`🎉 Painting complete! Winner: ${winner.color} (${winnerAddress}). Reward: ${rewardAmount} ETH`);
+      }
+    }
+    
     return {
       success: true,
-      account: updatedAccount
+      account: updatedAccount,
+      winnerReward
     };
   }
   

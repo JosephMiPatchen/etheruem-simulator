@@ -115,6 +115,25 @@
   font-size: 1rem;
 }
 
+.winner-reward {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.reward-amount {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #ffd700;
+  margin-bottom: 0.5rem;
+}
+
+.reward-address {
+  font-size: 0.9rem;
+  font-family: monospace;
+  color: rgba(255, 255, 255, 0.8);
+}
+
 @keyframes winnerPulse {
   0%, 100% {
     transform: scale(1);
