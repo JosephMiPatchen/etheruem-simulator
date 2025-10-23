@@ -108,8 +108,14 @@ export class Blockchain {
     }
     
     // Update world state with all transactions in the block
-    for (const transaction of block.transactions) {
-      this.worldState.updateWithTransaction(transaction);
+    // Pass block context for receipt creation
+    for (let i = 0; i < block.transactions.length; i++) {
+      this.worldState.updateWithTransaction(
+        block.transactions[i],
+        block.hash,
+        block.header.height,
+        i
+      );
     }
     
     // Add the block to the chain

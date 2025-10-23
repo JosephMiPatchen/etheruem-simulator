@@ -257,8 +257,14 @@ export class WorldState {
   /**
    * Updates the world state with a new transaction
    * Updates account balances and nonces
+   * Optionally creates receipts if block context is provided
    */
-  updateWithTransaction(transaction: EthereumTransaction): boolean {
+  updateWithTransaction(
+    transaction: EthereumTransaction,
+    blockHash?: string,
+    blockNumber?: number,
+    txIndex?: number
+  ): boolean {
     // Validate that sender account exists (unless it's a coinbase transaction)
     const isCoinbase = transaction.from === SimulatorConfig.REWARDER_NODE_ID;
     
@@ -279,8 +285,12 @@ export class WorldState {
       }
     }
     
-    // Process the transaction (update balances and nonces)
-    this.processTransaction(transaction);
+    // Calculate cumulative gas for this transaction
+    // In a real implementation, this would track gas across all txs in the block
+    const cumulativeGasUsed = (txIndex || 0) * 21000;
+    
+    // Process the transaction (update balances and nonces, create receipt if block context provided)
+    this.processTransaction(transaction, blockHash, blockNumber, txIndex, cumulativeGasUsed);
     return true;
   }
 
