@@ -16,21 +16,13 @@ import { EPM } from './EPM';
 function createPixelGridPlaceholder(size: number = 128): number[][] {
   const grid: number[][] = [];
   
-  // Create a simple pattern - a filled circle in the center
-  const centerX = size / 2;
-  const centerY = size / 2;
-  const radius = size / 3;
-  
+  // Create a full rectangle - all pixels are paintable
+  // This allows the entire Pokemon image to be painted
   for (let y = 0; y < size; y++) {
     const row: number[] = [];
     for (let x = 0; x < size; x++) {
-      // Calculate distance from center
-      const dx = x - centerX;
-      const dy = y - centerY;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      
-      // Mark as paintable if within radius
-      row.push(distance <= radius ? 1 : 0);
+      // Mark all pixels as paintable (1)
+      row.push(1);
     }
     grid.push(row);
   }

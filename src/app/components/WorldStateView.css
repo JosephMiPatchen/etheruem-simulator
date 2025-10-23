@@ -405,6 +405,7 @@
 
 .smart-contract-modal {
   background: var(--background-primary);
+  background-color: #1a1a1a; /* Fallback solid background */
   border-radius: var(--border-radius-lg);
   max-width: 800px;
   width: 90%;
@@ -454,4 +455,5 @@
   padding: 2rem;
   overflow-y: auto;
   flex: 1;
+  background-color: #1a1a1a; /* Solid background for content area */
 }
