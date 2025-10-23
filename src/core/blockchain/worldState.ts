@@ -33,7 +33,16 @@ export class WorldState {
     const isCoinbase = from === SimulatorConfig.REWARDER_NODE_ID;
     
     // Check if this is a paint transaction to EPM contract
-    const isPaintTransaction = to === '0xEPM_PAINT_CONTRACT' && data === 'paint';
+    // Paint transactions have JSON data with a color field
+    let isPaintTransaction = false;
+    if (to === '0xEPM_PAINT_CONTRACT' && data) {
+      try {
+        const parsedData = JSON.parse(data);
+        isPaintTransaction = parsedData.color !== undefined;
+      } catch (e) {
+        // Not valid JSON, not a paint transaction
+      }
+    }
     
     // Handle paint transactions to EPM contract
     if (isPaintTransaction && this.accounts[to]) {
@@ -42,12 +51,16 @@ export class WorldState {
       // For now, we'll use the transaction ID as a proxy for block hash
       const blockHash = transaction.txid;
       
+      console.log(`Processing paint transaction: ${value} ETH from ${from} to ${to}`);
+      console.log(`Contract balance before: ${this.accounts[to].balance}`);
+      
       // Try to execute the paint transaction
       const result = EPM.executeTransaction(this.accounts[to], transaction, blockHash);
       
       if (result.success) {
         // Transaction succeeded - update the contract account
         this.accounts[to] = result.account;
+        console.log(`Paint transaction SUCCESS! Contract balance after: ${this.accounts[to].balance}`);
         
         // Deduct ETH from sender and increment nonce
         if (this.accounts[from]) {
@@ -60,6 +73,7 @@ export class WorldState {
       } else {
         // Transaction rejected by contract (e.g., painting complete)
         // Don't deduct ETH from sender, but still increment nonce
+        console.log(`Paint transaction REJECTED: ${result.error}`);
         if (this.accounts[from]) {
           this.accounts[from] = {
             ...this.accounts[from],

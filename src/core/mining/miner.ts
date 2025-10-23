@@ -157,13 +157,17 @@ export class Miner {
       signature = `error-${timestamp}`;
     }
     
-    // Build complete paint transaction
+    // Choose a random color for this paint transaction
+    const colors = ['blue', 'green', 'red', 'yellow'];
+    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+    
+    // Build complete paint transaction with color data
     return {
       from: this.node.getAddress(),
       to: '0xEPM_PAINT_CONTRACT',
       value: ethToSend,
       nonce,
-      data: 'paint',
+      data: JSON.stringify({ color: randomColor }),
       publicKey: this.node.getPublicKey(),
       signature,
       timestamp,
