@@ -135,13 +135,13 @@ export class Miner {
     const timestamp = Date.now();
     
     // Calculate txid (hash of transaction data)
+    // NOTE: Must match validator's calculateTxid - does NOT include data field
     const txString = JSON.stringify({ 
       from: this.node.getAddress(), 
       to: '0xEPM_PAINT_CONTRACT', 
       value: ethToSend, 
       nonce, 
-      timestamp,
-      data: 'paint'
+      timestamp
     });
     const txid = bytesToHex(sha256(new TextEncoder().encode(txString)));
     
