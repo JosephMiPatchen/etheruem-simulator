@@ -1,16 +1,144 @@
 .epm-display {
-  display: inline-block;
+  width: 100%;
+}
+
+.epm-content {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+}
+
+.epm-canvas-container {
+  flex: 1;
+  min-width: 0;
 }
 
 .epm-canvas {
   display: block;
+  width: 100%;
   max-width: 500px;
   height: auto;
   border: 2px solid var(--border-color);
   border-radius: var(--border-radius-sm);
 }
 
+.epm-stats {
+  flex: 0 0 300px;
+  background: rgba(30, 30, 35, 0.5);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: 1.5rem;
+}
+
+.epm-stats h3 {
+  margin: 0 0 1rem 0;
+  color: var(--primary-color);
+  font-size: 1.2rem;
+}
+
+/* Pie Chart */
+.epm-pie-chart {
+  width: 200px;
+  height: 200px;
+  margin: 0 auto 1.5rem;
+}
+
+.pie-svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+}
+
+/* Color Stats */
+.epm-color-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--border-radius-sm);
+  transition: background 0.2s;
+}
+
+.stat-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.stat-color {
+  font-size: 1.2rem;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.stat-label {
+  flex: 1;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+}
+
+.stat-value {
+  color: white;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+/* Winner Display */
+.epm-winner {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: var(--border-radius-md);
+  text-align: center;
+  animation: winnerPulse 2s ease-in-out infinite;
+}
+
+.epm-winner h2 {
+  margin: 0 0 0.5rem 0;
+  color: white;
+  font-size: 1.5rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.epm-winner p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1rem;
+}
+
+@keyframes winnerPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.7);
+  }
+}
+
 .epm-display-error {
   color: var(--text-error);
   padding: 1rem;
+}
+
+/* Responsive layout */
+@media (max-width: 768px) {
+  .epm-content {
+    flex-direction: column;
+  }
+  
+  .epm-stats {
+    flex: 1 1 auto;
+    width: 100%;
+  }
 }

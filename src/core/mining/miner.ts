@@ -10,6 +10,7 @@ import { isHashBelowCeiling, sha256Hash, generateSignature as cryptoGenerateSign
 import { Node } from '../node';
 import { sha256 } from '@noble/hashes/sha256';
 import { bytesToHex } from '@noble/hashes/utils';
+import { getNodePaintColor } from '../../utils/nodeColorUtils';
 
 /**
  * Miner class responsible for creating and mining new blocks
@@ -166,9 +167,10 @@ export class Miner {
       signature = `error-${timestamp}`;
     }
     
-    // Choose a random color for this paint transaction
-    const colors = ['blue', 'green', 'red', 'yellow'];
-    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+    // Choose a deterministic color for this node based on its ID
+    // This ensures each node consistently paints the same color
+    const nodeId = this.node.getNodeId();
+    const nodeColor = getNodePaintColor(nodeId);
     
     // Build complete paint transaction with color data
     return {
@@ -176,7 +178,7 @@ export class Miner {
       to: '0xEPM_PAINT_CONTRACT',
       value: ethToSend,
       nonce,
-      data: JSON.stringify({ color: randomColor }),
+      data: JSON.stringify({ color: nodeColor }),
       publicKey: this.node.getPublicKey(),
       signature,
       timestamp,

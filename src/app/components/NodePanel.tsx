@@ -4,6 +4,7 @@ import BlockchainView from './BlockchainView';
 import WorldStateView from './WorldStateView';
 import NodeToolbar from './NodeToolbar';
 import { useSimulatorContext } from '../contexts/SimulatorContext';
+import { getNodeColorEmoji, getNodeColorCSS } from '../../utils/nodeColorUtils';
 import './NodePanel.css';
 
 interface NodePanelProps {
@@ -29,7 +30,9 @@ const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [] }) => 
       <div className="node-header">
         <div className="node-info">
           <div className="node-id-container">
-            <h2>{nodeState.nodeId}</h2>
+            <h2 style={{ color: getNodeColorCSS(nodeState.nodeId) }}>
+              {nodeState.nodeId} {getNodeColorEmoji(nodeState.nodeId)}
+            </h2>
           </div>
           <NodeToolbar 
             isMining={nodeState.isMining}

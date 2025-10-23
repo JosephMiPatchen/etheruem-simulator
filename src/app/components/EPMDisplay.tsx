@@ -145,9 +145,130 @@ const EPMDisplay: React.FC<EPMDisplayProps> = ({ account }) => {
     return <div className="epm-display-error">No EPM contract storage found</div>;
   }
   
+  // Calculate color statistics at runtime (not stored in contract)
+  const totalPixels = storage.totalPixels;
+  const colorCounts = storage.colorCounts;
+  const unpaintedCount = totalPixels - Object.values(colorCounts).reduce((sum, count) => sum + count, 0);
+  
+  // Calculate percentages
+  const bluePercent = (colorCounts[PaintColor.BLUE] / totalPixels * 100).toFixed(1);
+  const greenPercent = (colorCounts[PaintColor.GREEN] / totalPixels * 100).toFixed(1);
+  const redPercent = (colorCounts[PaintColor.RED] / totalPixels * 100).toFixed(1);
+  const yellowPercent = (colorCounts[PaintColor.YELLOW] / totalPixels * 100).toFixed(1);
+  const unpaintedPercent = (unpaintedCount / totalPixels * 100).toFixed(1);
+  
+  // Determine if painting is complete
+  const isPaintingComplete = unpaintedCount === 0;
+  
+  // Find winner (color with most pixels)
+  let winner: string | null = null;
+  if (isPaintingComplete) {
+    const maxCount = Math.max(
+      colorCounts[PaintColor.BLUE],
+      colorCounts[PaintColor.GREEN],
+      colorCounts[PaintColor.RED],
+      colorCounts[PaintColor.YELLOW]
+    );
+    
+    if (colorCounts[PaintColor.BLUE] === maxCount) winner = 'Blue 🔵';
+    else if (colorCounts[PaintColor.GREEN] === maxCount) winner = 'Green 🟢';
+    else if (colorCounts[PaintColor.RED] === maxCount) winner = 'Red 🔴';
+    else if (colorCounts[PaintColor.YELLOW] === maxCount) winner = 'Yellow 🟡';
+  }
+  
   return (
     <div className="epm-display">
-      <canvas ref={canvasRef} className="epm-canvas" />
+      <div className="epm-content">
+        <div className="epm-canvas-container">
+          <canvas ref={canvasRef} className="epm-canvas" />
+        </div>
+        
+        <div className="epm-stats">
+          <h3>Paint Statistics</h3>
+          
+          {/* Pie Chart */}
+          <div className="epm-pie-chart">
+            <svg viewBox="0 0 100 100" className="pie-svg">
+              {/* Calculate pie slices */}
+              {(() => {
+                let currentAngle = 0;
+                const slices = [];
+                
+                // Helper to create pie slice path
+                const createSlice = (percent: number, color: string) => {
+                  if (percent === 0) return null;
+                  
+                  const startAngle = currentAngle;
+                  const angle = (percent / 100) * 360;
+                  currentAngle += angle;
+                  
+                  const startX = 50 + 50 * Math.cos((startAngle - 90) * Math.PI / 180);
+                  const startY = 50 + 50 * Math.sin((startAngle - 90) * Math.PI / 180);
+                  const endX = 50 + 50 * Math.cos((startAngle + angle - 90) * Math.PI / 180);
+                  const endY = 50 + 50 * Math.sin((startAngle + angle - 90) * Math.PI / 180);
+                  
+                  const largeArc = angle > 180 ? 1 : 0;
+                  
+                  return (
+                    <path
+                      key={color}
+                      d={`M 50 50 L ${startX} ${startY} A 50 50 0 ${largeArc} 1 ${endX} ${endY} Z`}
+                      fill={color}
+                      stroke="white"
+                      strokeWidth="0.5"
+                    />
+                  );
+                };
+                
+                slices.push(createSlice(parseFloat(bluePercent), '#3b82f6'));
+                slices.push(createSlice(parseFloat(greenPercent), '#22c55e'));
+                slices.push(createSlice(parseFloat(redPercent), '#ef4444'));
+                slices.push(createSlice(parseFloat(yellowPercent), '#eab308'));
+                slices.push(createSlice(parseFloat(unpaintedPercent), '#6b7280'));
+                
+                return slices;
+              })()}
+            </svg>
+          </div>
+          
+          {/* Color percentages */}
+          <div className="epm-color-stats">
+            <div className="stat-item">
+              <span className="stat-color" style={{ backgroundColor: '#3b82f6' }}>🔵</span>
+              <span className="stat-label">Blue:</span>
+              <span className="stat-value">{bluePercent}%</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-color" style={{ backgroundColor: '#22c55e' }}>🟢</span>
+              <span className="stat-label">Green:</span>
+              <span className="stat-value">{greenPercent}%</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-color" style={{ backgroundColor: '#ef4444' }}>🔴</span>
+              <span className="stat-label">Red:</span>
+              <span className="stat-value">{redPercent}%</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-color" style={{ backgroundColor: '#eab308' }}>🟡</span>
+              <span className="stat-label">Yellow:</span>
+              <span className="stat-value">{yellowPercent}%</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-color" style={{ backgroundColor: '#6b7280' }}>⚪</span>
+              <span className="stat-label">Unpainted:</span>
+              <span className="stat-value">{unpaintedPercent}%</span>
+            </div>
+          </div>
+          
+          {/* Winner display */}
+          {isPaintingComplete && winner && (
+            <div className="epm-winner">
+              <h2>🎉 Winner: {winner}! 🎉</h2>
+              <p>Painting Complete!</p>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
