@@ -1,6 +1,7 @@
-import { Block, NodeState, PeerInfoMap, Account } from '../types/types';
+import { Block, NodeState, PeerInfoMap, Account, EthereumTransaction } from '../types/types';
 import { Blockchain } from './blockchain/blockchain';
 import { Miner } from './mining/miner';
+import { Mempool } from './mempool/mempool';
 import { generatePrivateKey, derivePublicKey, generateAddress } from '../utils/cryptoUtils';
 
 /**
@@ -11,6 +12,7 @@ export class Node {
   private nodeId: string;
   private blockchain: Blockchain;
   private miner: Miner;
+  private mempool: Mempool;
   private peers: PeerInfoMap = {};
   private shouldBeMining: boolean = false;
   
@@ -33,6 +35,9 @@ export class Node {
     
     // Pass the node's actual address to the blockchain
     this.blockchain = new Blockchain(nodeId, this.address);
+    
+    // Initialize mempool for pending transactions
+    this.mempool = new Mempool();
     
     // Initialize miner with callback for when a block is mined
     // Using .bind(this) ensures the handleMinedBlock method maintains the Node instance context
@@ -101,6 +106,15 @@ export class Node {
   }
   
   /**
+   * Gets transactions from the mempool
+   * @param maxCount Maximum number of transactions to return
+   * @returns Array of transactions from mempool
+   */
+  getMempoolTransactions(maxCount: number): EthereumTransaction[] {
+    return this.mempool.getTransactions(maxCount);
+  }
+  
+  /**
    * Handles a block received from the network
    */
   async receiveBlock(block: Block): Promise<void> {
@@ -114,6 +128,10 @@ export class Node {
     const added = await this.blockchain.addBlock(block);
     
     if (added === true) {
+      // Remove transactions from mempool that were included in this block
+      const txids = block.transactions.map(tx => tx.txid);
+      this.mempool.removeTransactions(txids);
+      
       // Stop mining the current block
       this.miner.stopMining();
       
@@ -139,6 +157,10 @@ export class Node {
     const replaced = await this.blockchain.replaceChain(blocks);
     
     if (replaced === true) {
+      // Remove all transactions from mempool that are now in the new chain
+      const allTxids = blocks.flatMap(block => block.transactions.map(tx => tx.txid));
+      this.mempool.removeTransactions(allTxids);
+      
       // Stop current mining operation if we were mining
       const wasMining = this.miner.isMining;
       this.miner.stopMining();

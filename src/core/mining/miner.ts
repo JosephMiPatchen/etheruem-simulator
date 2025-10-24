@@ -112,6 +112,13 @@ export class Miner {
       transactions.push(paintTransaction);
     }
     
+    // Add transactions from mempool (up to MAX_BLOCK_TRANSACTIONS limit)
+    const remainingSlots = SimulatorConfig.MAX_BLOCK_TRANSACTIONS - transactions.length;
+    if (remainingSlots > 0) {
+      const mempoolTransactions = this.node.getMempoolTransactions(remainingSlots);
+      transactions.push(...mempoolTransactions);
+    }
+    
     return transactions;
   }
   

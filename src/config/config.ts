@@ -16,6 +16,7 @@ export const SimulatorConfig = {
   
   // Transaction parameters
   REDISTRIBUTION_RATIO: 0.5, // Ratio of coins to redistribute (0-1)
+  MAX_BLOCK_TRANSACTIONS: 10, // Maximum number of transactions per block
   
   // Constants
   REWARDER_NODE_ID: "COINBASE-REWARD",
