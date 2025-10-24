@@ -92,12 +92,21 @@ export class Miner {
     // Coinbase transactions don't increment nonce, so we use the miner's current nonce
     const worldState = this.node.getWorldState();
     const minerAccount = worldState[this.node.getAddress()];
-    const minerNonce = minerAccount ? minerAccount.nonce : 0;
+    const baseNonce = minerAccount ? minerAccount.nonce : 0;
+    
+    // IMPORTANT: Add mempool transactions FIRST
+    // This ensures peer payments and paint transactions use nonces that come after mempool transactions
+    const maxMempoolSlots = SimulatorConfig.MAX_BLOCK_TRANSACTIONS - 1 - Object.keys(validPeers).length; // Reserve slots for coinbase, peer payments, and paint tx
+    const mempoolTransactions = this.node.getMempoolTransactions(Math.max(0, maxMempoolSlots));
+    transactions.push(...mempoolTransactions);
+    
+    // Calculate starting nonce for peer payments (after mempool transactions)
+    const peerPaymentStartNonce = baseNonce + mempoolTransactions.length;
     
     // Create peer payment transactions (one per peer)
     const peerPayments = await createPeerPaymentTransactions(
       this.node.getAddress(),
-      minerNonce,
+      peerPaymentStartNonce,
       this.node.getPrivateKey(),
       this.node.getPublicKey(),
       validPeers
@@ -107,16 +116,10 @@ export class Miner {
     transactions.push(...peerPayments);
     
     // After peer payments, create a paint transaction with remaining ETH (truncated to integer)
-    const paintTransaction = await this.createPaintTransaction(minerNonce + peerPayments.length);
+    const paintNonce = peerPaymentStartNonce + peerPayments.length;
+    const paintTransaction = await this.createPaintTransaction(paintNonce);
     if (paintTransaction) {
       transactions.push(paintTransaction);
-    }
-    
-    // Add transactions from mempool (up to MAX_BLOCK_TRANSACTIONS limit)
-    const remainingSlots = SimulatorConfig.MAX_BLOCK_TRANSACTIONS - transactions.length;
-    if (remainingSlots > 0) {
-      const mempoolTransactions = this.node.getMempoolTransactions(remainingSlots);
-      transactions.push(...mempoolTransactions);
     }
     
     return transactions;
