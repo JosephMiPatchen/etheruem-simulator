@@ -40,7 +40,7 @@ const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, receipts, m
   const [currentPage, setCurrentPage] = useState(1);
   const [copiedItem, setCopiedItem] = useState<string | null>(null);
   const [copiedAll, setCopiedAll] = useState(false);
-  const [selectedContract, setSelectedContract] = useState<Account | null>(null);
+  const [selectedContract, setSelectedContract] = useState<{ account: Account; address: string } | null>(null);
   const [showReceipts, setShowReceipts] = useState(false);
   const [showMempool, setShowMempool] = useState(false);
   const itemsPerPage = 10;
@@ -256,7 +256,7 @@ const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, receipts, m
                   {isSmartContract ? (
                     <button 
                       className="smart-contract-button"
-                      onClick={() => setSelectedContract(account)}
+                      onClick={() => setSelectedContract({ account, address })}
                       title="View Smart Contract"
                     >
                       {displayNodeId}
@@ -323,7 +323,12 @@ const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, receipts, m
         <div className="smart-contract-modal-overlay" onClick={() => setSelectedContract(null)}>
           <div className="smart-contract-modal" onClick={(e) => e.stopPropagation()}>
             <div className="smart-contract-modal-header">
-              <h2>Smart Contract: {selectedContract.code}</h2>
+              <h2>
+                Smart Contract 
+                <span style={{ fontSize: '0.8em', color: 'var(--text-secondary)', fontWeight: 'normal', marginLeft: '8px' }}>
+                  {selectedContract.address}
+                </span>
+              </h2>
               <button 
                 className="smart-contract-modal-close"
                 onClick={() => setSelectedContract(null)}
@@ -332,7 +337,7 @@ const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, receipts, m
               </button>
             </div>
             <div className="smart-contract-modal-content">
-              <EPMDisplay account={selectedContract} />
+              <EPMDisplay account={selectedContract.account} />
             </div>
           </div>
         </div>
