@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Account } from '../../types/types';
+import { Account, EthereumTransaction } from '../../types/types';
 import { ReceiptsDatabase } from '../../types/receipt';
 import Select from 'react-select';
 import { useSimulatorContext } from '../contexts/SimulatorContext';
@@ -23,6 +23,7 @@ const CheckIcon = () => (
 interface WorldStateViewProps {
   worldState: Record<string, Account>; // Address -> Account mapping
   receipts?: ReceiptsDatabase; // Optional receipts database
+  mempool?: EthereumTransaction[]; // Optional mempool transactions
   allNodeIds?: string[];
   nodeId?: string; // Current node ID for which the modal is opened
 }
@@ -33,7 +34,7 @@ interface NodeOption {
   label: string;
 }
 
-const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, receipts, allNodeIds = [], nodeId }) => {
+const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, receipts, mempool, allNodeIds = [], nodeId }) => {
   const { addressToNodeId } = useSimulatorContext();
   const [selectedNodes, setSelectedNodes] = useState<NodeOption[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -41,6 +42,7 @@ const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, receipts, a
   const [copiedAll, setCopiedAll] = useState(false);
   const [selectedContract, setSelectedContract] = useState<Account | null>(null);
   const [showReceipts, setShowReceipts] = useState(false);
+  const [showMempool, setShowMempool] = useState(false);
   const itemsPerPage = 10;
 
   // Extract unique node IDs from the world state using address mapping
@@ -174,6 +176,15 @@ const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, receipts, a
           </div>
         </div>
         <div className="header-buttons">
+          {mempool && (
+            <button 
+              className="view-mempool-button" 
+              onClick={() => setShowMempool(true)}
+              title="View pending transactions in mempool"
+            >
+              🔄 View Mempool
+            </button>
+          )}
           {receipts && (
             <button 
               className="view-receipts-button" 
@@ -350,6 +361,36 @@ const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, receipts, a
               <div className="receipts-data">
                 <pre>{JSON.stringify(receipts, null, 2)}</pre>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Mempool Modal */}
+      {showMempool && mempool && (
+        <div className="smart-contract-modal-overlay" onClick={() => setShowMempool(false)}>
+          <div className="smart-contract-modal mempool-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="smart-contract-modal-header">
+              <h2>🔄 Mempool - Pending Transactions</h2>
+              <button 
+                className="smart-contract-modal-close"
+                onClick={() => setShowMempool(false)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="smart-contract-modal-content receipts-content">
+              <div className="receipts-info">
+                <p><strong>Mempool</strong> - Queue of pending transactions waiting to be included in a block</p>
+                <p>These transactions have been broadcast but not yet mined into a block.</p>
+                <p>Total Pending Transactions: <strong>{mempool.length}</strong></p>
+                {mempool.length === 0 && <p><em>Mempool is currently empty</em></p>}
+              </div>
+              {mempool.length > 0 && (
+                <div className="receipts-data">
+                  <pre>{JSON.stringify(mempool, null, 2)}</pre>
+                </div>
+              )}
             </div>
           </div>
         </div>

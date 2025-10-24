@@ -60,6 +60,7 @@ export interface NodeState {
   blockchain: Block[];
   worldState: Record<string, Account>;  // Account-based state instead of UTXO
   receipts?: any;  // Transaction receipts database
+  mempool?: EthereumTransaction[];  // Pending transactions in mempool
   isMining: boolean;
   peerIds: string[];
   publicKey: string;

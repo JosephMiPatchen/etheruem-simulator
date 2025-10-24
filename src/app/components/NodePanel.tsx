@@ -61,6 +61,7 @@ const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [] }) => 
               <WorldStateView 
                 worldState={nodeState.worldState || {}} 
                 receipts={nodeState.receipts}
+                mempool={nodeState.mempool}
                 allNodeIds={allNodeIds} 
                 nodeId={nodeState.nodeId} 
               />
