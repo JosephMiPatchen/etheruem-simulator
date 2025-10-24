@@ -4,6 +4,7 @@ import { ReceiptsDatabase } from '../../types/receipt';
 import Select from 'react-select';
 import { useSimulatorContext } from '../contexts/SimulatorContext';
 import EPMDisplay from './EPMDisplay';
+import TransactionView from './TransactionView';
 import './WorldStateView.css';
 
 // Icons for copy buttons
@@ -392,8 +393,18 @@ const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, receipts, m
                 {mempool.length === 0 && <p><em>Mempool is currently empty</em></p>}
               </div>
               {mempool.length > 0 && (
-                <div className="receipts-data">
-                  <pre>{JSON.stringify(mempool, null, 2)}</pre>
+                <div className="mempool-transactions">
+                  {mempool.map((transaction, index) => (
+                    <div key={transaction.txid || index} className="mempool-transaction-item">
+                      <h4 style={{ color: 'var(--primary-color)', marginBottom: '0.5rem' }}>
+                        Pending Transaction #{index + 1}
+                      </h4>
+                      <TransactionView 
+                        transaction={transaction} 
+                        worldState={worldState}
+                      />
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
