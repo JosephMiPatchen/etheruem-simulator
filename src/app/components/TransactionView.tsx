@@ -17,7 +17,7 @@ interface TransactionViewProps {
 const TransactionView: React.FC<TransactionViewProps> = ({ transaction, worldState, receipt }) => {
   const { addressToNodeId } = useSimulatorContext();
   const [copied, setCopied] = useState(false);
-  const [selectedContract, setSelectedContract] = useState<Account | null>(null);
+  const [selectedContract, setSelectedContract] = useState<{ account: Account; address: string } | null>(null);
   
   const copyToClipboard = async (text: string) => {
     try {
@@ -102,7 +102,7 @@ const TransactionView: React.FC<TransactionViewProps> = ({ transaction, worldSta
             {isSmartContract && contractAccount ? (
               <button 
                 className="smart-contract-button"
-                onClick={() => setSelectedContract(contractAccount)}
+                onClick={() => setSelectedContract({ account: contractAccount, address: transaction.to })}
                 title="View Smart Contract"
               >
                 {toNodeId}
@@ -191,7 +191,12 @@ const TransactionView: React.FC<TransactionViewProps> = ({ transaction, worldSta
         <div className="smart-contract-modal-overlay" onClick={() => setSelectedContract(null)}>
           <div className="smart-contract-modal" onClick={(e) => e.stopPropagation()}>
             <div className="smart-contract-modal-header">
-              <h2>Smart Contract</h2>
+              <h2>
+                Smart Contract 
+                <span style={{ fontSize: '0.8em', color: 'var(--text-secondary)', fontWeight: 'normal', marginLeft: '8px' }}>
+                  {selectedContract.address}
+                </span>
+              </h2>
               <button 
                 className="smart-contract-modal-close"
                 onClick={() => setSelectedContract(null)}
@@ -200,7 +205,7 @@ const TransactionView: React.FC<TransactionViewProps> = ({ transaction, worldSta
               </button>
             </div>
             <div className="smart-contract-modal-content">
-              <EPMDisplay account={selectedContract} />
+              <EPMDisplay account={selectedContract.account} />
             </div>
           </div>
         </div>
