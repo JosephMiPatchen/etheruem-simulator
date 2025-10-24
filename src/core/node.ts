@@ -197,6 +197,23 @@ export class Node {
     const added = await this.blockchain.addBlock(block);
     
     if (added === true) {
+      // Check if any paint transactions were rejected in this block
+      if (block.hash) {
+        const receipts = this.blockchain.getReceipts();
+        const blockReceipts = receipts[block.hash];
+        if (blockReceipts) {
+          for (const txid in blockReceipts) {
+            const receipt = blockReceipts[txid];
+            // If this node's paint transaction was rejected, stop creating more
+            if (receipt.to === '0xEPM_PAINT_CONTRACT' && 
+                receipt.from === this.address &&
+                receipt.status === 0) {
+              this.miner.markPaintingComplete();
+            }
+          }
+        }
+      }
+      
       // Broadcast the block to peers
       if (this.onBlockBroadcast) {
         this.onBlockBroadcast(block);

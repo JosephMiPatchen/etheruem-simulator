@@ -21,6 +21,7 @@ export class Miner {
   private onBlockMined: (block: Block) => void;
   private node: Node;
   private miningTimer: NodeJS.Timeout | null = null;
+  private paintingComplete: boolean = false; // Flag to stop creating paint transactions
   
   constructor(
     onBlockMined: (block: Block) => void,
@@ -28,6 +29,14 @@ export class Miner {
   ) {
     this.onBlockMined = onBlockMined;
     this.node = node;
+  }
+  
+  /**
+   * Mark painting as complete - stops creating paint transactions
+   */
+  public markPaintingComplete(): void {
+    this.paintingComplete = true;
+    console.log(`${this.node.getNodeId()}: Painting complete - no more paint transactions will be created`);
   }
   
   /**
@@ -131,6 +140,11 @@ export class Miner {
    * @returns Paint transaction or null if insufficient balance
    */
   private async createPaintTransaction(nonce: number): Promise<EthereumTransaction | null> {
+    // Don't create paint transactions if painting is complete
+    if (this.paintingComplete) {
+      return null;
+    }
+    
     // Get miner's current account state
     const worldState = this.node.getWorldState();
     const minerAccount = worldState[this.node.getAddress()];
