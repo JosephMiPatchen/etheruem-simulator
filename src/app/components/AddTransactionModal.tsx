@@ -28,9 +28,12 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
     e.preventDefault();
     setError('');
 
+    console.log('AddTransactionModal: Form submitted', { recipient, amount });
+
     // Validate recipient
     if (!recipient.trim()) {
       setError('Recipient address is required');
+      console.log('AddTransactionModal: Validation failed - no recipient');
       return;
     }
 
@@ -38,9 +41,11 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
     const amountNum = parseFloat(amount);
     if (isNaN(amountNum) || amountNum <= 0) {
       setError('Amount must be a positive number');
+      console.log('AddTransactionModal: Validation failed - invalid amount');
       return;
     }
 
+    console.log('AddTransactionModal: Calling onSubmit', { recipient: recipient.trim(), amount: amountNum });
     // Submit the transaction
     onSubmit(recipient.trim(), amountNum);
     onClose();

@@ -9,6 +9,7 @@ import {
   HeightRequestMessage,
   HeightResponseMessage
 } from './messages';
+import { createSignedTransaction } from '../core/blockchain/transaction';
 
 /**
  * NodeWorker class that wraps a Node instance and handles message passing
@@ -254,8 +255,6 @@ export class NodeWorker {
    * @returns true if transaction was added successfully
    */
   async addTransactionToMempool(recipient: string, amount: number): Promise<boolean> {
-    const { createSignedTransaction } = require('../core/blockchain/transaction');
-    
     // Get current nonce from world state
     const worldState = this._node.getWorldState();
     const senderAddress = this._node.getAddress();
