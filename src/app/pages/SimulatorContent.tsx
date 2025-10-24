@@ -87,8 +87,17 @@ const SimulatorContentInner: React.FC = () => {
     const success = await networkManagerRef.current.addTransactionToNodeMempool(nodeId, recipient, amount);
     if (success) {
       console.log(`Added transaction to ${nodeId}'s mempool: ${amount} ETH to ${recipient}`);
-      // Update UI to reflect new mempool state
-      updateNodeStates();
+      
+      // Small delay to ensure state is fully updated
+      setTimeout(() => {
+        updateNodeStates();
+        
+        // Debug: Check mempool size after update
+        const states = networkManagerRef.current?.getNetworkState();
+        if (states && states[nodeId]) {
+          console.log(`${nodeId} mempool size after update:`, states[nodeId].mempool?.length || 0);
+        }
+      }, 100);
     } else {
       console.error(`Failed to add transaction to ${nodeId}'s mempool`);
     }
