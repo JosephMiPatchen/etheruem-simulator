@@ -258,6 +258,21 @@ const EPMDisplay: React.FC<EPMDisplayProps> = ({ account }) => {
                 const createSlice = (percent: number, color: string) => {
                   if (percent === 0) return null;
                   
+                  // Special case: if 100%, draw a full circle instead of a path
+                  if (percent >= 99.9) {
+                    return (
+                      <circle
+                        key={color}
+                        cx="50"
+                        cy="50"
+                        r="50"
+                        fill={color}
+                        stroke="white"
+                        strokeWidth="0.5"
+                      />
+                    );
+                  }
+                  
                   const startAngle = currentAngle;
                   const angle = (percent / 100) * 360;
                   currentAngle += angle;
