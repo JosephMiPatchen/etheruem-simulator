@@ -67,7 +67,7 @@
   white-space: nowrap;
   border: 1px solid var(--border-color);
   background: var(--overlay-background);
-  color: var(--text-color);
+  color: var(--primary-color);
 }
 
 .toolbar-button:hover {
