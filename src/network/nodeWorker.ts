@@ -253,7 +253,7 @@ export class NodeWorker {
    * @param amount Amount in ETH
    * @returns true if transaction was added successfully
    */
-  addTransactionToMempool(recipient: string, amount: number): boolean {
+  async addTransactionToMempool(recipient: string, amount: number): Promise<boolean> {
     const { createSignedTransaction } = require('../core/blockchain/transaction');
     
     // Get current nonce from world state
@@ -263,7 +263,7 @@ export class NodeWorker {
     const nonce = senderAccount ? senderAccount.nonce : 0;
     
     // Create a signed transaction
-    const transaction = createSignedTransaction(
+    const transaction = await createSignedTransaction(
       senderAddress,
       recipient,
       amount,

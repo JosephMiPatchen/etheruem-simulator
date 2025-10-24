@@ -220,14 +220,14 @@ export class NetworkManager {
    * @param amount Amount in ETH
    * @returns true if transaction was added successfully
    */
-  addTransactionToNodeMempool(nodeId: string, recipient: string, amount: number): boolean {
+  async addTransactionToNodeMempool(nodeId: string, recipient: string, amount: number): Promise<boolean> {
     const node = this.nodesMap.get(nodeId);
     if (!node) {
       console.error(`Node ${nodeId} not found`);
       return false;
     }
     
-    return node.addTransactionToMempool(recipient, amount);
+    return await node.addTransactionToMempool(recipient, amount);
   }
   
   /**

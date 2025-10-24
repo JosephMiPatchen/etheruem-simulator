@@ -81,10 +81,10 @@ const SimulatorContentInner: React.FC = () => {
   };
   
   // Handle adding transaction to a node's mempool
-  const handleAddTransaction = (nodeId: string, recipient: string, amount: number) => {
+  const handleAddTransaction = async (nodeId: string, recipient: string, amount: number) => {
     if (!networkManagerRef.current) return;
     
-    const success = networkManagerRef.current.addTransactionToNodeMempool(nodeId, recipient, amount);
+    const success = await networkManagerRef.current.addTransactionToNodeMempool(nodeId, recipient, amount);
     if (success) {
       console.log(`Added transaction to ${nodeId}'s mempool: ${amount} ETH to ${recipient}`);
       // Update UI to reflect new mempool state

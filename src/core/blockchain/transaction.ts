@@ -130,3 +130,42 @@ export const createPeerPaymentTransactions = async (
   
   return transactions;
 };
+
+/**
+ * Creates a signed transaction for a user-initiated transfer
+ * @param from Sender address
+ * @param to Recipient address
+ * @param value Amount to send in ETH
+ * @param nonce Sender's current nonce
+ * @param privateKey Sender's private key for signing
+ * @param publicKey Sender's public key
+ * @returns Signed Ethereum transaction
+ */
+export async function createSignedTransaction(
+  from: string,
+  to: string,
+  value: number,
+  nonce: number,
+  privateKey: string,
+  publicKey: string
+): Promise<EthereumTransaction> {
+  const timestamp = Date.now();
+  
+  // Calculate txid first (before signature)
+  const txid = calculateTxid({ from, to, value, nonce, timestamp });
+  
+  // Create signature input and sign
+  const signatureInput = createSignatureInput({ txid });
+  const signature = await cryptoGenerateSignature(signatureInput, privateKey);
+  
+  return {
+    from,
+    to,
+    value,
+    nonce,
+    publicKey,
+    signature,
+    timestamp,
+    txid
+  };
+}
