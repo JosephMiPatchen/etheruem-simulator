@@ -40,6 +40,13 @@ export class Miner {
   }
   
   /**
+   * Check if painting is complete
+   */
+  public isPaintingComplete(): boolean {
+    return this.paintingComplete;
+  }
+  
+  /**
    * Gets the node ID
    */
   private get nodeId(): string {

@@ -198,7 +198,8 @@ export class Node {
     
     if (added === true) {
       // Check if any paint transactions were rejected in this block
-      if (block.hash) {
+      // Only check if we haven't already marked painting as complete
+      if (block.hash && !this.miner.isPaintingComplete()) {
         const receipts = this.blockchain.getReceipts();
         const blockReceipts = receipts[block.hash];
         if (blockReceipts) {
@@ -209,6 +210,7 @@ export class Node {
                 receipt.from === this.address &&
                 receipt.status === 0) {
               this.miner.markPaintingComplete();
+              break; // No need to check more receipts
             }
           }
         }
