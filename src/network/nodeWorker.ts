@@ -259,7 +259,14 @@ export class NodeWorker {
     const worldState = this._node.getWorldState();
     const senderAddress = this._node.getAddress();
     const senderAccount = worldState[senderAddress];
-    const nonce = senderAccount ? senderAccount.nonce : 0;
+    const baseNonce = senderAccount ? senderAccount.nonce : 0;
+    
+    // Count pending transactions from this sender in mempool to calculate next nonce
+    const mempoolTransactions = this._node.getMempoolTransactions(1000); // Get all mempool transactions
+    const pendingFromSender = mempoolTransactions.filter(tx => tx.from === senderAddress).length;
+    const nonce = baseNonce + pendingFromSender;
+    
+    console.log(`Creating transaction with nonce ${nonce} (base: ${baseNonce}, pending: ${pendingFromSender})`);
     
     // Create a signed transaction
     const transaction = await createSignedTransaction(
