@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { Account } from '../../types/types';
 import './AddTransactionModal.css';
 
 interface AddTransactionModalProps {
   nodeId: string;
   nodeAddress: string;
+  worldState: Record<string, Account>;
   onClose: () => void;
   onSubmit: (recipient: string, amount: number) => void;
 }
@@ -11,12 +13,16 @@ interface AddTransactionModalProps {
 const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
   nodeId,
   nodeAddress,
+  worldState,
   onClose,
   onSubmit
 }) => {
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
   const [error, setError] = useState('');
+  
+  // Get list of accounts for dropdown
+  const accounts = Object.keys(worldState).filter(addr => addr !== nodeAddress);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,38 +55,45 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
         </div>
         <div className="modal-content">
           <div className="add-tx-info">
-            <p><strong>Node:</strong> {nodeId}</p>
-            <p><strong>From:</strong> {nodeAddress}</p>
-            <p className="info-text">
-              This transaction will be added to {nodeId}'s mempool and included in the next block this node mines.
-            </p>
+            <p><strong>From:</strong> {nodeId} ({nodeAddress.slice(0, 10)}...)</p>
           </div>
 
           <form onSubmit={handleSubmit} className="add-tx-form">
-            <div className="form-group">
-              <label htmlFor="recipient">Recipient Address:</label>
-              <input
-                id="recipient"
-                type="text"
-                value={recipient}
-                onChange={(e) => setRecipient(e.target.value)}
-                placeholder="Enter recipient address (e.g., 0xEPM_PAINT_CONTRACT or another node's address)"
-                className="form-input"
-              />
-            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="recipient">To:</label>
+                <select
+                  id="recipient"
+                  value={recipient}
+                  onChange={(e) => setRecipient(e.target.value)}
+                  className="form-input"
+                  required
+                >
+                  <option value="">Select recipient...</option>
+                  {accounts.map(addr => (
+                    <option key={addr} value={addr}>
+                      {addr === '0xEPM_PAINT_CONTRACT' 
+                        ? '🎨 EPM Paint Contract' 
+                        : `${addr.slice(0, 10)}...${addr.slice(-8)}`}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            <div className="form-group">
-              <label htmlFor="amount">Amount (ETH):</label>
-              <input
-                id="amount"
-                type="number"
-                step="0.01"
-                min="0"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="Enter amount in ETH"
-                className="form-input"
-              />
+              <div className="form-group">
+                <label htmlFor="amount">Amount (ETH):</label>
+                <input
+                  id="amount"
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="0.00"
+                  className="form-input"
+                  required
+                />
+              </div>
             </div>
 
             {error && <div className="error-message">{error}</div>}

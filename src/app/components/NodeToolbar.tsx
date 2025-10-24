@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { LuPickaxe } from "react-icons/lu";
 import { RxDividerVertical } from "react-icons/rx";
 import { FaEarthAmericas } from "react-icons/fa6";
+import { IoMdAdd } from "react-icons/io";
 import './NodeToolbar.css';
 
 // Question mark icon
@@ -66,22 +67,22 @@ const NodeToolbar: React.FC<NodeToolbarProps> = ({
         
         <div className="divider"><RxDividerVertical size={20} color="var(--border-color)" /></div>
         
-        <div className="toolbar-actions">
+        <div className="toolbar-item toolbar-actions">
           <button 
-            className="toolbar-button"
+            className="toolbar-button world-state-button"
             onClick={onUtxoClick}
             title="View World State"
           >
-            <FaEarthAmericas size={18} />
+            <FaEarthAmericas size={16} />
             <span>World State</span>
           </button>
           <button 
-            className="toolbar-button"
+            className="toolbar-button add-tx-button"
             onClick={onAddTransaction}
             title="Add Transaction to Mempool"
           >
-            <span>➕</span>
-            <span>Add Transaction</span>
+            <IoMdAdd size={16} />
+            <span>Add Tx</span>
           </button>
         </div>
       </div>

@@ -86,6 +86,7 @@ const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [], onAdd
         <AddTransactionModal
           nodeId={nodeState.nodeId}
           nodeAddress={nodeAddress}
+          worldState={nodeState.worldState || {}}
           onClose={() => setShowAddTxModal(false)}
           onSubmit={handleAddTransaction}
         />

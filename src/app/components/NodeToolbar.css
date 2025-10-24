@@ -48,20 +48,41 @@
   padding: 0 var(--spacing-xs);
 }
 
+.toolbar-actions {
+  display: flex;
+  gap: var(--spacing-xs);
+  align-items: center;
+}
+
 .toolbar-button {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-xs) var(--spacing-xs);
+  gap: 4px;
+  padding: 6px 10px;
   border-radius: var(--border-radius-sm);
   font-size: var(--font-size-sm);
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
-  border: none;
-  background: none;
+  border: 1px solid var(--border-color);
+  background: var(--overlay-background);
   color: var(--text-color);
+}
+
+.toolbar-button:hover {
+  background-color: var(--primary-color);
+  color: var(--background-color);
+  border-color: var(--primary-color);
+}
+
+.world-state-button:hover {
+  background-color: var(--primary-color);
+}
+
+.add-tx-button:hover {
+  background-color: var(--success-color);
+  border-color: var(--success-color);
 }
 
 /* Node Status */
