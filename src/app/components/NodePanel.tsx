@@ -42,6 +42,11 @@ const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [], onAdd
           <div className="node-id-container">
             <h2 style={{ color: getNodeColorCSS(nodeState.nodeId) }}>
               {nodeState.nodeId} {getNodeColorEmoji(nodeState.nodeId)}
+              {nodeAddress && (
+                <span className="node-address-suffix">
+                  {nodeAddress.slice(-4)}
+                </span>
+              )}
             </h2>
           </div>
           <NodeToolbar 
