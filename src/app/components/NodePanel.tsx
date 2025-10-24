@@ -3,6 +3,7 @@ import { NodeState } from '../../types/types';
 import BlockchainView from './BlockchainView';
 import WorldStateView from './WorldStateView';
 import NodeToolbar from './NodeToolbar';
+import AddTransactionModal from './AddTransactionModal';
 import { useSimulatorContext } from '../contexts/SimulatorContext';
 import { getNodeColorEmoji, getNodeColorCSS } from '../../utils/nodeColorUtils';
 import './NodePanel.css';
@@ -10,10 +11,12 @@ import './NodePanel.css';
 interface NodePanelProps {
   nodeState: NodeState;
   allNodeIds?: string[];
+  onAddTransaction?: (nodeId: string, recipient: string, amount: number) => void;
 }
 
-const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [] }) => {
+const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [], onAddTransaction }) => {
   const [showUtxoModal, setShowUtxoModal] = useState(false);
+  const [showAddTxModal, setShowAddTxModal] = useState(false);
   const { addressToNodeId } = useSimulatorContext();
   
   // Find the address for this node
@@ -24,6 +27,13 @@ const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [] }) => 
   
   // Get the account balance - updates only when the actual balance changes
   const totalEth = nodeAddress ? (nodeState.worldState?.[nodeAddress]?.balance || 0) : 0;
+  
+  // Handler for adding transaction to mempool
+  const handleAddTransaction = (recipient: string, amount: number) => {
+    if (onAddTransaction) {
+      onAddTransaction(nodeState.nodeId, recipient, amount);
+    }
+  };
   
   return (
     <div className="node-panel">
@@ -38,6 +48,7 @@ const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [] }) => 
             isMining={nodeState.isMining}
             totalEth={totalEth}
             onUtxoClick={() => setShowUtxoModal(true)}
+            onAddTransaction={() => setShowAddTxModal(true)}
             nodeId={nodeState.nodeId}
           />
         </div>
@@ -70,7 +81,15 @@ const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [] }) => 
         </div>
       )}
 
-
+      {/* Add Transaction Modal */}
+      {showAddTxModal && nodeAddress && (
+        <AddTransactionModal
+          nodeId={nodeState.nodeId}
+          nodeAddress={nodeAddress}
+          onClose={() => setShowAddTxModal(false)}
+          onSubmit={handleAddTransaction}
+        />
+      )}
     </div>
   );
 };

@@ -68,20 +68,30 @@ const SimulatorContentInner: React.FC = () => {
   };
   
   // Function to toggle mining on all nodes
-  const handleToggleMining = () => {
+  const toggleMining = () => {
     if (!networkManagerRef.current) return;
     
     if (isMining) {
-      // Stop mining
       networkManagerRef.current.stopAllMining();
+      setIsMining(false);
+    } else {
+      networkManagerRef.current.startAllMining();
+      setIsMining(true);
+    }
+  };
+  
+  // Handle adding transaction to a node's mempool
+  const handleAddTransaction = (nodeId: string, recipient: string, amount: number) => {
+    if (!networkManagerRef.current) return;
+    
+    const success = networkManagerRef.current.addTransactionToNodeMempool(nodeId, recipient, amount);
+    if (success) {
+      console.log(`Added transaction to ${nodeId}'s mempool: ${amount} ETH to ${recipient}`);
+      // Update UI to reflect new mempool state
       updateNodeStates();
     } else {
-      // Start mining
-      networkManagerRef.current.startAllMining();
-      updateNodeStates();
+      console.error(`Failed to add transaction to ${nodeId}'s mempool`);
     }
-    
-    setIsMining(!isMining);
   };
   
   return (
@@ -90,7 +100,7 @@ const SimulatorContentInner: React.FC = () => {
         <h1>Ethereum Simulator</h1>
         <button 
           className={`mining-control ${isMining ? 'mining' : ''}`}
-          onClick={handleToggleMining}
+          onClick={toggleMining}
         >
           {isMining ? 'Stop Mining' : 'Start Mining'}
         </button>
@@ -101,6 +111,7 @@ const SimulatorContentInner: React.FC = () => {
           <NodePanel 
             key={nodeId} 
             nodeState={nodeState}
+            onAddTransaction={handleAddTransaction}
           />
         ))}
       </main>

@@ -246,4 +246,33 @@ export class NodeWorker {
       this.requestHeight(peerId);
     }
   }
+  
+  /**
+   * Creates and adds a transaction to this node's mempool
+   * @param recipient Recipient address
+   * @param amount Amount in ETH
+   * @returns true if transaction was added successfully
+   */
+  addTransactionToMempool(recipient: string, amount: number): boolean {
+    const { createSignedTransaction } = require('../core/blockchain/transaction');
+    
+    // Get current nonce from world state
+    const worldState = this._node.getWorldState();
+    const senderAddress = this._node.getAddress();
+    const senderAccount = worldState[senderAddress];
+    const nonce = senderAccount ? senderAccount.nonce : 0;
+    
+    // Create a signed transaction
+    const transaction = createSignedTransaction(
+      senderAddress,
+      recipient,
+      amount,
+      nonce,
+      this._node.getPrivateKey(),
+      this._node.getPublicKey()
+    );
+    
+    // Add to mempool
+    return this._node.addTransactionToMempool(transaction);
+  }
 }

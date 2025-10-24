@@ -214,6 +214,23 @@ export class NetworkManager {
   }
   
   /**
+   * Adds a transaction to a specific node's mempool
+   * @param nodeId ID of the node to add transaction to
+   * @param recipient Recipient address
+   * @param amount Amount in ETH
+   * @returns true if transaction was added successfully
+   */
+  addTransactionToNodeMempool(nodeId: string, recipient: string, amount: number): boolean {
+    const node = this.nodesMap.get(nodeId);
+    if (!node) {
+      console.error(`Node ${nodeId} not found`);
+      return false;
+    }
+    
+    return node.addTransactionToMempool(recipient, amount);
+  }
+  
+  /**
    * Simulates periodic height requests between nodes
    * This is a key part of the Nakamoto consensus protocol
    */

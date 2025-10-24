@@ -116,6 +116,15 @@ export class Node {
   }
   
   /**
+   * Adds a transaction to this node's mempool
+   * @param transaction Transaction to add
+   * @returns true if added successfully
+   */
+  addTransactionToMempool(transaction: EthereumTransaction): boolean {
+    return this.mempool.addTransaction(transaction);
+  }
+  
+  /**
    * Handles a block received from the network
    */
   async receiveBlock(block: Block): Promise<void> {

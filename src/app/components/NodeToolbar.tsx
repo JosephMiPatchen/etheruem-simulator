@@ -17,6 +17,7 @@ interface NodeToolbarProps {
   isMining: boolean;
   totalEth: number;
   onUtxoClick: () => void;
+  onAddTransaction: () => void;
   nodeId: string;
 }
 
@@ -24,6 +25,7 @@ const NodeToolbar: React.FC<NodeToolbarProps> = ({
   isMining, 
   totalEth, 
   onUtxoClick,
+  onAddTransaction,
   nodeId
 }) => {
   const [showTooltip, setShowTooltip] = useState(false);
@@ -64,14 +66,22 @@ const NodeToolbar: React.FC<NodeToolbarProps> = ({
         
         <div className="divider"><RxDividerVertical size={20} color="var(--border-color)" /></div>
         
-        <div className="toolbar-item utxo-container">
+        <div className="toolbar-actions">
           <button 
-            className="toolbar-button utxo-button" 
+            className="toolbar-button"
             onClick={onUtxoClick}
             title="View World State"
           >
             <FaEarthAmericas size={18} />
             <span>World State</span>
+          </button>
+          <button 
+            className="toolbar-button"
+            onClick={onAddTransaction}
+            title="Add Transaction to Mempool"
+          >
+            <span>➕</span>
+            <span>Add Transaction</span>
           </button>
         </div>
       </div>
