@@ -197,24 +197,8 @@ export class Node {
     const added = await this.blockchain.addBlock(block);
     
     if (added === true) {
-      // Check if any paint transactions were rejected in this block
-      // Only check if we haven't already marked painting as complete
-      if (block.hash && !this.miner.isPaintingComplete()) {
-        const receipts = this.blockchain.getReceipts();
-        const blockReceipts = receipts[block.hash];
-        if (blockReceipts) {
-          for (const txid in blockReceipts) {
-            const receipt = blockReceipts[txid];
-            // If this node's paint transaction was rejected, stop creating more
-            if (receipt.to === '0xEPM_PAINT_CONTRACT' && 
-                receipt.from === this.address &&
-                receipt.status === 0) {
-              this.miner.markPaintingComplete();
-              break; // No need to check more receipts
-            }
-          }
-        }
-      }
+      // Check if painting is complete based on transaction receipts
+      this.checkPaintingComplete(block);
       
       // Broadcast the block to peers
       if (this.onBlockBroadcast) {
@@ -230,6 +214,34 @@ export class Node {
       }
     } else {
       console.error(`Node ${this.nodeId}: Failed to add self-mined block to chain - this should never happen!`);
+    }
+  }
+  
+  /**
+   * Check if any paint transactions were rejected and mark painting as complete
+   * Only checks if painting hasn't already been marked complete
+   */
+  private checkPaintingComplete(block: Block): void {
+    if (!block.hash || this.miner.isPaintingComplete()) {
+      return;
+    }
+    
+    const receipts = this.blockchain.getReceipts();
+    const blockReceipts = receipts[block.hash];
+    
+    if (!blockReceipts) {
+      return;
+    }
+    
+    for (const txid in blockReceipts) {
+      const receipt = blockReceipts[txid];
+      // If this node's paint transaction was rejected, stop creating more
+      if (receipt.to === '0xEPM_PAINT_CONTRACT' && 
+          receipt.from === this.address &&
+          receipt.status === 0) {
+        this.miner.markPaintingComplete();
+        break;
+      }
     }
   }
   
