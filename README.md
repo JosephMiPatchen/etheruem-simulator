@@ -1,6 +1,20 @@
 # Ethereum Simulator
 
-A blockchain simulator demonstrating Ethereum's account-based model with Proof of Work (PoW) consensus. This project is evolving from a Bitcoin-style UTXO model toward a full Ethereum simulator with smart contracts and Proof of Stake.
+A blockchain simulator demonstrating Ethereum's account-based model with Proof of Work (PoW) consensus, featuring the Ethereum Painting Machine smart contract.
+
+## 📸 Screenshots
+
+### Main Simulator View
+![Main Simulator](docs/imgs/main.png)
+
+### Block Details
+![Block View](docs/imgs/block.png)
+
+### World State
+![World State](docs/imgs/world_state.png)
+
+### Smart Contract (EPM)
+![Smart Contract](docs/imgs/smart_contract.png)
 
 ## 🚀 Quick Start
 
