@@ -7,6 +7,10 @@
 import * as secp from 'noble-secp256k1';
 import { sha256 } from '@noble/hashes/sha2';
 import { bytesToHex, hexToBytes } from '@noble/hashes/utils';
+
+// Use dynamic import for BLS to work with both ES modules and Jest
+const blsModule = require('@noble/curves/bls12-381');
+const bls = blsModule.bls12_381;
 /**
  * Signature input data for Ethereum transactions
  * 
@@ -171,4 +175,130 @@ export function hexToBuffer(hex: string): Buffer {
  */
 export function bufferToHex(buffer: Buffer): string {
   return bytesToHex(new Uint8Array(buffer));
+}
+
+// ============================================================================
+// BLS Signature Functions (BLS12-381)
+// Used for Ethereum Proof of Stake consensus layer
+// ============================================================================
+
+/**
+ * Generates a BLS signature for the given message
+ * @param message The message to sign (as string or Uint8Array)
+ * @param privateKey The BLS private key (hex string)
+ * @returns The BLS signature as a hex string
+ */
+export function generateBLSSignature(message: string | Uint8Array, privateKey: string): string {
+  try {
+    // Convert message to bytes if it's a string
+    const messageBytes = typeof message === 'string' 
+      ? new TextEncoder().encode(message)
+      : message;
+    
+    // Convert private key from hex to bytes
+    const privateKeyBytes = hexToBytes(privateKey);
+    
+    // Sign the message
+    const signature = bls.sign(messageBytes, privateKeyBytes);
+    
+    // Return signature as hex string
+    return bytesToHex(signature);
+  } catch (error) {
+    console.error('Error generating BLS signature:', error);
+    throw error;
+  }
+}
+
+/**
+ * Verifies a BLS signature (supports both single and aggregated signatures)
+ * @param message The message that was signed (as string or Uint8Array)
+ * @param signature The BLS signature to verify (hex string)
+ * @param publicKey The BLS public key or array of public keys for aggregated signatures (hex string or array)
+ * @returns True if the signature is valid, false otherwise
+ */
+export function verifyBLSSignature(
+  message: string | Uint8Array,
+  signature: string,
+  publicKey: string | string[]
+): boolean {
+  try {
+    // Convert message to bytes if it's a string
+    const messageBytes = typeof message === 'string'
+      ? new TextEncoder().encode(message)
+      : message;
+    
+    // Convert signature from hex to bytes
+    const signatureBytes = hexToBytes(signature);
+    
+    // Handle single or aggregated public keys
+    if (Array.isArray(publicKey)) {
+      // Aggregated verification: multiple public keys
+      const publicKeyPoints = publicKey.map(pk => bls.G1.ProjectivePoint.fromHex(pk));
+      
+      // Aggregate the public keys by summing points
+      const aggregatedPoint = publicKeyPoints.reduce((acc, point) => acc.add(point));
+      const aggregatedPublicKey = aggregatedPoint.toRawBytes();
+      
+      // Verify with aggregated public key
+      return bls.verify(signatureBytes, messageBytes, aggregatedPublicKey);
+    } else {
+      // Single signature verification
+      const publicKeyBytes = hexToBytes(publicKey);
+      return bls.verify(signatureBytes, messageBytes, publicKeyBytes);
+    }
+  } catch (error) {
+    console.error('Error verifying BLS signature:', error);
+    return false;
+  }
+}
+
+/**
+ * Aggregates multiple BLS signatures into a single signature
+ * This is the key feature of BLS - constant-size aggregated signatures
+ * @param signatures Array of BLS signatures (hex strings)
+ * @returns The aggregated signature as a hex string
+ */
+export function aggregateBLSSignatures(signatures: string[]): string {
+  try {
+    if (signatures.length === 0) {
+      throw new Error('Cannot aggregate empty signature array');
+    }
+    
+    if (signatures.length === 1) {
+      return signatures[0];
+    }
+    
+    // Convert all signatures to points on the curve
+    const signaturePoints = signatures.map(sig => bls.G2.ProjectivePoint.fromHex(sig));
+    
+    // Aggregate signatures by summing points on the curve
+    const aggregatedPoint = signaturePoints.reduce((acc, point) => acc.add(point));
+    
+    return bytesToHex(aggregatedPoint.toRawBytes());
+  } catch (error) {
+    console.error('Error aggregating BLS signatures:', error);
+    throw error;
+  }
+}
+
+/**
+ * Generates a BLS key pair (private key and public key)
+ * @returns Object containing privateKey and publicKey as hex strings
+ */
+export function generateBLSKeyPair(): { privateKey: string; publicKey: string } {
+  try {
+    // Generate random private key (32 bytes)
+    const privateKey = bls.utils.randomPrivateKey();
+    
+    // Derive public key from private key
+    const publicKey = bls.getPublicKey(privateKey);
+    
+    return {
+      privateKey: bytesToHex(privateKey),
+      publicKey: bytesToHex(publicKey)
+    };
+  } catch (error) {
+    console.error('Error generating BLS key pair:', error);
+    throw error;
+  }
 }

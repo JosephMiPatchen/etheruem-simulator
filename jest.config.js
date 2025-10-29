@@ -13,7 +13,7 @@ module.exports = {
     '^.+\.jsx?$': 'babel-jest'
   },
   transformIgnorePatterns: [
-    '/node_modules/(?!(@noble/secp256k1)/)',
+    '/node_modules/(?!(@noble/secp256k1|@noble/curves|@noble/hashes)/)',
   ],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
 };
