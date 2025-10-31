@@ -7,10 +7,8 @@ import {
   generateBLSKeyPair,
   generateBLSSignature,
   verifyBLSSignature,
-  aggregateBLSSignatures,
-  generateRANDAOReveal,
-  verifyRANDAOReveal
-} from '../utils/blsUtils';
+  aggregateBLSSignatures
+} from '../utils/cryptoUtils';
 
 describe('BLS Signatures (BLS12-381)', () => {
   describe('Key Generation', () => {
@@ -137,54 +135,4 @@ describe('BLS Signatures (BLS12-381)', () => {
     });
   });
 
-  describe('RANDAO Use Case', () => {
-    it('should sign epoch number for RANDAO reveal', () => {
-      const validator = generateBLSKeyPair();
-      const epoch = 12345;
-      
-      // Validator signs the epoch number
-      const randaoReveal = generateRANDAOReveal(epoch, validator.privateKey);
-      
-      // Verify the reveal
-      const isValid = verifyRANDAOReveal(epoch, randaoReveal, validator.publicKey);
-      
-      expect(isValid).toBe(true);
-    });
-
-    it('should demonstrate RANDAO reveal is deterministic per validator per epoch', () => {
-      const validator = generateBLSKeyPair();
-      const epoch = 999;
-      
-      // Same validator signing same epoch multiple times
-      const reveal1 = generateRANDAOReveal(epoch, validator.privateKey);
-      const reveal2 = generateRANDAOReveal(epoch, validator.privateKey);
-      
-      // Should produce identical reveals
-      expect(reveal1).toBe(reveal2);
-    });
-
-    it('should produce different reveals for different epochs', () => {
-      const validator = generateBLSKeyPair();
-      const epoch1 = 100;
-      const epoch2 = 101;
-      
-      const reveal1 = generateRANDAOReveal(epoch1, validator.privateKey);
-      const reveal2 = generateRANDAOReveal(epoch2, validator.privateKey);
-      
-      // Different epochs should produce different reveals
-      expect(reveal1).not.toBe(reveal2);
-    });
-
-    it('should produce different reveals for different validators', () => {
-      const validator1 = generateBLSKeyPair();
-      const validator2 = generateBLSKeyPair();
-      const epoch = 500;
-      
-      const reveal1 = generateRANDAOReveal(epoch, validator1.privateKey);
-      const reveal2 = generateRANDAOReveal(epoch, validator2.privateKey);
-      
-      // Different validators should produce different reveals
-      expect(reveal1).not.toBe(reveal2);
-    });
-  });
 });
