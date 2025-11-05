@@ -5,6 +5,8 @@ import Select from 'react-select';
 import { useSimulatorContext } from '../contexts/SimulatorContext';
 import EPMDisplay from './EPMDisplay';
 import TransactionView from './TransactionView';
+import BlockTreeView from './BlockTreeView';
+import { BlockchainTree } from '../../core/blockchain/blockchainTree';
 import './WorldStateView.css';
 
 // Icons for copy buttons
@@ -25,6 +27,7 @@ interface WorldStateViewProps {
   worldState: Record<string, Account>; // Address -> Account mapping
   receipts?: ReceiptsDatabase; // Optional receipts database
   mempool?: EthereumTransaction[]; // Optional mempool transactions
+  blockchainTree?: BlockchainTree; // Blockchain tree for visualization
   allNodeIds?: string[];
   nodeId?: string; // Current node ID for which the modal is opened
 }
@@ -35,7 +38,7 @@ interface NodeOption {
   label: string;
 }
 
-const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, receipts, mempool, allNodeIds = [], nodeId }) => {
+const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, receipts, mempool, blockchainTree, allNodeIds = [], nodeId }) => {
   const { addressToNodeId } = useSimulatorContext();
   const [selectedNodes, setSelectedNodes] = useState<NodeOption[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -44,6 +47,7 @@ const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, receipts, m
   const [selectedContract, setSelectedContract] = useState<{ account: Account; address: string } | null>(null);
   const [showReceipts, setShowReceipts] = useState(false);
   const [showMempool, setShowMempool] = useState(false);
+  const [showBlockTree, setShowBlockTree] = useState(false);
   const itemsPerPage = 10;
 
   // Extract unique node IDs from the world state using address mapping
@@ -193,6 +197,15 @@ const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, receipts, m
               title="View transaction receipts"
             >
               📋 View Receipts
+            </button>
+          )}
+          {blockchainTree && (
+            <button 
+              className="view-tree-button" 
+              onClick={() => setShowBlockTree(true)}
+              title="View blockchain tree structure"
+            >
+              🌳 View Block Tree
             </button>
           )}
           <button 
@@ -410,6 +423,14 @@ const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, receipts, m
             </div>
           </div>
         </div>
+      )}
+
+      {/* Block Tree Modal */}
+      {showBlockTree && blockchainTree && (
+        <BlockTreeView 
+          blockchainTree={blockchainTree}
+          onClose={() => setShowBlockTree(false)}
+        />
       )}
     </>
   );

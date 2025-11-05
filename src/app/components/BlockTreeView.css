@@ -1,0 +1,209 @@
+/* Block Tree Modal Styles */
+.block-tree-modal .modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.block-tree-modal .modal-content {
+  background: white !important;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  position: relative;
+  max-width: 95vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.block-tree-modal .block-tree-content {
+  width: 90vw;
+  height: 85vh;
+}
+
+.block-tree-modal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.block-tree-modal .modal-header h2 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 1.5rem;
+}
+
+.block-tree-modal .modal-close {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.block-tree-modal .modal-close:hover {
+  background: #f8f9fa;
+  color: #333;
+}
+
+/* Tree Stats */
+.block-tree-modal .tree-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.block-tree-modal .stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.block-tree-modal .stat-label {
+  font-size: 0.85rem;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.block-tree-modal .stat-value {
+  font-size: 1.25rem;
+  color: #2c3e50;
+  font-weight: 700;
+}
+
+/* Tree Container */
+.block-tree-modal .tree-container {
+  flex: 1;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  background: #fafbfc;
+  overflow: hidden;
+  position: relative;
+  min-height: 400px;
+}
+
+/* Override react-d3-tree styles */
+.block-tree-modal .tree-container svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Legend */
+.block-tree-modal .tree-legend {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.block-tree-modal .tree-legend h3 {
+  margin: 0 0 0.75rem 0;
+  font-size: 1rem;
+  color: #2c3e50;
+}
+
+.block-tree-modal .tree-legend ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.block-tree-modal .tree-legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+.block-tree-modal .legend-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.block-tree-modal .legend-dot.root {
+  background: #6c757d;
+}
+
+.block-tree-modal .legend-dot.canonical {
+  background: #28a745;
+}
+
+.block-tree-modal .legend-dot.fork {
+  background: #007bff;
+}
+
+/* Modal Footer */
+.block-tree-modal .modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e9ecef;
+}
+
+.block-tree-modal .modal-button {
+  padding: 0.5rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #007bff;
+  color: white;
+}
+
+.block-tree-modal .modal-button:hover {
+  background: #0056b3;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .block-tree-modal .block-tree-content {
+    width: 95vw;
+    height: 90vh;
+  }
+  
+  .block-tree-modal .tree-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .block-tree-modal .tree-legend ul {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}

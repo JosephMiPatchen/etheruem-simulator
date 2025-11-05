@@ -79,6 +79,7 @@ export class Node {
     return {
       nodeId: this.nodeId,
       blockchain: this.blockchain.getBlocks(),
+      blockchainTree: this.blockchain.getTree(),
       worldState: this.blockchain.getWorldState(),
       receipts: this.blockchain.getReceipts(),
       mempool: this.mempool.getAllTransactions(),

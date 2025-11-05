@@ -58,6 +58,7 @@ export interface Block {
 export interface NodeState {
   nodeId: string;
   blockchain: Block[];
+  blockchainTree?: any;  // BlockchainTree for visualization (any to avoid circular dependency)
   worldState: Record<string, Account>;  // Account-based state instead of UTXO
   receipts?: any;  // Transaction receipts database
   mempool?: EthereumTransaction[];  // Pending transactions in mempool
