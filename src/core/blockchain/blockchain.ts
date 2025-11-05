@@ -81,63 +81,60 @@ export class Blockchain {
   
   /**
    * Adds a new block to the chain if valid
+   * Adds to tree and updates HEAD if it extends the canonical chain
    * Returns true if the block was added, false otherwise
-   * Note: This method should not be used for genesis blocks (height 0)
    */
   async addBlock(block: Block): Promise<boolean> {
-    // Reject genesis blocks (height 0)
-    if (block.header.height === 0) {
-      console.error('Genesis blocks should be added directly, not through addBlock');
-      return false;
-    }
-    
     // Ensure block has a hash
     if (!block.hash) {
       block.hash = calculateBlockHeaderHash(block.header);
     }
     
-    // Get the previous block
-    const previousBlock = this.blocks.length > 0 ? this.blocks[this.blocks.length - 1] : null;
-    
-    // Validate the block
-    if (!previousBlock) {
-      console.error('Cannot add block without a previous block');
+    // Add block to tree (handles genesis blocks and regular blocks)
+    const treeNode = this.tree.addBlock(block);
+    if (!treeNode) {
+      console.error(`Failed to add block ${block.hash} to tree - parent not found`);
       return false;
     }
     
-    // Validate block height is sequential (exactly one more than the current chain height)
-    const expectedHeight = previousBlock.header.height + 1;
-    if (block.header.height !== expectedHeight) {
-      console.error(`Block height mismatch: expected ${expectedHeight}, got ${block.header.height}`);
-      return false;
+    // Check if this block extends the current canonical chain
+    const currentHead = this.tree.getCanonicalHead();
+    const extendsCanonical = block.header.previousHeaderHash === (currentHead.block?.hash || '');
+    
+    if (extendsCanonical) {
+      // Validate the block against the current world state
+      const previousHash = currentHead.block?.hash || '';
+      const isValid = await validateBlock(block, this.worldState, previousHash);
+      
+      if (!isValid) {
+        console.error(`Block ${block.hash} is invalid`);
+        return false;
+      }
+      
+      // Update world state with all transactions in the block
+      for (let i = 0; i < block.transactions.length; i++) {
+        this.worldState.updateWithTransaction(
+          block.transactions[i],
+          block.hash,
+          block.header.height,
+          i
+        );
+      }
+      
+      // Update HEAD to point to this block (extends canonical chain)
+      this.tree.setHead(block.hash);
+      
+      return true;
+    } else {
+      // Block creates a fork - added to tree but doesn't update HEAD or world state
+      console.log(`Block ${block.hash} added as fork at height ${block.header.height}`);
+      return true;
     }
-    
-    // Validate the block against the previous block's hash
-    const previousHash = previousBlock.hash || '';
-    const isValid = await validateBlock(block, this.worldState, previousHash);
-    if (!isValid) {
-      return false;
-    }
-    
-    // Update world state with all transactions in the block
-    // Pass block context for receipt creation
-    for (let i = 0; i < block.transactions.length; i++) {
-      this.worldState.updateWithTransaction(
-        block.transactions[i],
-        block.hash,
-        block.header.height,
-        i
-      );
-    }
-    
-    // Add the block to the chain
-    this.blocks.push(block);
-    
-    return true;
   }
   
   /**
    * Replaces the current chain with a new one if it's valid and longer
+   * Adds all new blocks to tree and updates HEAD pointer
    * Returns true if the chain was replaced, false otherwise
    */
   async replaceChain(newBlocks: Block[]): Promise<boolean> {
@@ -147,16 +144,27 @@ export class Blockchain {
       return false;
     }
     
-    // Check if the new chain is longer
-    if (newBlocks.length <= this.blocks.length) {
+    // Check if the new chain is longer than current canonical chain
+    const currentCanonicalChain = this.tree.getCanonicalChain();
+    if (newBlocks.length <= currentCanonicalChain.length) {
       return false;
     }
     
-    // Replace the chain
-    this.blocks = [...newBlocks];
+    // Add all blocks from new chain to tree (preserves forks)
+    for (const block of newBlocks) {
+      const existingNode = this.tree.getNode(block.hash || '');
+      if (!existingNode) {
+        // New block - add to tree
+        this.tree.addBlock(block);
+      }
+    }
     
-    // Rebuild the world state
-    this.worldState = WorldState.fromBlocks(this.blocks);
+    // Update HEAD to point to the last block of the new chain
+    const lastBlock = newBlocks[newBlocks.length - 1];
+    this.tree.setHead(lastBlock.hash || '');
+    
+    // Rebuild world state from the new canonical chain
+    this.worldState = WorldState.fromBlocks(newBlocks);
     
     return true;
   }
@@ -169,16 +177,18 @@ export class Blockchain {
   }
   
   /**
-   * Gets a block by its hash
+   * Gets a block by its hash (searches tree)
    */
   getBlockByHash(hash: string): Block | undefined {
-    return this.blocks.find(block => block.hash === hash);
+    const node = this.tree.getNode(hash);
+    return node?.block || undefined;
   }
   
   /**
-   * Gets a block by its height
+   * Gets a block by its height (from canonical chain)
    */
   getBlockByHeight(height: number): Block | undefined {
-    return height >= 0 && height < this.blocks.length ? this.blocks[height] : undefined;
+    const canonicalChain = this.tree.getCanonicalChain();
+    return height >= 0 && height < canonicalChain.length ? canonicalChain[height] : undefined;
   }
 }
