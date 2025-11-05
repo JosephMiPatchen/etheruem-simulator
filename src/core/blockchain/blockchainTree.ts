@@ -1,7 +1,12 @@
 /**
- * Blockchain Tree Structure
- * Maintains all blocks in a tree structure to support GHOST fork-choice rule
- * Keeps all branches/forks instead of discarding them
+ * Blockchain Tree Structure with Null Root
+ * 
+ * Architecture:
+ * - Null root block serves as parent to all genesis blocks
+ * - Multiple genesis blocks can coexist (from different nodes)
+ * - HEAD pointer points to canonical chain tip (leaf node)
+ * - Height = number of hops from HEAD to null root
+ * - Supports GHOST fork-choice by changing HEAD pointer
  */
 
 import { Block } from '../../types/types';
@@ -11,10 +16,11 @@ import { Block } from '../../types/types';
  * Extensible for future metadata (attestations, weight, etc.)
  */
 export interface BlockTreeNode {
-  block: Block;
+  block: Block | null;  // null for root node
   hash: string;
   parent: BlockTreeNode | null;
   children: BlockTreeNode[];
+  isNullRoot: boolean;  // True only for the null root node
   
   // Metadata (extensible for future use)
   metadata: {
@@ -26,46 +32,64 @@ export interface BlockTreeNode {
 }
 
 /**
- * Blockchain Tree class
- * Maintains a tree of all blocks with the canonical chain marked
+ * Blockchain Tree class with Null Root
+ * Maintains a tree of all blocks with multiple genesis blocks supported
  */
 export class BlockchainTree {
-  private root: BlockTreeNode;                    // Genesis block
+  private nullRoot: BlockTreeNode;                 // Null root (parent of all genesis blocks)
   private nodesByHash: Map<string, BlockTreeNode>; // Fast lookup by hash
-  private leaves: Set<BlockTreeNode>;             // All leaf nodes (chain tips)
-  private canonicalHead: BlockTreeNode;           // Current canonical chain head
+  private leaves: Set<BlockTreeNode>;              // All leaf nodes (chain tips)
+  private head: BlockTreeNode;                     // HEAD pointer to canonical chain tip
   
-  constructor(genesisBlock: Block) {
-    // Create root node from genesis block
-    this.root = {
-      block: genesisBlock,
-      hash: genesisBlock.hash || '',
+  constructor() {
+    // Create null root node
+    this.nullRoot = {
+      block: null,
+      hash: 'NULL_ROOT',
       parent: null,
       children: [],
+      isNullRoot: true,
       metadata: {
-        isCanonical: true,
+        isCanonical: false,
         weight: 0
       }
     };
     
     this.nodesByHash = new Map();
-    this.nodesByHash.set(this.root.hash, this.root);
+    this.nodesByHash.set(this.nullRoot.hash, this.nullRoot);
     
-    this.leaves = new Set([this.root]);
-    this.canonicalHead = this.root;
+    this.leaves = new Set();
+    this.head = this.nullRoot; // Initially points to null root
   }
   
   /**
    * Adds a block to the tree
+   * Genesis blocks (height 0) are added as children of null root
+   * Other blocks are added as children of their parent block
    * Returns the new tree node if successful, null if parent not found
    */
   addBlock(block: Block): BlockTreeNode | null {
-    const parentHash = block.header.previousHeaderHash;
-    const parentNode = this.nodesByHash.get(parentHash);
-    
-    if (!parentNode) {
-      console.warn(`Parent block ${parentHash} not found in tree`);
+    // Check if block already exists
+    if (this.nodesByHash.has(block.hash || '')) {
+      console.warn(`Block ${block.hash} already exists in tree`);
       return null;
+    }
+    
+    // Determine parent: null root for genesis blocks, otherwise find by hash
+    let parentNode: BlockTreeNode | null = null;
+    
+    if (block.header.height === 0) {
+      // Genesis block - parent is null root
+      parentNode = this.nullRoot;
+    } else {
+      // Regular block - find parent by previousHeaderHash
+      const parentHash = block.header.previousHeaderHash;
+      parentNode = this.nodesByHash.get(parentHash) || null;
+      
+      if (!parentNode) {
+        console.warn(`Parent block ${parentHash} not found in tree`);
+        return null;
+      }
     }
     
     // Create new node
@@ -74,6 +98,7 @@ export class BlockchainTree {
       hash: block.hash || '',
       parent: parentNode,
       children: [],
+      isNullRoot: false,
       metadata: {
         isCanonical: false,
         weight: 0
@@ -96,12 +121,12 @@ export class BlockchainTree {
   }
   
   /**
-   * Sets the canonical chain head
+   * Sets the HEAD pointer to a new canonical chain tip
    * Updates isCanonical metadata for all nodes on the canonical path
    */
-  setCanonicalHead(headHash: string): boolean {
+  setHead(headHash: string): boolean {
     const headNode = this.nodesByHash.get(headHash);
-    if (!headNode) {
+    if (!headNode || headNode.isNullRoot) {
       return false;
     }
     
@@ -110,26 +135,36 @@ export class BlockchainTree {
       node.metadata.isCanonical = false;
     });
     
-    // Mark canonical path from head to root
+    // Mark canonical path from head to null root
     let current: BlockTreeNode | null = headNode;
-    while (current) {
+    while (current && !current.isNullRoot) {
       current.metadata.isCanonical = true;
       current = current.parent;
     }
     
-    this.canonicalHead = headNode;
+    this.head = headNode;
     return true;
   }
   
   /**
-   * Gets the canonical chain as an array of blocks
+   * Alias for setHead for backward compatibility
+   */
+  setCanonicalHead(headHash: string): boolean {
+    return this.setHead(headHash);
+  }
+  
+  /**
+   * Gets the canonical chain as an array of blocks (from HEAD to genesis)
+   * Excludes the null root
    */
   getCanonicalChain(): Block[] {
     const chain: Block[] = [];
-    let current: BlockTreeNode | null = this.canonicalHead;
+    let current: BlockTreeNode | null = this.head;
     
-    while (current) {
-      chain.unshift(current.block);
+    while (current && !current.isNullRoot) {
+      if (current.block) {
+        chain.unshift(current.block);
+      }
       current = current.parent;
     }
     
@@ -151,17 +186,32 @@ export class BlockchainTree {
   }
   
   /**
-   * Gets the canonical head node
+   * Gets the HEAD node (canonical chain tip)
    */
   getCanonicalHead(): BlockTreeNode {
-    return this.canonicalHead;
+    return this.head;
   }
   
   /**
-   * Gets the root (genesis) node
+   * Gets the null root node
    */
   getRoot(): BlockTreeNode {
-    return this.root;
+    return this.nullRoot;
+  }
+  
+  /**
+   * Gets the height of the canonical chain (hops from HEAD to null root)
+   */
+  getHeight(): number {
+    let height = 0;
+    let current: BlockTreeNode | null = this.head;
+    
+    while (current && !current.isNullRoot) {
+      height++;
+      current = current.parent;
+    }
+    
+    return height - 1; // Subtract 1 because genesis is height 0
   }
   
   /**
@@ -198,10 +248,14 @@ export class BlockchainTree {
     const traverse = (node: BlockTreeNode, prefix: string, isLast: boolean) => {
       const marker = isLast ? '└── ' : '├── ';
       const canonical = node.metadata.isCanonical ? ' [CANONICAL]' : '';
-      const height = node.block.header.height;
-      const shortHash = node.hash.substring(0, 8);
       
-      lines.push(`${prefix}${marker}Block ${height} (${shortHash})${canonical}`);
+      if (node.isNullRoot) {
+        lines.push(`${prefix}${marker}[NULL ROOT]`);
+      } else if (node.block) {
+        const height = node.block.header.height;
+        const shortHash = node.hash.substring(0, 8);
+        lines.push(`${prefix}${marker}Block ${height} (${shortHash})${canonical}`);
+      }
       
       const childPrefix = prefix + (isLast ? '    ' : '│   ');
       node.children.forEach((child, index) => {
@@ -210,10 +264,10 @@ export class BlockchainTree {
       });
     };
     
-    lines.push(`Root: Block 0 (${this.root.hash.substring(0, 8)}) [CANONICAL]`);
-    this.root.children.forEach((child, index) => {
-      const isLast = index === this.root.children.length - 1;
-      traverse(child, '', isLast);
+    lines.push('[NULL ROOT]');
+    this.nullRoot.children.forEach((child, index) => {
+      const isLastChild = index === this.nullRoot.children.length - 1;
+      traverse(child, '', isLastChild);
     });
     
     return lines.join('\n');

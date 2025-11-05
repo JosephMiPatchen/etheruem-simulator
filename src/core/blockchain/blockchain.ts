@@ -3,13 +3,15 @@ import { createGenesisBlock } from './block';
 import { WorldState } from './worldState';
 import { validateBlock, calculateBlockHeaderHash } from '../validation/blockValidator';
 import { validateChain } from '../validation/chainValidator';
+import { BlockchainTree } from './blockchainTree';
 
 /**
- * Blockchain class to manage the chain of blocks and world state
- * Implements core Nakamoto consensus mechanisms for chain selection and validation
+ * Blockchain class with tree structure for fork management
+ * Uses null root architecture to support multiple genesis blocks
+ * Tree is single source of truth, canonical chain computed from HEAD pointer
  */
 export class Blockchain {
-  private blocks: Block[] = [];
+  private tree: BlockchainTree;  // Tree with null root (single source of truth)
   private worldState: WorldState;
   private nodeId: string;
   private minerAddress: string;
@@ -18,25 +20,31 @@ export class Blockchain {
     this.nodeId = nodeId;
     this.minerAddress = minerAddress;
     this.worldState = new WorldState();
-    this.initializeChain();
-  }
-  
-  /**
-   * Initializes the blockchain with a genesis block
-   */
-  private initializeChain(): void {
-    const genesisBlock = createGenesisBlock(this.nodeId, this.minerAddress);
-    this.blocks.push(genesisBlock);
     
-    // Rebuild the world state from all blocks
-    this.worldState = WorldState.fromBlocks(this.blocks);
+    // Initialize tree with null root
+    this.tree = new BlockchainTree();
+    
+    // Create and add this node's genesis block
+    const genesisBlock = createGenesisBlock(this.nodeId, this.minerAddress);
+    this.tree.addBlock(genesisBlock);
+    this.tree.setHead(genesisBlock.hash || '');
+    
+    // Initialize world state from genesis
+    this.worldState = WorldState.fromBlocks([genesisBlock]);
   }
   
   /**
-   * Gets all blocks in the blockchain
+   * Gets all blocks in the canonical blockchain (computed from tree)
    */
   getBlocks(): Block[] {
-    return [...this.blocks];
+    return this.tree.getCanonicalChain();
+  }
+  
+  /**
+   * Gets the blockchain tree (for visualization and fork analysis)
+   */
+  getTree(): BlockchainTree {
+    return this.tree;
   }
   
   /**
@@ -54,17 +62,21 @@ export class Blockchain {
   }
   
   /**
-   * Gets the latest block in the chain
+   * Gets the latest block in the canonical chain (HEAD)
    */
   getLatestBlock(): Block {
-    return this.blocks[this.blocks.length - 1];
+    const head = this.tree.getCanonicalHead();
+    if (!head.block) {
+      throw new Error('HEAD points to null root - no genesis block added');
+    }
+    return head.block;
   }
   
   /**
-   * Gets the current blockchain height
+   * Gets the current blockchain height (hops from HEAD to null root)
    */
   getHeight(): number {
-    return this.blocks.length - 1;
+    return this.tree.getHeight();
   }
   
   /**
