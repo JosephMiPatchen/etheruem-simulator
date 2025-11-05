@@ -11,7 +11,7 @@ import { BlockchainTree } from './blockchainTree';
  * Tree is single source of truth, canonical chain computed from HEAD pointer
  */
 export class Blockchain {
-  private tree: BlockchainTree;  // Tree with null root (single source of truth)
+  private blockTree: BlockchainTree;  // Block Tree with null root (single source of truth)
   private worldState: WorldState;
   private nodeId: string;
   private minerAddress: string;
@@ -22,12 +22,12 @@ export class Blockchain {
     this.worldState = new WorldState();
     
     // Initialize tree with null root
-    this.tree = new BlockchainTree();
+    this.blockTree = new BlockchainTree();
     
     // Create and add this node's genesis block
     const genesisBlock = createGenesisBlock(this.nodeId, this.minerAddress);
-    this.tree.addBlock(genesisBlock);
-    this.tree.setHead(genesisBlock.hash || '');
+    this.blockTree.addBlock(genesisBlock);
+    this.blockTree.setHead(genesisBlock.hash || '');
     
     // Initialize world state from genesis
     this.worldState = WorldState.fromBlocks([genesisBlock]);
@@ -37,14 +37,14 @@ export class Blockchain {
    * Gets all blocks in the canonical blockchain (computed from tree)
    */
   getBlocks(): Block[] {
-    return this.tree.getCanonicalChain();
+    return this.blockTree.getCanonicalChain();
   }
   
   /**
    * Gets the blockchain tree (for visualization and fork analysis)
    */
   getTree(): BlockchainTree {
-    return this.tree;
+    return this.blockTree;
   }
   
   /**
@@ -65,7 +65,7 @@ export class Blockchain {
    * Gets the latest block in the canonical chain (HEAD)
    */
   getLatestBlock(): Block {
-    const head = this.tree.getCanonicalHead();
+    const head = this.blockTree.getCanonicalHead();
     if (!head.block) {
       throw new Error('HEAD points to null root - no genesis block added');
     }
@@ -76,7 +76,7 @@ export class Blockchain {
    * Gets the current blockchain height (hops from HEAD to null root)
    */
   getHeight(): number {
-    return this.tree.getHeight();
+    return this.blockTree.getHeight();
   }
   
   /**
@@ -91,14 +91,14 @@ export class Blockchain {
     }
     
     // Add block to tree (handles genesis blocks and regular blocks)
-    const treeNode = this.tree.addBlock(block);
+    const treeNode = this.blockTree.addBlock(block);
     if (!treeNode) {
       console.error(`Failed to add block ${block.hash} to tree - parent not found`);
       return false;
     }
     
     // Check if this block extends the current canonical chain
-    const currentHead = this.tree.getCanonicalHead();
+    const currentHead = this.blockTree.getCanonicalHead();
     const extendsCanonical = block.header.previousHeaderHash === (currentHead.block?.hash || '');
     
     if (extendsCanonical) {
@@ -122,7 +122,7 @@ export class Blockchain {
       }
       
       // Update HEAD to point to this block (extends canonical chain)
-      this.tree.setHead(block.hash);
+      this.blockTree.setHead(block.hash);
       
       return true;
     } else {
@@ -145,23 +145,23 @@ export class Blockchain {
     }
     
     // Check if the new chain is longer than current canonical chain
-    const currentCanonicalChain = this.tree.getCanonicalChain();
+    const currentCanonicalChain = this.blockTree.getCanonicalChain();
     if (newBlocks.length <= currentCanonicalChain.length) {
       return false;
     }
     
     // Add all blocks from new chain to tree (preserves forks)
     for (const block of newBlocks) {
-      const existingNode = this.tree.getNode(block.hash || '');
+      const existingNode = this.blockTree.getNode(block.hash || '');
       if (!existingNode) {
         // New block - add to tree
-        this.tree.addBlock(block);
+        this.blockTree.addBlock(block);
       }
     }
     
     // Update HEAD to point to the last block of the new chain
     const lastBlock = newBlocks[newBlocks.length - 1];
-    this.tree.setHead(lastBlock.hash || '');
+    this.blockTree.setHead(lastBlock.hash || '');
     
     // Rebuild world state from the new canonical chain
     this.worldState = WorldState.fromBlocks(newBlocks);
@@ -180,7 +180,7 @@ export class Blockchain {
    * Gets a block by its hash (searches tree)
    */
   getBlockByHash(hash: string): Block | undefined {
-    const node = this.tree.getNode(hash);
+    const node = this.blockTree.getNode(hash);
     return node?.block || undefined;
   }
   
@@ -188,7 +188,7 @@ export class Blockchain {
    * Gets a block by its height (from canonical chain)
    */
   getBlockByHeight(height: number): Block | undefined {
-    const canonicalChain = this.tree.getCanonicalChain();
+    const canonicalChain = this.blockTree.getCanonicalChain();
     return height >= 0 && height < canonicalChain.length ? canonicalChain[height] : undefined;
   }
 }

@@ -25,7 +25,6 @@ export interface BlockTreeNode {
   // Metadata (extensible for future use)
   metadata: {
     weight?: number;           // For GHOST: total attestation weight
-    isCanonical?: boolean;     // Is this block on the canonical chain?
     attestationCount?: number; // Number of attestations
     [key: string]: any;        // Allow any future metadata
   };
@@ -50,7 +49,6 @@ export class BlockchainTree {
       children: [],
       isNullRoot: true,
       metadata: {
-        isCanonical: false,
         weight: 0
       }
     };
@@ -77,7 +75,6 @@ export class BlockchainTree {
     
     // Determine parent: null root for genesis blocks, otherwise find by hash
     let parentNode: BlockTreeNode | null = null;
-    
     if (block.header.height === 0) {
       // Genesis block - parent is null root
       parentNode = this.nullRoot;
@@ -100,7 +97,6 @@ export class BlockchainTree {
       children: [],
       isNullRoot: false,
       metadata: {
-        isCanonical: false,
         weight: 0
       }
     };
@@ -122,24 +118,12 @@ export class BlockchainTree {
   
   /**
    * Sets the HEAD pointer to a new canonical chain tip
-   * Updates isCanonical metadata for all nodes on the canonical path
+   * Canonical chain is determined by walking from HEAD to null root
    */
   setHead(headHash: string): boolean {
     const headNode = this.nodesByHash.get(headHash);
     if (!headNode || headNode.isNullRoot) {
       return false;
-    }
-    
-    // Clear all canonical flags
-    this.nodesByHash.forEach(node => {
-      node.metadata.isCanonical = false;
-    });
-    
-    // Mark canonical path from head to null root
-    let current: BlockTreeNode | null = headNode;
-    while (current && !current.isNullRoot) {
-      current.metadata.isCanonical = true;
-      current = current.parent;
     }
     
     this.head = headNode;
@@ -245,9 +229,17 @@ export class BlockchainTree {
   visualize(): string {
     const lines: string[] = [];
     
+    // Build set of canonical node hashes by walking from HEAD to null root
+    const canonicalHashes = new Set<string>();
+    let current: BlockTreeNode | null = this.head;
+    while (current && !current.isNullRoot) {
+      canonicalHashes.add(current.hash);
+      current = current.parent;
+    }
+    
     const traverse = (node: BlockTreeNode, prefix: string, isLast: boolean) => {
       const marker = isLast ? '└── ' : '├── ';
-      const canonical = node.metadata.isCanonical ? ' [CANONICAL]' : '';
+      const canonical = canonicalHashes.has(node.hash) ? ' [CANONICAL]' : '';
       
       if (node.isNullRoot) {
         lines.push(`${prefix}${marker}[NULL ROOT]`);
