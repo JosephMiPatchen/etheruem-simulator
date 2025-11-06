@@ -133,5 +133,4 @@ export class RANDAO {
     const newMix = xorHexStrings(currentMix, reveal);
     state.updateRandaoMix(epoch, newMix);
   }
-
 }
