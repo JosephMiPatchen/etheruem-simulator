@@ -181,29 +181,34 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, rec
               {selectedBlock.attestations && selectedBlock.attestations.length > 0 && (
                 <div className="attestations-container">
                   <h3>Attestations ({selectedBlock.attestations.length})</h3>
-                  <div className="attestations-list">
+                  <div className="attestations-grid-compact">
                     {selectedBlock.attestations.map((attestation, index) => {
                       // Check if this attestation's block hash is in the canonical chain
                       const isCanonical = blocks.some((b: Block) => b.hash === attestation.blockHash);
                       
+                      // Find the block being attested to get its height
+                      const attestedBlock = blocks.find((b: Block) => b.hash === attestation.blockHash);
+                      const blockHeight = attestedBlock ? attestedBlock.header.height : '?';
+                      
+                      // Get node ID from address using context
+                      const nodeId = worldState && attestation.validatorAddress in worldState 
+                        ? Object.keys(worldState).indexOf(attestation.validatorAddress).toString()
+                        : attestation.validatorAddress.slice(-4);
+                      
+                      // Get last 6 hex characters of block hash
+                      const hashSuffix = attestation.blockHash.slice(-6);
+                      
                       return (
-                        <div key={index} className="attestation-item-block">
-                          <div className="attestation-validator-info">
-                            <span className="attestation-label">Validator:</span>
-                            <span className="attestation-address-full">{attestation.validatorAddress}</span>
-                          </div>
-                          <div className="attestation-block-info">
-                            <span className="attestation-label">Block Hash:</span>
-                            <span className="attestation-hash-full">
-                              {attestation.blockHash}
-                              {isCanonical && <span className="canonical-checkmark" title="In canonical chain"> ✓</span>}
-                            </span>
-                          </div>
-                          <div className="attestation-timestamp-info">
-                            <span className="attestation-label">Timestamp:</span>
-                            <span className="attestation-timestamp-value">
-                              {new Date(attestation.timestamp).toLocaleString()}
-                            </span>
+                        <div 
+                          key={index} 
+                          className="attestation-circle"
+                          title={`Validator: ${attestation.validatorAddress}\nBlock: ${attestation.blockHash}\nHeight: ${blockHeight}`}
+                        >
+                          <div className="attestation-circle-content">
+                            <div className="attestation-node-id">{nodeId}</div>
+                            <div className="attestation-block-height">#{blockHeight}</div>
+                            <div className="attestation-hash-suffix">{hashSuffix}</div>
+                            {isCanonical && <div className="attestation-check">✓</div>}
                           </div>
                         </div>
                       );
