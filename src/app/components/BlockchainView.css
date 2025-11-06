@@ -129,9 +129,27 @@
   font-size: 0.8rem;
 }
 
+.block-counts-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
 .block-tx-count {
-  font-size: 0.8rem;
-  color: var(--text-color);
+  font-size: 10px;
+  color: var(--text-secondary);
+  background-color: rgba(98, 126, 234, 0.1);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.block-attestation-count {
+  font-size: 10px;
+  color: var(--text-secondary);
+  background-color: rgba(76, 175, 80, 0.1);
+  padding: 2px 6px;
+  border-radius: 3px;
 }
 
 /* Block Modal */
@@ -287,6 +305,13 @@
 .attestation-timestamp-value {
   font-size: var(--font-size-sm);
   color: var(--text-color);
+}
+
+.canonical-checkmark {
+  color: #4caf50;
+  font-weight: bold;
+  margin-left: 8px;
+  font-size: var(--font-size-md);
 }
 
 .genesis-hash {

@@ -88,10 +88,12 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, rec
                       <span className="invalid-block">✗</span>
                   }
                 </div>
-                <div className="block-tx-count">{block.transactions.length} tx</div>
-                {block.attestations && block.attestations.length > 0 && (
-                  <div className="block-attestation-count">{block.attestations.length} att</div>
-                )}
+                <div className="block-counts-row">
+                  <div className="block-tx-count">{block.transactions.length} tx</div>
+                  {block.attestations && block.attestations.length > 0 && (
+                    <div className="block-attestation-count">{block.attestations.length} att</div>
+                  )}
+                </div>
                 {isForkedBlock(block) && <div className="fork-icon"><BiFork /></div>}
               </div>
             );
@@ -180,24 +182,32 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, rec
                 <div className="attestations-container">
                   <h3>Attestations ({selectedBlock.attestations.length})</h3>
                   <div className="attestations-list">
-                    {selectedBlock.attestations.map((attestation, index) => (
-                      <div key={index} className="attestation-item-block">
-                        <div className="attestation-validator-info">
-                          <span className="attestation-label">Validator:</span>
-                          <span className="attestation-address-full">{attestation.validatorAddress}</span>
+                    {selectedBlock.attestations.map((attestation, index) => {
+                      // Check if this attestation's block hash is in the canonical chain
+                      const isCanonical = blocks.some((b: Block) => b.hash === attestation.blockHash);
+                      
+                      return (
+                        <div key={index} className="attestation-item-block">
+                          <div className="attestation-validator-info">
+                            <span className="attestation-label">Validator:</span>
+                            <span className="attestation-address-full">{attestation.validatorAddress}</span>
+                          </div>
+                          <div className="attestation-block-info">
+                            <span className="attestation-label">Block Hash:</span>
+                            <span className="attestation-hash-full">
+                              {attestation.blockHash}
+                              {isCanonical && <span className="canonical-checkmark" title="In canonical chain"> ✓</span>}
+                            </span>
+                          </div>
+                          <div className="attestation-timestamp-info">
+                            <span className="attestation-label">Timestamp:</span>
+                            <span className="attestation-timestamp-value">
+                              {new Date(attestation.timestamp).toLocaleString()}
+                            </span>
+                          </div>
                         </div>
-                        <div className="attestation-block-info">
-                          <span className="attestation-label">Block Hash:</span>
-                          <span className="attestation-hash-full">{attestation.blockHash}</span>
-                        </div>
-                        <div className="attestation-timestamp-info">
-                          <span className="attestation-label">Timestamp:</span>
-                          <span className="attestation-timestamp-value">
-                            {new Date(attestation.timestamp).toLocaleString()}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}

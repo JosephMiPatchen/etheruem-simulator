@@ -234,8 +234,20 @@ export class Miner {
       // Create transactions for the block - await the async function
       const transactions = await this.createBlockTransactions(height);
       
-      // Get attestations for the previous block from beacon pool
-      const attestations = this.node.getState().beaconState?.getAttestationsForBlock(previousHeaderHash) || [];
+      // Get all attestations for blocks in the canonical chain from beacon pool
+      // Miners include as many attestations as possible to maximize fees
+      const beaconState = this.node.getState().beaconState;
+      let attestations: any[] = [];
+      
+      if (beaconState) {
+        // Get all blocks in the canonical chain
+        const canonicalChain = this.node.getBlocks();
+        const canonicalBlockHashes = new Set(canonicalChain.map(b => b.hash).filter((h): h is string => !!h));
+        
+        // Filter beacon pool to only include attestations for canonical chain blocks
+        const allAttestations = beaconState.getBeaconPool();
+        attestations = allAttestations.filter((att: any) => canonicalBlockHashes.has(att.blockHash));
+      }
       
       // Create the block header
       const header: BlockHeader = {
@@ -247,7 +259,7 @@ export class Miner {
         height
       };
       
-      // Create the block with attestations for the previous block
+      // Create the block with attestations for all canonical chain blocks
       const block: Block = {
         header,
         transactions,
