@@ -153,6 +153,12 @@ export class NodeWorker {
     const nodeState = this._node.getState();
     if (!nodeState.address) return; // Skip if no address
     
+    // Skip if block doesn't have a hash
+    if (!block.hash) {
+      console.warn('Cannot create attestation for block without hash');
+      return;
+    }
+    
     // Create attestation (address is guaranteed to exist after check above)
     const attestation: Attestation = {
       validatorAddress: nodeState.address!,

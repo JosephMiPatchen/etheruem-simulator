@@ -95,9 +95,18 @@ export class BeaconState {
   
   /**
    * Add an attestation to the beacon pool
+   * Prevents duplicate attestations (same validator + block hash)
    */
   addAttestation(attestation: Attestation): void {
-    this.beaconPool.push(attestation);
+    // Check if this exact attestation already exists (same validator + block hash)
+    const exists = this.beaconPool.some(
+      att => att.validatorAddress === attestation.validatorAddress && 
+             att.blockHash === attestation.blockHash
+    );
+    
+    if (!exists) {
+      this.beaconPool.push(attestation);
+    }
   }
   
   /**
