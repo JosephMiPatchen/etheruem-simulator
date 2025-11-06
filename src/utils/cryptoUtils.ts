@@ -7,6 +7,10 @@
 import * as secp from 'noble-secp256k1';
 import { sha256 } from '@noble/hashes/sha2';
 import { bytesToHex, hexToBytes } from '@noble/hashes/utils';
+
+// Re-export utility functions from @noble/hashes
+export { bytesToHex, hexToBytes };
+
 /**
  * Signature input data for Ethereum transactions
  * 
@@ -350,4 +354,78 @@ export function aggregateBLSSignatures(signatureHexArray: string[]): string {
   const aggregated = AugSchemeMPL.aggregate(signatures);
   
   return aggregated.toHex();
+}
+
+// ============================================================================
+// RANDAO Helper Functions
+// Used for validator scheduling and randomness
+// ============================================================================
+
+/**
+ * Convert number to 8-byte big-endian representation
+ * @param n The number to convert
+ * @returns 8-byte Uint8Array in big-endian format
+ */
+export function i2b8(n: number): Uint8Array {
+  const b = new Uint8Array(8);
+  for (let i = 7; i >= 0; i--) {
+    b[i] = n & 0xff;
+    n = Math.floor(n / 256);
+  }
+  return b;
+}
+
+/**
+ * Concatenate multiple byte arrays
+ * @param parts Variable number of Uint8Array to concatenate
+ * @returns Single concatenated Uint8Array
+ */
+export function concat(...parts: Uint8Array[]): Uint8Array {
+  const len = parts.reduce((a, p) => a + p.length, 0);
+  const out = new Uint8Array(len);
+  let offset = 0;
+  for (const p of parts) {
+    out.set(p, offset);
+    offset += p.length;
+  }
+  return out;
+}
+
+/**
+ * Parse 8 bytes as big-endian unsigned 64-bit integer
+ * Returns as JS number (safe for modulo operations)
+ * @param b The byte array to parse
+ * @param offset Starting offset in the array
+ * @returns Parsed number
+ */
+export function u64(b: Uint8Array, offset = 0): number {
+  let n = 0;
+  for (let i = 0; i < 8; i++) {
+    n = (n * 256 + (b[offset + i] ?? 0)) >>> 0;
+  }
+  return n >>> 0;
+}
+
+/**
+ * XOR two hex strings byte-by-byte
+ * @param hex1 First hex string
+ * @param hex2 Second hex string
+ * @returns XOR result as hex string
+ */
+export function xorHexStrings(hex1: string, hex2: string): string {
+  // Remove 0x prefix if present
+  const h1 = hex1.startsWith('0x') ? hex1.slice(2) : hex1;
+  const h2 = hex2.startsWith('0x') ? hex2.slice(2) : hex2;
+  
+  // Ensure both strings are same length
+  const maxLen = Math.max(h1.length, h2.length);
+  const padded1 = h1.padStart(maxLen, '0');
+  const padded2 = h2.padStart(maxLen, '0');
+  
+  let result = '';
+  for (let i = 0; i < maxLen; i++) {
+    const xor = parseInt(padded1[i], 16) ^ parseInt(padded2[i], 16);
+    result += xor.toString(16);
+  }
+  return result;
 }

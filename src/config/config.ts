@@ -18,6 +18,10 @@ export const SimulatorConfig = {
   REDISTRIBUTION_RATIO: 0.5, // Ratio of coins to redistribute (0-1)
   MAX_BLOCK_TRANSACTIONS: 10, // Maximum number of transactions per block
   
+  // Proof of Stake (PoS) parameters
+  SLOTS_PER_EPOCH: 32,       // Number of slots per epoch (Ethereum mainnet standard)
+  MAX_EFFECTIVE_BALANCE: 32, // Maximum effective balance in ETH for validators
+  
   // Constants
   REWARDER_NODE_ID: "COINBASE-REWARD",
   GENESIS_PREV_HASH: "0000000000000000000000000000000000000000000000000000000000000000", // Previous hash for genesis blocks
