@@ -154,18 +154,20 @@
 }
 
 .block-tree-modal .legend-dot.root {
-  background: var(--secondary-color);
-  border-color: #7f8c8d;
+  background: #4d4d4d;
+  border-color: #ff9800;
+  border-width: 3px;
 }
 
 .block-tree-modal .legend-dot.canonical {
-  background: var(--success-color);
-  border-color: #4caf50;
+  background: #667eea;
+  border-color: #764ba2;
+  box-shadow: 0 0 8px rgba(102, 126, 234, 0.6);
 }
 
 .block-tree-modal .legend-dot.fork {
-  background: var(--primary-color);
-  border-color: #627eea;
+  background: #6c757d;
+  border-color: #95a5a6;
 }
 
 /* Tree Links */
@@ -211,6 +213,11 @@
 
 .block-tree-modal .tree-node:hover {
   opacity: 0.8;
+}
+
+/* Canonical Node Glow */
+.block-tree-modal .canonical-node circle {
+  filter: drop-shadow(0 0 8px rgba(102, 126, 234, 0.6));
 }
 
 /* Non-Canonical Warning Banner */

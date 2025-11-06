@@ -7,6 +7,7 @@ import { isHashBelowCeiling } from '../../utils/cryptoUtils';
 import { SimulatorConfig } from '../../config/config';
 import TransactionView from './TransactionView';
 import { MdContentCopy, MdCheck } from 'react-icons/md';
+import { BiFork } from 'react-icons/bi';
 import './BlockTreeView.css';
 
 interface BlockTreeViewProps {
@@ -164,15 +165,33 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, onClose }
                   <g 
                     onClick={handleClick}
                     style={{ cursor: blockNode?.block ? 'pointer' : 'default' }}
-                    className="tree-node"
+                    className={isCanonical && !isRoot ? 'tree-node canonical-node' : 'tree-node'}
                   >
                     {/* Main circle */}
                     <circle
                       r={22}
-                      fill={isRoot ? '#4d4d4d' : isCanonical ? '#4caf50' : '#627eea'}
-                      stroke={isRoot ? '#7f8c8d' : isCanonical ? '#66bb6a' : '#7e97f0'}
-                      strokeWidth={2}
+                      fill={isRoot ? '#4d4d4d' : isCanonical ? '#667eea' : '#6c757d'}
+                      stroke={isRoot ? '#ff9800' : isCanonical ? '#764ba2' : '#95a5a6'}
+                      strokeWidth={isRoot ? 3 : 2}
                     />
+                    
+                    {/* Fork icon for non-canonical blocks - positioned below the circle */}
+                    {!isCanonical && !isRoot && (
+                      <g transform="translate(-6, 28)">
+                        <foreignObject width="12" height="12">
+                          <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center',
+                            color: '#95a5a6',
+                            fontSize: '12px'
+                          }}>
+                            <BiFork />
+                          </div>
+                        </foreignObject>
+                      </g>
+                    )}
+                    
                     {/* Height text */}
                     <text
                       fill="#ffffff"
