@@ -18,8 +18,9 @@ interface BlockchainViewProps {
 
 const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, receipts }) => {
   const [selectedBlock, setSelectedBlock] = useState<Block | null>(null);
+  const [selectedAttestation, setSelectedAttestation] = useState<any | null>(null);
   const [copied, setCopied] = useState(false);
-  const { forkStartHeight } = useSimulatorContext();
+  const { forkStartHeight, addressToNodeId } = useSimulatorContext();
   
   const copyToClipboard = async (text: string) => {
     try {
@@ -190,10 +191,8 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, rec
                       const attestedBlock = blocks.find((b: Block) => b.hash === attestation.blockHash);
                       const blockHeight = attestedBlock ? attestedBlock.header.height : '?';
                       
-                      // Get node ID from address using context
-                      const nodeId = worldState && attestation.validatorAddress in worldState 
-                        ? Object.keys(worldState).indexOf(attestation.validatorAddress).toString()
-                        : attestation.validatorAddress.slice(-4);
+                      // Get node name (color) from address using context
+                      const nodeName = addressToNodeId[attestation.validatorAddress] || attestation.validatorAddress.slice(-4);
                       
                       // Get last 6 hex characters of block hash
                       const hashSuffix = attestation.blockHash.slice(-6);
@@ -201,11 +200,12 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, rec
                       return (
                         <div 
                           key={index} 
-                          className="attestation-circle"
-                          title={`Validator: ${attestation.validatorAddress}\nBlock: ${attestation.blockHash}\nHeight: ${blockHeight}`}
+                          className={`attestation-circle ${isCanonical ? 'attestation-canonical' : ''}`}
+                          title={`Validator: ${nodeName}\nBlock: ${attestation.blockHash}\nHeight: ${blockHeight}`}
+                          onClick={() => setSelectedAttestation({ ...attestation, blockHeight, nodeName, isCanonical })}
                         >
                           <div className="attestation-circle-content">
-                            <div className="attestation-node-id">{nodeId}</div>
+                            <div className="attestation-node-id">{nodeName}</div>
                             <div className="attestation-block-height">#{blockHeight}</div>
                             <div className="attestation-hash-suffix">{hashSuffix}</div>
                             {isCanonical && <div className="attestation-check">✓</div>}
@@ -216,6 +216,63 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, rec
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Attestation Detail Modal */}
+      {selectedAttestation && (
+        <div className="block-modal-overlay" onClick={() => setSelectedAttestation(null)}>
+          <div className="block-modal attestation-detail-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Attestation Details</h3>
+              <button className="close-button" onClick={() => setSelectedAttestation(null)}>×</button>
+            </div>
+            
+            <div className="block-modal-content">
+              <div className="attestation-detail-section">
+                <div className="info-row">
+                  <span className="info-label">Validator Node:</span>
+                  <span className="info-value">{selectedAttestation.nodeName}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Validator Address:</span>
+                  <span className="info-value hash-value">{selectedAttestation.validatorAddress}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Block Hash:</span>
+                  <span className="info-value hash-value">{selectedAttestation.blockHash}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Block Height:</span>
+                  <span className="info-value">{selectedAttestation.blockHeight}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Timestamp:</span>
+                  <span className="info-value">{new Date(selectedAttestation.timestamp).toLocaleString()}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Canonical Chain:</span>
+                  <span className="info-value">
+                    {selectedAttestation.isCanonical ? 
+                      <span className="valid-hash">Yes ✓</span> : 
+                      <span className="invalid-hash">No (Forked)</span>
+                    }
+                  </span>
+                </div>
+              </div>
+              
+              <div className="attestation-raw-data">
+                <h4>Raw Data</h4>
+                <pre className="raw-data-display">
+                  {JSON.stringify({
+                    validatorAddress: selectedAttestation.validatorAddress,
+                    blockHash: selectedAttestation.blockHash,
+                    timestamp: selectedAttestation.timestamp
+                  }, null, 2)}
+                </pre>
+              </div>
             </div>
           </div>
         </div>

@@ -288,6 +288,16 @@
   box-shadow: 0 2px 8px rgba(98, 126, 234, 0.3);
 }
 
+.attestation-canonical {
+  border-color: #4caf50;
+  border-width: 3px;
+}
+
+.attestation-canonical:hover {
+  border-color: #4caf50;
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.4);
+}
+
 .attestation-circle-content {
   display: flex;
   flex-direction: column;
@@ -324,6 +334,42 @@
   font-size: 14px;
   line-height: 1;
   margin-top: 2px;
+}
+
+/* Attestation Detail Modal */
+.attestation-detail-modal {
+  max-width: 600px;
+}
+
+.attestation-detail-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.attestation-raw-data {
+  border-top: 1px solid var(--border-color);
+  padding-top: 20px;
+}
+
+.attestation-raw-data h4 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: var(--primary-color);
+}
+
+.raw-data-display {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  padding: 12px;
+  font-family: monospace;
+  font-size: var(--font-size-xs);
+  color: var(--text-color);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .genesis-hash {
