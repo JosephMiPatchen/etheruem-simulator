@@ -1,19 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BeaconState } from '../../core/consensus/beaconState';
+import { Block } from '../../types/types';
 import { useSimulatorContext } from '../contexts/SimulatorContext';
 import { getNodeColorCSS, getNodeColorEmoji } from '../../utils/nodeColorUtils';
+import AttestationCircle from './AttestationCircle';
 import './BeaconStateView.css';
 
 interface BeaconStateViewProps {
   beaconState: BeaconState;
+  blockchain: Block[];
   onClose: () => void;
 }
 
 /**
  * BeaconStateView - Displays the Consensus Layer (CL) beacon state
  */
-const BeaconStateView: React.FC<BeaconStateViewProps> = ({ beaconState, onClose }) => {
+const BeaconStateView: React.FC<BeaconStateViewProps> = ({ beaconState, blockchain, onClose }) => {
   const { addressToNodeId } = useSimulatorContext();
+  const [selectedAttestation, setSelectedAttestation] = useState<any | null>(null);
   const currentSlot = beaconState.getCurrentSlot();
   const currentEpoch = beaconState.getCurrentEpoch();
   const validators = beaconState.validators;
@@ -140,33 +144,26 @@ const BeaconStateView: React.FC<BeaconStateViewProps> = ({ beaconState, onClose 
               {beaconState.beaconPool.length === 0 ? (
                 <p className="empty-message">No attestations in beacon pool</p>
               ) : (
-                <div className="attestations-grid">
+                <div className="attestations-grid-compact">
                   {beaconState.beaconPool.slice(-20).reverse().map((attestation, index) => {
-                    const nodeId = addressToNodeId[attestation.validatorAddress] || 'Unknown';
-                    const nodeColor = getNodeColorCSS(nodeId);
-                    const nodeEmoji = getNodeColorEmoji(nodeId);
-                    const addressSuffix = attestation.validatorAddress.slice(-6);
-                    const blockHashShort = attestation.blockHash.slice(0, 8) + '...';
-                    const timeAgo = Math.floor((Date.now() - attestation.timestamp) / 1000);
+                    // Find the block being attested to get its height
+                    const attestedBlock = blockchain.find((b: Block) => b.hash === attestation.blockHash);
+                    const blockHeight = attestedBlock ? attestedBlock.header.height : '?';
+                    
+                    // Get node name (color) from address using context
+                    const nodeName = addressToNodeId[attestation.validatorAddress] || 'Unknown';
+                    
+                    // Check if canonical for modal data
+                    const isCanonical = blockchain.some((b: Block) => b.hash === attestation.blockHash);
 
                     return (
-                      <div 
-                        key={`${attestation.validatorAddress}-${attestation.timestamp}-${index}`} 
-                        className="attestation-item"
-                        style={{ borderLeftColor: nodeColor }}
-                      >
-                        <div className="attestation-validator">
-                          <span style={{ color: nodeColor, fontWeight: 'bold' }}>
-                            {nodeEmoji} {nodeId}
-                          </span>
-                          <span className="attestation-address">({addressSuffix})</span>
-                        </div>
-                        <div className="attestation-block">
-                          <span className="attestation-label">Block:</span>
-                          <span className="attestation-hash">{blockHashShort}</span>
-                        </div>
-                        <div className="attestation-time">{timeAgo}s ago</div>
-                      </div>
+                      <AttestationCircle
+                        key={`${attestation.validatorAddress}-${attestation.timestamp}-${index}`}
+                        attestation={attestation}
+                        blocks={blockchain}
+                        addressToNodeId={addressToNodeId}
+                        onClick={() => setSelectedAttestation({ ...attestation, blockHeight, nodeName, isCanonical })}
+                      />
                     );
                   })}
                 </div>
@@ -179,6 +176,65 @@ const BeaconStateView: React.FC<BeaconStateViewProps> = ({ beaconState, onClose 
           <button className="beacon-button" onClick={onClose}>Close</button>
         </div>
       </div>
+      
+      {/* Attestation Detail Modal */}
+      {selectedAttestation && (
+        <div className="block-modal-overlay" onClick={() => setSelectedAttestation(null)}>
+          <div className="block-modal attestation-detail-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Attestation Details</h3>
+              <button className="close-button" onClick={() => setSelectedAttestation(null)}>×</button>
+            </div>
+            
+            <div className="block-modal-content">
+              <div className="attestation-detail-section">
+                <div className="info-row">
+                  <span className="info-label">Validator Node:</span>
+                  <span className="info-value" style={{ color: getNodeColorCSS(selectedAttestation.nodeName), fontWeight: 'bold' }}>
+                    {selectedAttestation.nodeName}
+                  </span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Validator Address:</span>
+                  <span className="info-value hash-value">{selectedAttestation.validatorAddress}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Block Hash:</span>
+                  <span className="info-value hash-value">{selectedAttestation.blockHash}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Block Height:</span>
+                  <span className="info-value">{selectedAttestation.blockHeight}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Timestamp:</span>
+                  <span className="info-value">{new Date(selectedAttestation.timestamp).toLocaleString()}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Canonical Chain:</span>
+                  <span className="info-value">
+                    {selectedAttestation.isCanonical ? 
+                      <span className="valid-hash">Yes ✓</span> : 
+                      <span className="invalid-hash">No (Forked)</span>
+                    }
+                  </span>
+                </div>
+              </div>
+              
+              <div className="attestation-raw-data">
+                <h4>Raw Data</h4>
+                <pre className="raw-data-display">
+                  {JSON.stringify({
+                    validatorAddress: selectedAttestation.validatorAddress,
+                    blockHash: selectedAttestation.blockHash,
+                    timestamp: selectedAttestation.timestamp
+                  }, null, 2)}
+                </pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

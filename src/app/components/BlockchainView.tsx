@@ -5,6 +5,7 @@ import { calculateBlockHeaderHash } from '../../core/validation/blockValidator';
 import { isHashBelowCeiling } from '../../utils/cryptoUtils';
 import { SimulatorConfig } from '../../config/config';
 import TransactionView from './TransactionView';
+import AttestationCircle from './AttestationCircle';
 import { useSimulatorContext } from '../contexts/SimulatorContext';
 import { getNodeColorCSS } from '../../utils/nodeColorUtils';
 import { BiFork } from "react-icons/bi";
@@ -185,35 +186,24 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, rec
                   <h3>Attestations ({selectedBlock.attestations.length})</h3>
                   <div className="attestations-grid-compact">
                     {selectedBlock.attestations.map((attestation, index) => {
-                      // Check if this attestation's block hash is in the canonical chain
-                      const isCanonical = blocks.some((b: Block) => b.hash === attestation.blockHash);
-                      
                       // Find the block being attested to get its height
                       const attestedBlock = blocks.find((b: Block) => b.hash === attestation.blockHash);
                       const blockHeight = attestedBlock ? attestedBlock.header.height : '?';
                       
                       // Get node name (color) from address using context
                       const nodeName = addressToNodeId[attestation.validatorAddress] || attestation.validatorAddress.slice(-4);
-                      const nodeColor = getNodeColorCSS(nodeName);
                       
-                      // Get last 6 hex characters of block hash
-                      const hashSuffix = attestation.blockHash.slice(-6);
+                      // Check if canonical for modal data
+                      const isCanonical = blocks.some((b: Block) => b.hash === attestation.blockHash);
                       
                       return (
-                        <div 
-                          key={index} 
-                          className={`attestation-circle ${isCanonical ? 'attestation-canonical' : ''}`}
-                          style={{ borderColor: nodeColor }}
-                          title={`Validator: ${nodeName}\nBlock: ${attestation.blockHash}\nHeight: ${blockHeight}`}
+                        <AttestationCircle
+                          key={index}
+                          attestation={attestation}
+                          blocks={blocks}
+                          addressToNodeId={addressToNodeId}
                           onClick={() => setSelectedAttestation({ ...attestation, blockHeight, nodeName, isCanonical })}
-                        >
-                          <div className="attestation-circle-content">
-                            <div className="attestation-block-label">Block</div>
-                            <div className="attestation-block-number">{blockHeight}</div>
-                            <div className="attestation-hash-suffix">{hashSuffix}</div>
-                            {isCanonical && <div className="attestation-check">✓</div>}
-                          </div>
-                        </div>
+                        />
                       );
                     })}
                   </div>

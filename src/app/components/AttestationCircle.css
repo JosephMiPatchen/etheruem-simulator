@@ -1,0 +1,63 @@
+/* Attestation Circle Component */
+.attestation-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--overlay-background);
+  border: 1.5px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.attestation-circle:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(98, 126, 234, 0.3);
+}
+
+.attestation-canonical {
+  border-width: 1.5px;
+}
+
+.attestation-circle-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  text-align: center;
+  padding: 4px;
+}
+
+.attestation-block-label {
+  font-size: 10px;
+  color: var(--text-secondary);
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.attestation-block-number {
+  font-weight: bold;
+  font-size: 18px;
+  color: var(--text-color);
+  line-height: 1;
+}
+
+.attestation-hash-suffix {
+  font-family: monospace;
+  font-size: 9px;
+  color: var(--text-secondary);
+  line-height: 1;
+}
+
+.attestation-check {
+  color: #4caf50;
+  font-weight: bold;
+  font-size: 14px;
+  line-height: 1;
+  margin-top: 2px;
+}
