@@ -1,7 +1,12 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import Tree from 'react-d3-tree';
 import { BlockchainTree, BlockTreeNode } from '../../core/blockchain/blockchainTree';
 import { Block } from '../../types/types';
+import { calculateBlockHeaderHash } from '../../core/validation/blockValidator';
+import { isHashBelowCeiling } from '../../utils/cryptoUtils';
+import { SimulatorConfig } from '../../config/config';
+import TransactionView from './TransactionView';
+import { MdContentCopy, MdCheck } from 'react-icons/md';
 import './BlockTreeView.css';
 
 interface BlockTreeViewProps {
@@ -24,8 +29,26 @@ interface TreeNodeData {
  * Shows null root, all genesis blocks, and all forks with canonical chain highlighted
  */
 const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, onClose }) => {
-  const [selectedBlock, setSelectedBlock] = React.useState<Block | null>(null);
+  const [selectedBlock, setSelectedBlock] = useState<Block | null>(null);
+  const [copied, setCopied] = useState(false);
   const stats = blockchainTree.getStats();
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  const validateBlockHash = (block: Block) => {
+    const hash = calculateBlockHeaderHash(block.header);
+    const isValid = isHashBelowCeiling(hash, SimulatorConfig.CEILING);
+    const isGenesis = block.header.height === 0;
+    return { hash, isValid, isGenesis };
+  };
   
   // Convert BlockchainTree to react-d3-tree format
   const treeData = useMemo(() => {
@@ -205,84 +228,74 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, onClose }
         </div>
       </div>
 
-      {/* Block Detail Modal */}
+      {/* Block Detail Modal - Using BlockchainView style */}
       {selectedBlock && (
-        <div className="block-detail-overlay" onClick={() => setSelectedBlock(null)}>
-          <div className="block-detail-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="block-detail-header">
-              <h3>Block Details</h3>
-              <button className="modal-close" onClick={() => setSelectedBlock(null)}>×</button>
+        <div className="block-modal-overlay" onClick={() => setSelectedBlock(null)}>
+          <div className="block-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Block {selectedBlock.header.height}</h3>
+              <div className="modal-header-actions">
+                <button 
+                  className="copy-button" 
+                  onClick={() => copyToClipboard(JSON.stringify(selectedBlock, null, 2))}
+                  title="Copy block data"
+                >
+                  {copied ? <MdCheck /> : <MdContentCopy />}
+                </button>
+                <button className="close-button" onClick={() => setSelectedBlock(null)}>×</button>
+              </div>
             </div>
-            <div className="block-detail-content">
-              <div className="block-detail-section">
-                <h4>Block Header</h4>
-                <div className="block-detail-item">
-                  <span className="label">Height:</span>
-                  <span className="value">{selectedBlock.header.height}</span>
+            
+            <div className="block-modal-content">
+              <div className="block-info">
+                <div className="info-row">
+                  <span className="info-label">Height:</span>
+                  <span className="info-value">{selectedBlock.header.height}</span>
                 </div>
-                <div className="block-detail-item">
-                  <span className="label">Hash:</span>
-                  <span className="value monospace">{selectedBlock.hash}</span>
+                <div className="info-row">
+                  <span className="info-label">Hash:</span>
+                  <span className="info-value hash-value">0x{calculateBlockHeaderHash(selectedBlock.header)}</span>
                 </div>
-                <div className="block-detail-item">
-                  <span className="label">Previous Hash:</span>
-                  <span className="value monospace">{selectedBlock.header.previousHeaderHash}</span>
+                <div className="info-row">
+                  <span className="info-label">Previous Hash:</span>
+                  <span className="info-value hash-value">0x{selectedBlock.header.previousHeaderHash}</span>
                 </div>
-                <div className="block-detail-item">
-                  <span className="label">Timestamp:</span>
-                  <span className="value">{new Date(selectedBlock.header.timestamp).toLocaleString()}</span>
+                <div className="info-row">
+                  <span className="info-label">Nonce:</span>
+                  <span className="info-value">{selectedBlock.header.nonce}</span>
                 </div>
-                <div className="block-detail-item">
-                  <span className="label">Nonce:</span>
-                  <span className="value">{selectedBlock.header.nonce}</span>
+                <div className="info-row">
+                  <span className="info-label">Timestamp:</span>
+                  <span className="info-value">{new Date(selectedBlock.header.timestamp).toLocaleString()}</span>
                 </div>
-                {(selectedBlock.header as any).difficulty !== undefined && (
-                  <div className="block-detail-item">
-                    <span className="label">Difficulty:</span>
-                    <span className="value">{(selectedBlock.header as any).difficulty}</span>
+                <div className="info-row">
+                  <span className="info-label">Ceiling:</span>
+                  <span className="info-value hash-value">0x{SimulatorConfig.CEILING}</span>
+                </div>
+                <div className="modal-row">
+                  <div className="modal-label">Valid Hash:</div>
+                  <div className="modal-value">
+                    {validateBlockHash(selectedBlock).isGenesis ? (
+                      <span className="genesis-hash">Genesis Block (Always Valid)</span>
+                    ) : validateBlockHash(selectedBlock).isValid ? (
+                      <span className="valid-hash">Yes ✓</span>
+                    ) : (
+                      <span className="invalid-hash">No ✗</span>
+                    )}
                   </div>
-                )}
-                {(selectedBlock.header as any).miner && (
-                  <div className="block-detail-item">
-                    <span className="label">Miner:</span>
-                    <span className="value monospace">{(selectedBlock.header as any).miner}</span>
-                  </div>
-                )}
+                </div>
               </div>
               
-              <div className="block-detail-section">
-                <h4>Transactions ({selectedBlock.transactions.length})</h4>
-                {selectedBlock.transactions.length === 0 ? (
-                  <p className="empty-message">No transactions in this block</p>
-                ) : (
-                  <div className="transactions-list">
-                    {selectedBlock.transactions.map((tx, idx) => (
-                      <div key={tx.txid || idx} className="transaction-item">
-                        <div className="tx-header">Transaction #{idx + 1}</div>
-                        <div className="tx-detail">
-                          <span className="label">TXID:</span>
-                          <span className="value monospace">{tx.txid}</span>
-                        </div>
-                        <div className="tx-detail">
-                          <span className="label">From:</span>
-                          <span className="value monospace">{tx.from}</span>
-                        </div>
-                        <div className="tx-detail">
-                          <span className="label">To:</span>
-                          <span className="value monospace">{tx.to}</span>
-                        </div>
-                        <div className="tx-detail">
-                          <span className="label">Value:</span>
-                          <span className="value">{tx.value} ETH</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+              <div className="transactions-container">
+                <h3>Transactions ({selectedBlock.transactions.length})</h3>
+                
+                {selectedBlock.transactions.map((tx, index) => (
+                  <TransactionView 
+                    key={index} 
+                    transaction={tx} 
+                  />
+                ))}
               </div>
-            </div>
-            <div className="block-detail-footer">
-              <button className="modal-button" onClick={() => setSelectedBlock(null)}>Close</button>
             </div>
           </div>
         </div>
