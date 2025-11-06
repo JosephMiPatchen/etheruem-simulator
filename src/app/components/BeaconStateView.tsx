@@ -128,6 +128,51 @@ const BeaconStateView: React.FC<BeaconStateViewProps> = ({ beaconState, onClose 
               )}
             </div>
           </div>
+
+          {/* Beacon Pool (Attestations) */}
+          <div className="beacon-section">
+            <h3>Beacon Pool (Attestations)</h3>
+            <div className="beacon-pool-info">
+              <span className="beacon-label">Total Attestations:</span>
+              <span className="beacon-value">{beaconState.beaconPool.length}</span>
+            </div>
+            <div className="beacon-pool-list">
+              {beaconState.beaconPool.length === 0 ? (
+                <p className="empty-message">No attestations in beacon pool</p>
+              ) : (
+                <div className="attestations-grid">
+                  {beaconState.beaconPool.slice(-20).reverse().map((attestation, index) => {
+                    const nodeId = addressToNodeId[attestation.validatorAddress] || 'Unknown';
+                    const nodeColor = getNodeColorCSS(nodeId);
+                    const nodeEmoji = getNodeColorEmoji(nodeId);
+                    const addressSuffix = attestation.validatorAddress.slice(-6);
+                    const blockHashShort = attestation.blockHash.slice(0, 8) + '...';
+                    const timeAgo = Math.floor((Date.now() - attestation.timestamp) / 1000);
+
+                    return (
+                      <div 
+                        key={`${attestation.validatorAddress}-${attestation.timestamp}-${index}`} 
+                        className="attestation-item"
+                        style={{ borderLeftColor: nodeColor }}
+                      >
+                        <div className="attestation-validator">
+                          <span style={{ color: nodeColor, fontWeight: 'bold' }}>
+                            {nodeEmoji} {nodeId}
+                          </span>
+                          <span className="attestation-address">({addressSuffix})</span>
+                        </div>
+                        <div className="attestation-block">
+                          <span className="attestation-label">Block:</span>
+                          <span className="attestation-hash">{blockHashShort}</span>
+                        </div>
+                        <div className="attestation-time">{timeAgo}s ago</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         <div className="beacon-modal-footer">

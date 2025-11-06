@@ -10,6 +10,12 @@ export interface Validator {
   stakedEth: number; // Amount of ETH staked (typically 32 ETH)
 }
 
+export interface Attestation {
+  validatorAddress: string;
+  blockHash: string;
+  timestamp: number;
+}
+
 export class BeaconState {
   // RANDAO mixes - one per epoch, continuously updated with XOR
   public randaoMixes: Map<number, string>; // epoch -> random mix
@@ -23,11 +29,15 @@ export class BeaconState {
   // Genesis timestamp in UTC seconds
   public genesisTime: number;
   
+  // Beacon pool - accumulates attestations from validators
+  public beaconPool: Attestation[];
+  
   constructor(genesisTime: number, validators: Validator[]) {
     this.genesisTime = genesisTime;
     this.validators = validators;
     this.randaoMixes = new Map();
     this.currentEpochSchedule = new Map();
+    this.beaconPool = [];
     
     // Initialize first RANDAO mix for epoch 0
     this.randaoMixes.set(0, this.generateInitialRandao());
@@ -81,6 +91,27 @@ export class BeaconState {
    */
   setEpochSchedule(schedule: Map<number, string>): void {
     this.currentEpochSchedule = schedule;
+  }
+  
+  /**
+   * Add an attestation to the beacon pool
+   */
+  addAttestation(attestation: Attestation): void {
+    this.beaconPool.push(attestation);
+  }
+  
+  /**
+   * Get all attestations in the beacon pool
+   */
+  getBeaconPool(): Attestation[] {
+    return this.beaconPool;
+  }
+  
+  /**
+   * Get attestations for a specific block hash
+   */
+  getAttestationsForBlock(blockHash: string): Attestation[] {
+    return this.beaconPool.filter(att => att.blockHash === blockHash);
   }
   
   /**

@@ -232,6 +232,75 @@
   color: var(--text-color);
 }
 
+/* Beacon Pool */
+.beacon-pool-info {
+  display: flex;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
+  align-items: center;
+}
+
+.beacon-pool-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.attestations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--spacing-sm);
+}
+
+.attestation-item {
+  background: var(--overlay-background);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  padding: var(--spacing-sm);
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.attestation-item:hover {
+  background: rgba(98, 126, 234, 0.05);
+}
+
+.attestation-validator {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: var(--font-size-sm);
+}
+
+.attestation-address {
+  font-family: monospace;
+  color: var(--text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.attestation-block {
+  display: flex;
+  gap: var(--spacing-xs);
+  font-size: var(--font-size-xs);
+}
+
+.attestation-label {
+  color: var(--text-secondary);
+}
+
+.attestation-hash {
+  font-family: monospace;
+  color: var(--text-color);
+}
+
+.attestation-time {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
 /* Empty Message */
 .empty-message {
   color: var(--text-secondary);

@@ -1,5 +1,5 @@
 import { Node } from '../core/node';
-import { Block, PeerInfoMap } from '../types/types';
+import { Block, PeerInfoMap, Attestation } from '../types/types';
 import { Validator } from '../core/consensus/beaconState';
 import { 
   Message, 
@@ -8,7 +8,8 @@ import {
   ChainRequestMessage,
   ChainResponseMessage,
   HeightRequestMessage,
-  HeightResponseMessage
+  HeightResponseMessage,
+  AttestationMessage
 } from './messages';
 import { createSignedTransaction } from '../core/blockchain/transaction';
 
@@ -63,6 +64,9 @@ export class NodeWorker {
         break;
       case MessageType.HEIGHT_RESPONSE:
         this.handleHeightResponse(message as HeightResponseMessage);
+        break;
+      case MessageType.ATTESTATION:
+        this.handleAttestation(message as AttestationMessage);
         break;
       default:
         console.error(`Unknown message type: ${(message as any).type}`);
@@ -129,10 +133,46 @@ export class NodeWorker {
   
   /**
    * Handles a block announcement message from another node
+   * After receiving and validating the block, creates an attestation
    */
   private handleBlockAnnouncement(message: BlockAnnouncementMessage): void {
     // Process the received block
     this._node.receiveBlock(message.block);
+    
+    // Create and broadcast attestation for this block (PoS consensus)
+    this.createAndBroadcastAttestation(message.block);
+  }
+  
+  /**
+   * Creates and broadcasts an attestation for a received block
+   * This is part of the PoS consensus mechanism
+   */
+  private createAndBroadcastAttestation(block: Block): void {
+    if (!this.onOutgoingMessageCallback) return;
+    
+    const nodeState = this._node.getState();
+    if (!nodeState.address) return; // Skip if no address
+    
+    // Create attestation (address is guaranteed to exist after check above)
+    const attestation: Attestation = {
+      validatorAddress: nodeState.address!,
+      blockHash: block.hash,
+      timestamp: Date.now()
+    };
+    
+    // Add to our own beacon pool
+    if (nodeState.beaconState) {
+      nodeState.beaconState.addAttestation(attestation);
+    }
+    
+    // Broadcast attestation to network
+    const message: AttestationMessage = {
+      type: MessageType.ATTESTATION,
+      fromNodeId: nodeState.nodeId,
+      attestation
+    };
+    
+    this.onOutgoingMessageCallback(message);
   }
   
   /**
@@ -199,6 +239,18 @@ export class NodeWorker {
     // Always request longer chains to stay in sync
     if (message.height > ourHeight) {
       this.requestChain(message.fromNodeId);
+    }
+  }
+  
+  /**
+   * Handles an attestation message from another validator
+   * Adds the attestation to the local beacon pool
+   */
+  private handleAttestation(message: AttestationMessage): void {
+    // Add attestation to beacon state's beacon pool
+    const beaconState = this._node.getState().beaconState;
+    if (beaconState) {
+      beaconState.addAttestation(message.attestation);
     }
   }
   

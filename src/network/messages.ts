@@ -1,4 +1,4 @@
-import { Block } from '../types/types';
+import { Block, Attestation } from '../types/types';
 
 /**
  * Types of messages that can be sent between nodes
@@ -9,6 +9,7 @@ export enum MessageType {
   CHAIN_RESPONSE = 'CHAIN_RESPONSE',
   HEIGHT_REQUEST = 'HEIGHT_REQUEST',
   HEIGHT_RESPONSE = 'HEIGHT_RESPONSE',
+  ATTESTATION = 'ATTESTATION',
 }
 
 /**
@@ -63,6 +64,14 @@ export interface HeightResponseMessage extends NetworkMessage {
 }
 
 /**
+ * Message for broadcasting an attestation (PoS consensus)
+ */
+export interface AttestationMessage extends NetworkMessage {
+  type: MessageType.ATTESTATION;
+  attestation: Attestation;
+}
+
+/**
  * Union type for all network messages
  */
 export type Message = 
@@ -70,4 +79,5 @@ export type Message =
   | ChainRequestMessage
   | ChainResponseMessage
   | HeightRequestMessage
-  | HeightResponseMessage;
+  | HeightResponseMessage
+  | AttestationMessage;
