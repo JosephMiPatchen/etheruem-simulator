@@ -429,3 +429,19 @@ export function xorHexStrings(hex1: string, hex2: string): string {
   }
   return result;
 }
+
+/**
+ * Hash bytes using SHA-256
+ * @param bytes - Bytes to hash
+ * @returns Hash as Uint8Array
+ */
+export function hashBytes(bytes: Uint8Array): Uint8Array {
+  // Convert bytes to hex string for sha256Hash function
+  const hexString = bytesToHex(bytes);
+  
+  // Use SHA-256
+  const hashHex = sha256Hash(hexString);
+  
+  // Convert back to bytes
+  return hexToBytes(hashHex);
+}

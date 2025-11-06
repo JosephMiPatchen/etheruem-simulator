@@ -8,71 +8,103 @@
 import { BeaconState } from './beaconState';
 import { SimulatorConfig } from '../../config/config';
 import { 
-  sha256Hash, 
   hexToBytes, 
-  bytesToHex,
   generateBLSSignature,
   i2b8,
   concat,
   u64,
-  xorHexStrings
+  xorHexStrings,
+  hashBytes
 } from '../../utils/cryptoUtils';
 import { Node } from '../node';
 
 export class RANDAO {
 
   /**
-   * Returns 32 proposer addresses (one per slot of the *next* epoch)
-   * Uses current epoch's RANDAO mix as seed for next epoch's schedule
+   * Computes the proposer schedule for the next epoch (32 slots)
+   * Uses RANDAO mix for unpredictable but deterministic validator selection
+   * Validators are weighted by their effective balance (stake)
+   * 
+   * @param state - Current beacon state with validators and RANDAO mix
+   * @returns Array of 32 validator addresses (one per slot in next epoch)
    */
   static getProposerSchedule(state: BeaconState): string[] {
     const currentEpoch = state.getCurrentEpoch();
     const nextEpoch = currentEpoch + 1;
 
-    // Seed: use current epoch's mix to schedule the next
-    const mix = state.getRandaoMix(currentEpoch);
-    const epochSeed = hexToBytes(mix);
+    // Use current epoch's RANDAO mix as the randomness seed for next epoch's schedule
+    // This ensures unpredictability (can't predict future RANDAO reveals)
+    // but determinism (all nodes compute same schedule from same state)
+    const currentEpochMix = state.getRandaoMix(currentEpoch);
+    const epochSeedBytes = hexToBytes(currentEpochMix);
 
-    // Active set (all validators with positive stake)
-    const active = state.validators
-      .map((v, i) => ({ 
-        i, 
-        v, 
-        eff: Math.min(Math.max(v.stakedEth, 0), SimulatorConfig.MAX_EFFECTIVE_BALANCE) 
+    // Build list of active validators with their effective balance
+    // Effective balance is capped at MAX_EFFECTIVE_BALANCE (32 ETH)
+    // This prevents any single validator from dominating the selection
+    const activeValidators = state.validators
+      .map((validator, validatorIndex) => ({ 
+        validatorIndex, 
+        validator, 
+        effectiveBalance: Math.min(
+          Math.max(validator.stakedEth, 0), 
+          SimulatorConfig.MAX_EFFECTIVE_BALANCE
+        ) 
       }))
-      .filter(x => x.eff > 0);
+      .filter(v => v.effectiveBalance > 0);
 
-    if (active.length === 0) {
-      throw new Error("No active validators");
+    if (activeValidators.length === 0) {
+      throw new Error("No active validators with positive stake");
     }
 
-    const schedule: string[] = [];
+    const proposerSchedule: string[] = [];
 
-    for (let idxInEpoch = 0; idxInEpoch < SimulatorConfig.SLOTS_PER_EPOCH; idxInEpoch++) {
-      const slot = nextEpoch * SimulatorConfig.SLOTS_PER_EPOCH + idxInEpoch;
+    // Compute proposer for each of the 32 slots in the next epoch
+    for (let slotIndexInEpoch = 0; slotIndexInEpoch < SimulatorConfig.SLOTS_PER_EPOCH; slotIndexInEpoch++) {
+      const absoluteSlotNumber = nextEpoch * SimulatorConfig.SLOTS_PER_EPOCH + slotIndexInEpoch;
 
-      // Per-slot seed = H(epochSeed || slot)
-      const slotSeed = this.hashBytes(concat(epochSeed, i2b8(slot)));
+      // Create unique seed for this specific slot by hashing: H(epochSeed || slotNumber)
+      // This ensures each slot has independent randomness
+      const slotSeedBytes = hashBytes(concat(epochSeedBytes, i2b8(absoluteSlotNumber)));
 
-      // Sample-until-accepted (spec-style), weighted by effective balance
-      let counter = 0;
-      // Loop terminates quickly in practice (probability proportional to eff / MAX_EFFECTIVE_BALANCE)
+      // Weighted random selection using "sample-until-accepted" algorithm
+      // This is the Ethereum spec's method for stake-weighted validator selection
+      let samplingAttempt = 0;
+      
       while (true) {
-        const h = this.hashBytes(concat(slotSeed, i2b8(counter++)));
+        // Generate fresh randomness for each sampling attempt: H(slotSeed || attempt)
+        const randomnessBytes = hashBytes(concat(slotSeedBytes, i2b8(samplingAttempt++)));
 
-        // Candidate index from first 8 bytes (mod active size)
-        const cand = active[u64(h, 0) % active.length];
+        // Select a candidate validator uniformly at random from active set
+        // Use first 8 bytes of hash as random number, mod by validator count
+        const candidateIndex = u64(randomnessBytes, 0) % activeValidators.length;
+        const candidate = activeValidators[candidateIndex];
 
-        // Weighted accept: use next byte as randomness
-        const randByte = h[8]; // 0..255
-        if (randByte * SimulatorConfig.MAX_EFFECTIVE_BALANCE <= cand.eff * 255) {
-          schedule.push(state.validators[cand.i].nodeAddress);
-          break;
+        // Weighted acceptance test: Accept with probability = effectiveBalance / MAX_EFFECTIVE_BALANCE
+        // This gives validators with more stake a higher chance of being selected
+        // 
+        // How it works:
+        // - randomByte is uniform random in [0, 255]
+        // - We accept if: randomByte < (effectiveBalance / MAX_EFFECTIVE_BALANCE) * 256
+        // - Rearranged: randomByte * MAX_EFFECTIVE_BALANCE < effectiveBalance * 256
+        // - We use 255 instead of 256 to avoid overflow (close enough approximation)
+        //
+        // Example: If validator has 16 ETH (half of 32 ETH max):
+        //   - Accept if randomByte < 128 (50% chance)
+        // Example: If validator has 32 ETH (max):
+        //   - Accept if randomByte < 255 (≈100% chance)
+        const randomByte = randomnessBytes[8]; // Use 9th byte as random value [0-255]
+        const acceptanceThreshold = (candidate.effectiveBalance * 255) / SimulatorConfig.MAX_EFFECTIVE_BALANCE;
+        
+        if (randomByte <= acceptanceThreshold) {
+          // Candidate accepted! Add their address to the schedule
+          proposerSchedule.push(state.validators[candidate.validatorIndex].nodeAddress);
+          break; // Move to next slot
         }
+        // Candidate rejected, try again with new randomness (samplingAttempt++)
       }
     }
 
-    return schedule;
+    return proposerSchedule;
   }
 
   /**
@@ -109,26 +141,6 @@ export class RANDAO {
     const currentMix = state.getRandaoMix(epoch);
     const newMix = xorHexStrings(currentMix, reveal);
     state.updateRandaoMix(epoch, newMix);
-  }
-
-  // ============================================================================
-  // Static Helper Methods
-  // ============================================================================
-
-  /**
-   * Hash bytes using SHA-256
-   * @param bytes - Bytes to hash
-   * @returns Hash as Uint8Array
-   */
-  private static hashBytes(bytes: Uint8Array): Uint8Array {
-    // Convert bytes to hex string for sha256Hash function
-    const hexString = bytesToHex(bytes);
-    
-    // Use SHA-256 from cryptoUtils
-    const hashHex = sha256Hash(hexString);
-    
-    // Convert back to bytes
-    return hexToBytes(hashHex);
   }
 
 }
