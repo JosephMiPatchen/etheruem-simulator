@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { NodeState } from '../../types/types';
 import BlockchainView from './BlockchainView';
 import WorldStateView from './WorldStateView';
+import BeaconStateView from './BeaconStateView';
 import NodeToolbar from './NodeToolbar';
 import AddTransactionModal from './AddTransactionModal';
 import { useSimulatorContext } from '../contexts/SimulatorContext';
@@ -16,6 +17,7 @@ interface NodePanelProps {
 
 const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [], onAddTransaction }) => {
   const [showUtxoModal, setShowUtxoModal] = useState(false);
+  const [showBeaconStateModal, setShowBeaconStateModal] = useState(false);
   const [showAddTxModal, setShowAddTxModal] = useState(false);
   const { addressToNodeId } = useSimulatorContext();
   
@@ -53,6 +55,7 @@ const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [], onAdd
             isMining={nodeState.isMining}
             totalEth={totalEth}
             onUtxoClick={() => setShowUtxoModal(true)}
+            onBeaconStateClick={() => setShowBeaconStateModal(true)}
             onAddTransaction={() => setShowAddTxModal(true)}
             nodeId={nodeState.nodeId}
           />
@@ -95,6 +98,14 @@ const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [], onAdd
           worldState={nodeState.worldState || {}}
           onClose={() => setShowAddTxModal(false)}
           onSubmit={handleAddTransaction}
+        />
+      )}
+
+      {/* Beacon State Modal */}
+      {showBeaconStateModal && nodeState.beaconState && (
+        <BeaconStateView
+          beaconState={nodeState.beaconState}
+          onClose={() => setShowBeaconStateModal(false)}
         />
       )}
     </div>

@@ -2,6 +2,7 @@ import { Block, NodeState, PeerInfoMap, Account, EthereumTransaction } from '../
 import { Blockchain } from './blockchain/blockchain';
 import { Miner } from './mining/miner';
 import { Mempool } from './mempool/mempool';
+import { BeaconState, Validator } from './consensus/beaconState';
 import { generatePrivateKey, derivePublicKey, generateAddress } from '../utils/cryptoUtils';
 
 /**
@@ -13,6 +14,7 @@ export class Node {
   private blockchain: Blockchain;
   private miner: Miner;
   private mempool: Mempool;
+  private beaconState: BeaconState; // Consensus Layer state
   private peers: PeerInfoMap = {};
   private shouldBeMining: boolean = false;
   
@@ -25,7 +27,7 @@ export class Node {
   private onBlockBroadcast?: (block: Block) => void;
   private onChainUpdated?: () => void;
   
-  constructor(nodeId: string) {
+  constructor(nodeId: string, genesisTime?: number, validators?: Validator[]) {
     this.nodeId = nodeId;
     
     // Generate cryptographic keys and their derivatives for this node
@@ -38,6 +40,12 @@ export class Node {
     
     // Initialize mempool for pending transactions
     this.mempool = new Mempool();
+    
+    // Initialize Beacon State (Consensus Layer)
+    // All nodes will be initialized with the same genesis time and validator set
+    const defaultGenesisTime = genesisTime || Math.floor(Date.now() / 1000);
+    const defaultValidators = validators || [];
+    this.beaconState = new BeaconState(defaultGenesisTime, defaultValidators);
     
     // Initialize miner with callback for when a block is mined
     // Using .bind(this) ensures the handleMinedBlock method maintains the Node instance context
@@ -80,6 +88,7 @@ export class Node {
       nodeId: this.nodeId,
       blockchain: this.blockchain.getBlocks(),
       blockchainTree: this.blockchain.getTree(),
+      beaconState: this.beaconState,
       worldState: this.blockchain.getWorldState(),
       receipts: this.blockchain.getReceipts(),
       mempool: this.mempool.getAllTransactions(),
@@ -296,6 +305,13 @@ export class Node {
    */
   getPeerInfos(): PeerInfoMap {
     return this.peers;
+  }
+  
+  /**
+   * Gets the Beacon State (Consensus Layer state)
+   */
+  getBeaconState(): BeaconState {
+    return this.beaconState;
   }
   
   /**

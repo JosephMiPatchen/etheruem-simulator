@@ -58,10 +58,11 @@ export interface Block {
 export interface NodeState {
   nodeId: string;
   blockchain: Block[];
-  blockchainTree?: any;  // BlockchainTree for visualization (any to avoid circular dependency)
-  worldState: Record<string, Account>;  // Account-based state instead of UTXO
-  receipts?: any;  // Transaction receipts database
-  mempool?: EthereumTransaction[];  // Pending transactions in mempool
+  blockchainTree?: any; // Optional blockchain tree for visualization
+  beaconState?: any; // Optional beacon state (Consensus Layer)
+  worldState: Record<string, Account>;
+  receipts?: any; // Optional receipts database
+  mempool?: EthereumTransaction[]; // Optional mempool for pending transactions
   isMining: boolean;
   peerIds: string[];
   publicKey: string;

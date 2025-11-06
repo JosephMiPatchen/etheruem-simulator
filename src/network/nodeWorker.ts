@@ -1,5 +1,6 @@
 import { Node } from '../core/node';
 import { Block, PeerInfoMap } from '../types/types';
+import { Validator } from '../core/consensus/beaconState';
 import { 
   Message, 
   MessageType, 
@@ -27,9 +28,9 @@ export class NodeWorker {
     return this._node;
   }
   
-  constructor(nodeId: string) {
-    // Create the node instance
-    this._node = new Node(nodeId);
+  constructor(nodeId: string, genesisTime?: number, validators?: Validator[]) {
+    // Create the node instance with beacon state initialization
+    this._node = new Node(nodeId, genesisTime, validators);
     
     // Set up callback for block broadcast events
     this._node.setOnBlockBroadcast(this.handleBlockBroadcast.bind(this));

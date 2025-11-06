@@ -18,6 +18,7 @@ interface NodeToolbarProps {
   isMining: boolean;
   totalEth: number;
   onUtxoClick: () => void;
+  onBeaconStateClick: () => void;
   onAddTransaction: () => void;
   nodeId: string;
 }
@@ -26,6 +27,7 @@ const NodeToolbar: React.FC<NodeToolbarProps> = ({
   isMining, 
   totalEth, 
   onUtxoClick,
+  onBeaconStateClick,
   onAddTransaction,
   nodeId
 }) => {
@@ -75,6 +77,13 @@ const NodeToolbar: React.FC<NodeToolbarProps> = ({
           >
             <FaEarthAmericas size={16} />
             <span>World State</span>
+          </button>
+          <button 
+            className="toolbar-button beacon-state-button"
+            onClick={onBeaconStateClick}
+            title="View Beacon State (Consensus Layer)"
+          >
+            <span>Beacon State (CL)</span>
           </button>
           <button 
             className="toolbar-button add-tx-button"

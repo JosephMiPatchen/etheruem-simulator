@@ -2,6 +2,7 @@ import { NodeWorker } from './nodeWorker';
 import { Message } from './messages';
 import { SimulatorConfig } from '../config/config';
 import { generateUniqueNodeIds } from '../utils/nodeIdGenerator';
+import { Validator } from '../core/consensus/beaconState';
 
 /**
  * NetworkManager class to manage a network of nodes
@@ -21,18 +22,28 @@ export class NetworkManager {
   private nodesMap: Map<string, NodeWorker> = new Map();
   private networkTopology: Map<string, string[]> = new Map();
   
+  // Shared beacon state initialization - all nodes start with same genesis time and validators
+  private beaconGenesisTime: number = Math.floor(Date.now() / 1000);
+  private beaconValidators: Validator[] = [];
+  
   /**
    * Creates a new node in the network
    */
   createNode(nodeId: string): NodeWorker {
-    // Create a new node worker
-    const nodeWorker = new NodeWorker(nodeId);
+    // Create a new node worker with shared beacon state initialization
+    const nodeWorker = new NodeWorker(nodeId, this.beaconGenesisTime, this.beaconValidators);
     
     // Set up message handling
     nodeWorker.setOnOutgoingMessage(this.routeMessageFromNode.bind(this));
     
     // Add the node to the network
     this.nodesMap.set(nodeId, nodeWorker);
+    
+    // Add this node as a validator (every node is a validator with 32 ETH staked)
+    this.beaconValidators.push({
+      nodeAddress: nodeWorker.getNodeAddress(),
+      stakedEth: 32
+    });
     
     return nodeWorker;
   }

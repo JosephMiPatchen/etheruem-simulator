@@ -80,6 +80,11 @@
   background-color: var(--primary-color);
 }
 
+.beacon-state-button:hover {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: #764ba2;
+}
+
 .add-tx-button:hover {
   background-color: var(--success-color);
   border-color: var(--success-color);
