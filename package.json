@@ -5,6 +5,7 @@
   "dependencies": {
     "@noble/curves": "^2.0.1",
     "@noble/hashes": "^1.8.0",
+    "@rigidity/bls-signatures": "^2.0.5",
     "noble-secp256k1": "^1.2.14",
     "react": "^18.2.0",
     "react-d3-tree": "^3.6.6",

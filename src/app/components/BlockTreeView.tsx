@@ -53,7 +53,7 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, onClose }
       
       if (node.block) {
         const height = node.block.header.height;
-        const shortHash = node.hash.substring(0, 8);
+        const shortHash = node.hash.slice(-6); // Last 6 characters
         
         return {
           name: `Block ${height}`,
@@ -108,6 +108,10 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, onClose }
               translate={{ x: 400, y: 50 }}
               nodeSize={{ x: 200, y: 100 }}
               separation={{ siblings: 1.5, nonSiblings: 2 }}
+              zoom={0.8}
+              scaleExtent={{ min: 0.1, max: 2 }}
+              enableLegacyTransitions={true}
+              pathClassFunc={() => 'tree-link'}
               renderCustomNodeElement={(rd3tProps) => {
                 const { nodeDatum } = rd3tProps;
                 const isCanonical = nodeDatum.attributes?.canonical === 'yes';
@@ -115,14 +119,24 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, onClose }
                 
                 return (
                   <g>
+                    {/* Outer glow effect */}
+                    <circle
+                      r={24}
+                      fill="none"
+                      stroke={isRoot ? 'rgba(108, 117, 125, 0.3)' : isCanonical ? 'rgba(0, 255, 157, 0.4)' : 'rgba(0, 191, 255, 0.4)'}
+                      strokeWidth={3}
+                      opacity={0.6}
+                    />
+                    {/* Main circle */}
                     <circle
                       r={20}
-                      fill={isRoot ? '#6c757d' : isCanonical ? '#28a745' : '#007bff'}
-                      stroke="#fff"
+                      fill={isRoot ? '#2c3e50' : isCanonical ? '#1a4d2e' : '#1e3a5f'}
+                      stroke={isRoot ? '#6c757d' : isCanonical ? '#00ff9d' : '#00bfff'}
                       strokeWidth={2}
                     />
+                    {/* Height text */}
                     <text
-                      fill="#fff"
+                      fill={isRoot ? '#95a5a6' : isCanonical ? '#00ff9d' : '#00bfff'}
                       strokeWidth="0"
                       x="0"
                       y="5"
@@ -132,8 +146,9 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, onClose }
                     >
                       {nodeDatum.attributes?.height || '∅'}
                     </text>
+                    {/* Block name */}
                     <text
-                      fill="#333"
+                      fill="#ecf0f1"
                       x="0"
                       y="40"
                       textAnchor="middle"
@@ -142,13 +157,15 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, onClose }
                     >
                       {nodeDatum.name}
                     </text>
+                    {/* Hash */}
                     {nodeDatum.attributes?.hash && (
                       <text
-                        fill="#666"
+                        fill="#95a5a6"
                         x="0"
                         y="55"
                         textAnchor="middle"
                         fontSize="9"
+                        fontFamily="monospace"
                       >
                         {nodeDatum.attributes.hash}
                       </text>
