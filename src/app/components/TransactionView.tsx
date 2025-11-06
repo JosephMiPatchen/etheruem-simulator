@@ -3,6 +3,7 @@ import { EthereumTransaction, Account } from '../../types/types';
 import { TransactionReceipt } from '../../types/receipt';
 import { SimulatorConfig } from '../../config/config';
 import { useSimulatorContext } from '../contexts/SimulatorContext';
+import { getNodeColorCSS } from '../../utils/nodeColorUtils';
 import Xarrow from 'react-xarrows';
 import { MdContentCopy, MdCheck } from 'react-icons/md';
 import EPMDisplay from './EPMDisplay';
@@ -84,7 +85,14 @@ const TransactionView: React.FC<TransactionViewProps> = ({ transaction, worldSta
         {/* From Section */}
         <div className="tx-inputs-section">
           <div className="section-title">From</div>
-          <div className={`tx-input ${isCoinbase ? 'coinbase-input' : ''}`} id={`${txId}-from`}>
+          <div 
+            className={`tx-input ${isCoinbase ? 'coinbase-input' : ''}`} 
+            id={`${txId}-from`}
+            style={!isCoinbase && fromNodeId !== 'Unknown' ? {
+              borderColor: getNodeColorCSS(fromNodeId),
+              color: getNodeColorCSS(fromNodeId)
+            } : {}}
+          >
             <div className="node-id">{fromNodeId}</div>
           </div>
         </div>
@@ -98,7 +106,17 @@ const TransactionView: React.FC<TransactionViewProps> = ({ transaction, worldSta
         {/* To Section */}
         <div className="tx-outputs-section">
           <div className="section-title">To</div>
-          <div className="tx-output" id={`${txId}-to`}>
+          <div 
+            className="tx-output" 
+            id={`${txId}-to`}
+            style={!isSmartContract && toNodeId !== 'Unknown' && toNodeId !== 'PROTOCOL' ? {
+              borderColor: getNodeColorCSS(toNodeId),
+              color: getNodeColorCSS(toNodeId)
+            } : toNodeId === 'PROTOCOL' ? {
+              borderColor: '#ff9800',
+              color: '#ff9800'
+            } : {}}
+          >
             {isSmartContract && contractAccount ? (
               <button 
                 className="smart-contract-button"
@@ -108,14 +126,7 @@ const TransactionView: React.FC<TransactionViewProps> = ({ transaction, worldSta
                 {toNodeId}
               </button>
             ) : (
-              <div 
-                className="node-id"
-                style={toNodeId === 'PROTOCOL' ? { 
-                  color: '#ff9800', 
-                  fontWeight: 600,
-                  borderColor: '#ff9800'
-                } : {}}
-              >
+              <div className="node-id">
                 {toNodeId}
               </div>
             )}
