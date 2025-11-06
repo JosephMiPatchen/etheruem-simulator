@@ -1,6 +1,7 @@
 import React from 'react';
 import { BeaconState } from '../../core/consensus/beaconState';
 import { useSimulatorContext } from '../contexts/SimulatorContext';
+import { getNodeColorCSS, getNodeColorEmoji } from '../../utils/nodeColorUtils';
 import './BeaconStateView.css';
 
 interface BeaconStateViewProps {
@@ -66,14 +67,22 @@ const BeaconStateView: React.FC<BeaconStateViewProps> = ({ beaconState, onClose 
                   {validators.map((validator, idx) => {
                     const nodeId = addressToNodeId[validator.nodeAddress] || 'Unknown';
                     const addressSuffix = validator.nodeAddress.slice(-6);
+                    const nodeColor = getNodeColorCSS(nodeId);
+                    const nodeEmoji = getNodeColorEmoji(nodeId);
                     return (
-                      <div key={idx} className="validator-item">
+                      <div 
+                        key={idx} 
+                        className="validator-item"
+                        style={{ borderLeftColor: nodeColor, borderLeftWidth: '4px' }}
+                      >
                         <div className="validator-header">
                           <span className="validator-index">#{idx}</span>
                           <span className="validator-stake">{validator.stakedEth} ETH</span>
                         </div>
                         <div className="validator-node-info">
-                          <span className="validator-node-id">{nodeId}</span>
+                          <span className="validator-node-id" style={{ color: nodeColor }}>
+                            {nodeId} {nodeEmoji}
+                          </span>
                           <span className="validator-address-suffix">({addressSuffix})</span>
                         </div>
                       </div>

@@ -10,18 +10,18 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 1rem;
+  padding: var(--spacing-md);
 }
 
 .beacon-state-modal {
   background: var(--panel-background);
-  border-radius: 12px;
-  padding: 1.5rem;
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
   max-width: 900px;
   max-height: 85vh;
   overflow-y: auto;
-  border: 1px solid var(--primary-color);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-lg);
   width: 90vw;
 }
 
@@ -29,15 +29,15 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid var(--primary-color);
+  margin-bottom: var(--spacing-lg);
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .beacon-modal-header h2 {
   margin: 0;
   color: var(--primary-color);
-  font-size: 1.5rem;
+  font-size: var(--font-size-xl);
 }
 
 .beacon-modal-close {
@@ -52,56 +52,56 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
+  border-radius: var(--border-radius-sm);
   transition: all 0.2s;
 }
 
 .beacon-modal-close:hover {
-  background: rgba(98, 126, 234, 0.1);
+  background: var(--overlay-background);
   color: var(--primary-color);
 }
 
 .beacon-modal-content {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: var(--spacing-lg);
 }
 
 /* Sections */
 .beacon-section {
-  background: rgba(98, 126, 234, 0.05);
-  border: 1px solid var(--primary-color);
-  border-radius: 8px;
-  padding: 1rem;
+  background: var(--overlay-background);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-md);
 }
 
 .beacon-section h3 {
-  margin: 0 0 1rem 0;
+  margin: 0 0 var(--spacing-md) 0;
   color: var(--primary-color);
-  font-size: 1.1rem;
+  font-size: var(--font-size-lg);
 }
 
 /* Info Grid */
 .beacon-info-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
+  gap: var(--spacing-md);
 }
 
 .beacon-info-item {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: var(--spacing-xs);
 }
 
 .beacon-label {
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   color: var(--text-secondary);
   font-weight: 500;
 }
 
 .beacon-value {
-  font-size: 1.1rem;
+  font-size: var(--font-size-lg);
   color: var(--text-color);
   font-weight: 600;
 }
@@ -115,49 +115,55 @@
 .validators-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 0.75rem;
+  gap: var(--spacing-sm);
 }
 
 .validator-item {
-  background: rgba(98, 126, 234, 0.1);
-  border: 1px solid rgba(98, 126, 234, 0.3);
-  border-radius: 6px;
-  padding: 0.75rem;
+  background: var(--overlay-background);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  padding: var(--spacing-sm);
+  transition: all 0.2s;
+}
+
+.validator-item:hover {
+  background: rgba(98, 126, 234, 0.05);
 }
 
 .validator-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--spacing-xs);
 }
 
 .validator-index {
-  color: var(--primary-color);
+  color: var(--text-secondary);
   font-weight: 600;
+  font-size: var(--font-size-sm);
 }
 
 .validator-stake {
   color: var(--success-color);
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: var(--font-size-sm);
 }
 
 .validator-node-info {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--spacing-xs);
 }
 
 .validator-node-id {
-  font-size: 0.95rem;
-  color: var(--text-color);
+  font-size: var(--font-size-md);
   font-weight: 600;
 }
 
 .validator-address-suffix {
   font-family: monospace;
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   color: var(--text-secondary);
 }
 
@@ -165,28 +171,30 @@
 .randao-list {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--spacing-xs);
   max-height: 200px;
   overflow-y: auto;
 }
 
 .randao-item {
   display: flex;
-  gap: 0.5rem;
-  padding: 0.5rem;
-  background: rgba(98, 126, 234, 0.1);
-  border-radius: 4px;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs);
+  background: var(--overlay-background);
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--border-color);
 }
 
 .randao-epoch {
   color: var(--primary-color);
   font-weight: 600;
   min-width: 80px;
+  font-size: var(--font-size-sm);
 }
 
 .randao-mix {
   font-family: monospace;
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   color: var(--text-color);
   word-break: break-all;
 }
@@ -200,26 +208,27 @@
 .schedule-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 0.5rem;
+  gap: var(--spacing-xs);
 }
 
 .schedule-item {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  padding: 0.5rem;
-  background: rgba(98, 126, 234, 0.1);
-  border-radius: 4px;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs);
+  background: var(--overlay-background);
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--border-color);
 }
 
 .schedule-slot {
   color: var(--primary-color);
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: var(--font-size-sm);
 }
 
 .schedule-validator {
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   color: var(--text-color);
 }
 
@@ -228,35 +237,35 @@
   color: var(--text-secondary);
   font-style: italic;
   text-align: center;
-  padding: 1rem;
+  padding: var(--spacing-md);
 }
 
 /* Footer */
 .beacon-modal-footer {
   display: flex;
   justify-content: flex-end;
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--primary-color);
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--border-color);
 }
 
 .beacon-button {
-  padding: 0.5rem 1.5rem;
-  border: 1px solid var(--primary-color);
-  border-radius: 6px;
-  font-size: 0.95rem;
+  padding: var(--spacing-xs) var(--spacing-lg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-sm);
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
-  background: rgba(98, 126, 234, 0.1);
-  color: var(--primary-color);
+  background: var(--overlay-background);
+  color: var(--text-color);
 }
 
 .beacon-button:hover {
   background: var(--primary-color);
   color: var(--background-color);
+  border-color: var(--primary-color);
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(98, 126, 234, 0.3);
 }
 
 /* Responsive */
