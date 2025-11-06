@@ -175,16 +175,16 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, onClose }
                       strokeWidth={isRoot ? 3 : 2}
                     />
                     
-                    {/* Fork icon for non-canonical blocks - positioned to the right */}
+                    {/* Fork icon for non-canonical blocks - positioned outside to the right */}
                     {!isCanonical && !isRoot && (
-                      <g transform="translate(24, -6)">
-                        <foreignObject width="14" height="14">
+                      <g transform="translate(35, -2)">
+                        <foreignObject width="16" height="16">
                           <div style={{ 
                             display: 'flex', 
                             alignItems: 'center', 
                             justifyContent: 'center',
                             color: '#95a5a6',
-                            fontSize: '14px'
+                            fontSize: '16px'
                           }}>
                             <BiFork />
                           </div>
@@ -192,22 +192,22 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, onClose }
                       </g>
                     )}
                     
-                    {/* Block name inside circle */}
+                    {/* Block name or empty set symbol inside circle */}
                     <text
                       fill="#ffffff"
                       stroke="none"
                       x="0"
                       y="5"
                       textAnchor="middle"
-                      fontSize="14"
+                      fontSize={isRoot ? "24" : "14"}
                       fontWeight="bold"
                       style={{ pointerEvents: 'none', userSelect: 'none' }}
                     >
-                      {nodeDatum.name}
+                      {isRoot ? '∅' : nodeDatum.name}
                     </text>
                     
-                    {/* Hash below circle - white and bold */}
-                    {nodeDatum.attributes?.hash && (
+                    {/* Hash below circle - white and bold (only for non-root blocks) */}
+                    {nodeDatum.attributes?.hash && !isRoot && (
                       <text
                         fill="#ffffff"
                         stroke="none"
