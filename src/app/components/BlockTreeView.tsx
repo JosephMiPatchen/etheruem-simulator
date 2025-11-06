@@ -30,6 +30,7 @@ interface TreeNodeData {
  */
 const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, onClose }) => {
   const [selectedBlock, setSelectedBlock] = useState<Block | null>(null);
+  const [isSelectedBlockCanonical, setIsSelectedBlockCanonical] = useState(true);
   const [copied, setCopied] = useState(false);
   const stats = blockchainTree.getStats();
 
@@ -155,6 +156,7 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, onClose }
                 const handleClick = () => {
                   if (blockNode?.block) {
                     setSelectedBlock(blockNode.block);
+                    setIsSelectedBlockCanonical(isCanonical);
                   }
                 };
                 
@@ -250,6 +252,13 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, onClose }
                 <button className="close-button" onClick={() => setSelectedBlock(null)}>×</button>
               </div>
             </div>
+
+            {/* Non-Canonical Warning Banner */}
+            {!isSelectedBlockCanonical && (
+              <div className="non-canonical-warning">
+                ⚠️ <strong>Warning:</strong> This block is NOT on the canonical chain. It is part of a fork branch that was not selected as the main chain.
+              </div>
+            )}
             
             <div className="block-modal-content">
               <div className="block-info">

@@ -213,6 +213,26 @@
   opacity: 0.8;
 }
 
+/* Non-Canonical Warning Banner */
+.non-canonical-warning {
+  background: linear-gradient(135deg, #ffa726 0%, #ff9800 100%);
+  color: #1a1a1a;
+  padding: 1rem 1.5rem;
+  margin: 0 -1.5rem 1rem -1.5rem;
+  border-left: 4px solid #f57c00;
+  border-right: 4px solid #f57c00;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
+}
+
+.non-canonical-warning strong {
+  font-weight: 700;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .block-tree-modal .block-tree-content {
