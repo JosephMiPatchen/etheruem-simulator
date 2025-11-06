@@ -203,12 +203,13 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, rec
                         <div 
                           key={index} 
                           className={`attestation-circle ${isCanonical ? 'attestation-canonical' : ''}`}
+                          style={{ borderColor: nodeColor }}
                           title={`Validator: ${nodeName}\nBlock: ${attestation.blockHash}\nHeight: ${blockHeight}`}
                           onClick={() => setSelectedAttestation({ ...attestation, blockHeight, nodeName, isCanonical })}
                         >
                           <div className="attestation-circle-content">
-                            <div className="attestation-node-id" style={{ color: nodeColor }}>{nodeName}</div>
-                            <div className="attestation-block-height">#{blockHeight}</div>
+                            <div className="attestation-block-label">Block</div>
+                            <div className="attestation-block-number">{blockHeight}</div>
                             <div className="attestation-hash-suffix">{hashSuffix}</div>
                             {isCanonical && <div className="attestation-check">✓</div>}
                           </div>

@@ -273,7 +273,7 @@
   height: 80px;
   border-radius: 50%;
   background: var(--overlay-background);
-  border: 2px solid var(--border-color);
+  border: 1.5px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -284,18 +284,11 @@
 
 .attestation-circle:hover {
   transform: scale(1.05);
-  border-color: var(--primary-color);
   box-shadow: 0 2px 8px rgba(98, 126, 234, 0.3);
 }
 
 .attestation-canonical {
-  border-color: #4caf50;
-  border-width: 2px;
-}
-
-.attestation-canonical:hover {
-  border-color: #4caf50;
-  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.4);
+  border-width: 1.5px;
 }
 
 .attestation-circle-content {
@@ -308,16 +301,18 @@
   padding: 4px;
 }
 
-.attestation-node-id {
-  font-weight: bold;
-  font-size: 14px;
-  color: var(--primary-color);
+.attestation-block-label {
+  font-size: 10px;
+  color: var(--text-secondary);
   line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.attestation-block-height {
-  font-size: 11px;
-  color: var(--text-secondary);
+.attestation-block-number {
+  font-weight: bold;
+  font-size: 18px;
+  color: var(--text-color);
   line-height: 1;
 }
 
