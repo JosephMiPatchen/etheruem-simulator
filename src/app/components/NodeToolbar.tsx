@@ -3,6 +3,7 @@ import { LuPickaxe } from "react-icons/lu";
 import { RxDividerVertical } from "react-icons/rx";
 import { FaEarthAmericas } from "react-icons/fa6";
 import { IoMdAdd } from "react-icons/io";
+import { GiLighthouse } from "react-icons/gi";
 import './NodeToolbar.css';
 
 // Question mark icon
@@ -83,7 +84,8 @@ const NodeToolbar: React.FC<NodeToolbarProps> = ({
             onClick={onBeaconStateClick}
             title="View Beacon State (Consensus Layer)"
           >
-            <span>Beacon State (CL)</span>
+            <GiLighthouse size={16} />
+            <span>Beacon State</span>
           </button>
           <button 
             className="toolbar-button add-tx-button"

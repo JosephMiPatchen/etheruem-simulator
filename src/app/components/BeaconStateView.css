@@ -143,11 +143,22 @@
   font-size: 0.9rem;
 }
 
-.validator-address {
+.validator-node-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.validator-node-id {
+  font-size: 0.95rem;
+  color: var(--text-color);
+  font-weight: 600;
+}
+
+.validator-address-suffix {
   font-family: monospace;
   font-size: 0.85rem;
-  color: var(--text-color);
-  word-break: break-all;
+  color: var(--text-secondary);
 }
 
 /* RANDAO Mixes */

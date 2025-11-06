@@ -1,5 +1,6 @@
 import React from 'react';
 import { BeaconState } from '../../core/consensus/beaconState';
+import { useSimulatorContext } from '../contexts/SimulatorContext';
 import './BeaconStateView.css';
 
 interface BeaconStateViewProps {
@@ -11,6 +12,7 @@ interface BeaconStateViewProps {
  * BeaconStateView - Displays the Consensus Layer (CL) beacon state
  */
 const BeaconStateView: React.FC<BeaconStateViewProps> = ({ beaconState, onClose }) => {
+  const { addressToNodeId } = useSimulatorContext();
   const currentSlot = beaconState.getCurrentSlot();
   const currentEpoch = beaconState.getCurrentEpoch();
   const validators = beaconState.validators;
@@ -61,17 +63,22 @@ const BeaconStateView: React.FC<BeaconStateViewProps> = ({ beaconState, onClose 
                 <p className="empty-message">No validators registered</p>
               ) : (
                 <div className="validators-grid">
-                  {validators.map((validator, idx) => (
-                    <div key={idx} className="validator-item">
-                      <div className="validator-header">
-                        <span className="validator-index">#{idx}</span>
-                        <span className="validator-stake">{validator.stakedEth} ETH</span>
+                  {validators.map((validator, idx) => {
+                    const nodeId = addressToNodeId[validator.nodeAddress] || 'Unknown';
+                    const addressSuffix = validator.nodeAddress.slice(-6);
+                    return (
+                      <div key={idx} className="validator-item">
+                        <div className="validator-header">
+                          <span className="validator-index">#{idx}</span>
+                          <span className="validator-stake">{validator.stakedEth} ETH</span>
+                        </div>
+                        <div className="validator-node-info">
+                          <span className="validator-node-id">{nodeId}</span>
+                          <span className="validator-address-suffix">({addressSuffix})</span>
+                        </div>
                       </div>
-                      <div className="validator-address">
-                        {validator.nodeAddress}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
