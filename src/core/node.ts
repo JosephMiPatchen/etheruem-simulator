@@ -152,9 +152,15 @@ export class Node {
       const txids = block.transactions.map(tx => tx.txid);
       this.mempool.removeTransactions(txids);
       
-      // Flush attestations for this block from the beacon pool (PoS consensus)
-      if (this.beaconState && block.hash) {
-        this.beaconState.flushAttestationsForBlock(block.hash);
+      // Flush attestations that were included in this block from the beacon pool (PoS consensus)
+      // Remove attestations by matching validatorAddress + blockHash combination
+      if (this.beaconState && block.attestations && block.attestations.length > 0) {
+        for (const attestation of block.attestations) {
+          // Remove this specific attestation from the pool
+          this.beaconState.beaconPool = this.beaconState.beaconPool.filter(
+            att => !(att.validatorAddress === attestation.validatorAddress && att.blockHash === attestation.blockHash)
+          );
+        }
       }
       
       // Stop mining the current block

@@ -6,6 +6,7 @@ import { isHashBelowCeiling } from '../../utils/cryptoUtils';
 import { SimulatorConfig } from '../../config/config';
 import TransactionView from './TransactionView';
 import { useSimulatorContext } from '../contexts/SimulatorContext';
+import { getNodeColorCSS } from '../../utils/nodeColorUtils';
 import { BiFork } from "react-icons/bi";
 import { MdContentCopy, MdCheck } from 'react-icons/md';
 import './BlockchainView.css';
@@ -193,6 +194,7 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, rec
                       
                       // Get node name (color) from address using context
                       const nodeName = addressToNodeId[attestation.validatorAddress] || attestation.validatorAddress.slice(-4);
+                      const nodeColor = getNodeColorCSS(nodeName);
                       
                       // Get last 6 hex characters of block hash
                       const hashSuffix = attestation.blockHash.slice(-6);
@@ -205,7 +207,7 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, rec
                           onClick={() => setSelectedAttestation({ ...attestation, blockHeight, nodeName, isCanonical })}
                         >
                           <div className="attestation-circle-content">
-                            <div className="attestation-node-id">{nodeName}</div>
+                            <div className="attestation-node-id" style={{ color: nodeColor }}>{nodeName}</div>
                             <div className="attestation-block-height">#{blockHeight}</div>
                             <div className="attestation-hash-suffix">{hashSuffix}</div>
                             {isCanonical && <div className="attestation-check">✓</div>}
@@ -234,7 +236,9 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, rec
               <div className="attestation-detail-section">
                 <div className="info-row">
                   <span className="info-label">Validator Node:</span>
-                  <span className="info-value">{selectedAttestation.nodeName}</span>
+                  <span className="info-value" style={{ color: getNodeColorCSS(selectedAttestation.nodeName), fontWeight: 'bold' }}>
+                    {selectedAttestation.nodeName}
+                  </span>
                 </div>
                 <div className="info-row">
                   <span className="info-label">Validator Address:</span>
