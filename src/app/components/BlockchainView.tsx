@@ -89,6 +89,9 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, rec
                   }
                 </div>
                 <div className="block-tx-count">{block.transactions.length} tx</div>
+                {block.attestations && block.attestations.length > 0 && (
+                  <div className="block-attestation-count">{block.attestations.length} att</div>
+                )}
                 {isForkedBlock(block) && <div className="fork-icon"><BiFork /></div>}
               </div>
             );
@@ -171,6 +174,33 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, rec
                   );
                 })}
               </div>
+              
+              {/* Attestations Section */}
+              {selectedBlock.attestations && selectedBlock.attestations.length > 0 && (
+                <div className="attestations-container">
+                  <h3>Attestations ({selectedBlock.attestations.length})</h3>
+                  <div className="attestations-list">
+                    {selectedBlock.attestations.map((attestation, index) => (
+                      <div key={index} className="attestation-item-block">
+                        <div className="attestation-validator-info">
+                          <span className="attestation-label">Validator:</span>
+                          <span className="attestation-address-full">{attestation.validatorAddress}</span>
+                        </div>
+                        <div className="attestation-block-info">
+                          <span className="attestation-label">Block Hash:</span>
+                          <span className="attestation-hash-full">{attestation.blockHash}</span>
+                        </div>
+                        <div className="attestation-timestamp-info">
+                          <span className="attestation-label">Timestamp:</span>
+                          <span className="attestation-timestamp-value">
+                            {new Date(attestation.timestamp).toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

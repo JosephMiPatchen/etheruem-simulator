@@ -1,14 +1,18 @@
-import { Block, BlockHeader, EthereumTransaction } from '../../types/types';
+import { Block, BlockHeader, EthereumTransaction, Attestation } from '../../types/types';
 import { SimulatorConfig } from '../../config/config';
 import { calculateTransactionHash, calculateBlockHeaderHash } from '../validation/blockValidator';
 import { createCoinbaseTransaction } from './transaction';
 
 /**
  * Creates a new block template ready for mining
+ * @param previousBlock The previous block in the chain
+ * @param transactions Transactions to include in the block
+ * @param attestations Attestations for the previous block (PoS consensus)
  */
 export const createBlockTemplate = (
   previousBlock: Block | null,
-  transactions: EthereumTransaction[]
+  transactions: EthereumTransaction[],
+  attestations: Attestation[] = []
 ): Block => {
   const height = previousBlock ? previousBlock.header.height + 1 : 0;
   const previousHeaderHash = previousBlock ? previousBlock.hash! : SimulatorConfig.GENESIS_PREV_HASH;
@@ -29,6 +33,7 @@ export const createBlockTemplate = (
   return {
     header,
     transactions,
+    attestations,
     hash: initialHash
   };
 };

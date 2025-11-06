@@ -115,6 +115,15 @@ export class BeaconState {
   }
   
   /**
+   * Flush (remove) attestations for a specific block hash from the beacon pool
+   * This is called after a block is validated and added to the chain
+   * Removes attestations based on blockHash + validatorAddress combination
+   */
+  flushAttestationsForBlock(blockHash: string): void {
+    this.beaconPool = this.beaconPool.filter(att => att.blockHash !== blockHash);
+  }
+  
+  /**
    * Generate initial RANDAO mix (placeholder for now)
    */
   private generateInitialRandao(): string {

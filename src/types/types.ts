@@ -52,6 +52,7 @@ export interface BlockHeader { // note: we dont have a field for headers hash, w
 export interface Block {
   header: BlockHeader;
   transactions: EthereumTransaction[];
+  attestations: Attestation[]; // Attestations for the previous block (PoS consensus)
   hash?: string;      // Calculated hash of the block header
 }
 

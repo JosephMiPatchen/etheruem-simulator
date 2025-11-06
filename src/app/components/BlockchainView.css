@@ -231,6 +231,64 @@
   color: var(--primary-color);
 }
 
+/* Attestations in Block Modal */
+.attestations-container {
+  border-top: 1px solid var(--border-color);
+  padding-top: 20px;
+  margin-top: 20px;
+}
+
+.attestations-container h3 {
+  margin-top: 0;
+  color: var(--primary-color);
+}
+
+.attestations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.attestation-item-block {
+  background: var(--overlay-background);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--primary-color);
+  border-radius: var(--border-radius-sm);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.attestation-validator-info,
+.attestation-block-info,
+.attestation-timestamp-info {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.attestation-label {
+  color: var(--text-secondary);
+  font-weight: 600;
+  min-width: 100px;
+  font-size: var(--font-size-sm);
+}
+
+.attestation-address-full,
+.attestation-hash-full {
+  font-family: monospace;
+  font-size: var(--font-size-xs);
+  color: var(--text-color);
+  word-break: break-all;
+  flex: 1;
+}
+
+.attestation-timestamp-value {
+  font-size: var(--font-size-sm);
+  color: var(--text-color);
+}
+
 .genesis-hash {
   color: var(--accent-color);
 }

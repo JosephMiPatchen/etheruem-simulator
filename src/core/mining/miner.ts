@@ -234,6 +234,9 @@ export class Miner {
       // Create transactions for the block - await the async function
       const transactions = await this.createBlockTransactions(height);
       
+      // Get attestations for the previous block from beacon pool
+      const attestations = this.node.getState().beaconState?.getAttestationsForBlock(previousHeaderHash) || [];
+      
       // Create the block header
       const header: BlockHeader = {
         transactionHash: sha256Hash(JSON.stringify(transactions)),
@@ -244,10 +247,11 @@ export class Miner {
         height
       };
       
-      // Create the block
+      // Create the block with attestations for the previous block
       const block: Block = {
         header,
-        transactions
+        transactions,
+        attestations
       };
       
       // Start mining the block

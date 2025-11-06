@@ -152,6 +152,11 @@ export class Node {
       const txids = block.transactions.map(tx => tx.txid);
       this.mempool.removeTransactions(txids);
       
+      // Flush attestations for this block from the beacon pool (PoS consensus)
+      if (this.beaconState && block.hash) {
+        this.beaconState.flushAttestationsForBlock(block.hash);
+      }
+      
       // Stop mining the current block
       this.miner.stopMining();
       
