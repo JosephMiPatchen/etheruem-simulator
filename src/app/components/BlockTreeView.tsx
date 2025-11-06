@@ -167,24 +167,24 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, onClose }
                     style={{ cursor: blockNode?.block ? 'pointer' : 'default' }}
                     className={isCanonical && !isRoot ? 'tree-node canonical-node' : 'tree-node'}
                   >
-                    {/* Main circle */}
+                    {/* Main circle - larger to fit text */}
                     <circle
-                      r={22}
+                      r={30}
                       fill={isRoot ? '#4d4d4d' : isCanonical ? '#667eea' : '#6c757d'}
                       stroke={isRoot ? '#ff9800' : isCanonical ? '#764ba2' : '#95a5a6'}
                       strokeWidth={isRoot ? 3 : 2}
                     />
                     
-                    {/* Fork icon for non-canonical blocks - positioned below the circle */}
+                    {/* Fork icon for non-canonical blocks - positioned to the right */}
                     {!isCanonical && !isRoot && (
-                      <g transform="translate(-6, 28)">
-                        <foreignObject width="12" height="12">
+                      <g transform="translate(24, -6)">
+                        <foreignObject width="14" height="14">
                           <div style={{ 
                             display: 'flex', 
                             alignItems: 'center', 
                             justifyContent: 'center',
                             color: '#95a5a6',
-                            fontSize: '12px'
+                            fontSize: '14px'
                           }}>
                             <BiFork />
                           </div>
@@ -192,41 +192,30 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, onClose }
                       </g>
                     )}
                     
-                    {/* Height text */}
+                    {/* Block name inside circle */}
                     <text
                       fill="#ffffff"
                       stroke="none"
                       x="0"
                       y="5"
                       textAnchor="middle"
-                      fontSize="13"
+                      fontSize="14"
                       fontWeight="bold"
-                      style={{ pointerEvents: 'none', userSelect: 'none' }}
-                    >
-                      {nodeDatum.attributes?.height || '∅'}
-                    </text>
-                    {/* Block name */}
-                    <text
-                      fill="#ecf0f1"
-                      stroke="none"
-                      x="0"
-                      y="45"
-                      textAnchor="middle"
-                      fontSize="12"
-                      fontWeight="500"
                       style={{ pointerEvents: 'none', userSelect: 'none' }}
                     >
                       {nodeDatum.name}
                     </text>
-                    {/* Hash */}
+                    
+                    {/* Hash below circle - white and bold */}
                     {nodeDatum.attributes?.hash && (
                       <text
-                        fill="#bdc3c7"
+                        fill="#ffffff"
                         stroke="none"
                         x="0"
-                        y="60"
+                        y="50"
                         textAnchor="middle"
-                        fontSize="10"
+                        fontSize="11"
+                        fontWeight="bold"
                         fontFamily="monospace"
                         style={{ pointerEvents: 'none', userSelect: 'none' }}
                       >
