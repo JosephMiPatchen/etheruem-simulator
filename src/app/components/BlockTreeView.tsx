@@ -142,10 +142,15 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, onClose }
                 const isCanonical = nodeDatum.attributes?.canonical === 'yes';
                 const isRoot = nodeDatum.attributes?.canonical === 'root';
                 
-                // Find the actual block from the tree
-                const blockHash = nodeDatum.attributes?.hash ? 
-                  blockchainTree.getCanonicalChain().find(b => b.hash?.slice(-6) === nodeDatum.attributes?.hash)?.hash || '' : '';
-                const blockNode = blockHash ? blockchainTree.getNode(blockHash) : null;
+                // Find the actual block from the tree by searching all nodes
+                let blockNode: BlockTreeNode | null = null;
+                if (nodeDatum.attributes?.hash && !isRoot) {
+                  // Search through all nodes in the tree to find matching hash
+                  const allNodes = Array.from(blockchainTree['nodesByHash'].values());
+                  blockNode = allNodes.find(node => 
+                    node.block && node.hash.slice(-6) === nodeDatum.attributes?.hash
+                  ) || null;
+                }
                 
                 const handleClick = () => {
                   if (blockNode?.block) {
@@ -162,8 +167,8 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, onClose }
                     {/* Main circle */}
                     <circle
                       r={22}
-                      fill={isRoot ? '#34495e' : isCanonical ? '#27ae60' : '#3498db'}
-                      stroke={isRoot ? '#7f8c8d' : isCanonical ? '#2ecc71' : '#5dade2'}
+                      fill={isRoot ? '#4d4d4d' : isCanonical ? '#4caf50' : '#627eea'}
+                      stroke={isRoot ? '#7f8c8d' : isCanonical ? '#66bb6a' : '#7e97f0'}
                       strokeWidth={2}
                     />
                     {/* Height text */}

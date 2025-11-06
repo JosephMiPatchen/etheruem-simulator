@@ -58,7 +58,7 @@
   align-items: center;
 }
 
-.copy-all-button, .view-receipts-button, .view-mempool-button {
+.copy-all-button, .view-receipts-button, .view-mempool-button, .view-tree-button {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -72,7 +72,7 @@
   font-size: var(--font-size-sm);
 }
 
-.copy-all-button:hover, .view-receipts-button:hover, .view-mempool-button:hover {
+.copy-all-button:hover, .view-receipts-button:hover, .view-mempool-button:hover, .view-tree-button:hover {
   background-color: var(--primary-color);
   color: var(--background-color);
   border-color: var(--primary-color);
