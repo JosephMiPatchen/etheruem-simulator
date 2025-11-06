@@ -21,46 +21,37 @@ import { Node } from '../node';
 export class RANDAO {
 
   /**
-   * Computes the proposer schedule for the next epoch (32 slots)
-   * Uses RANDAO mix for unpredictable but deterministic validator selection
-   * Validators are weighted by their effective balance (stake)
+   * Computes the proposer schedule for a given epoch (32 slots)
+   * Uses RANDAO mix which is a unpredicable but deterministic seed
+   * for a psuedorandom selection of validators. The selection is
+   * weighted by validator effective balance (stake). 
+   * ~this algo has yet to be cross referenced with the official spec but it captures
+   * the core idea of using RANDAO mix as a seed for a psuedorandom selection of validators~
    * 
    * @param state - Current beacon state with validators and RANDAO mix
-   * @returns Array of 32 validator addresses (one per slot in next epoch)
+   * @param targetEpoch - The epoch to compute the schedule for
+   * @returns Array of 32 validator addresses (one per slot in target epoch)
    */
-  static getProposerSchedule(state: BeaconState): string[] {
-    const currentEpoch = state.getCurrentEpoch();
-    const nextEpoch = currentEpoch + 1;
-
-    // Use current epoch's RANDAO mix as the randomness seed for next epoch's schedule
+  static getProposerSchedule(state: BeaconState, targetEpoch: number): string[] {
+    // Use previous epoch's RANDAO mix as the randomness seed for target epoch's schedule
     // This ensures unpredictability (can't predict future RANDAO reveals)
     // but determinism (all nodes compute same schedule from same state)
-    const currentEpochMix = state.getRandaoMix(currentEpoch);
-    const epochSeedBytes = hexToBytes(currentEpochMix);
+    const seedEpoch = targetEpoch - 1;
+    const epochMix = state.getRandaoMix(seedEpoch);
+    const epochSeedBytes = hexToBytes(epochMix);
 
-    // Build list of active validators with their effective balance
-    // Effective balance is capped at MAX_EFFECTIVE_BALANCE (32 ETH)
+    // Build list of active validators with their effective balance capped at MAX_EFFECTIVE_BALANCE
     // This prevents any single validator from dominating the selection
-    const activeValidators = state.validators
-      .map((validator, validatorIndex) => ({ 
-        validatorIndex, 
-        validator, 
-        effectiveBalance: Math.min(
-          Math.max(validator.stakedEth, 0), 
-          SimulatorConfig.MAX_EFFECTIVE_BALANCE
-        ) 
-      }))
-      .filter(v => v.effectiveBalance > 0);
-
-    if (activeValidators.length === 0) {
-      throw new Error("No active validators with positive stake");
-    }
+    const activeValidators = state.validators.map((validator, validatorIndex) => ({ 
+      validatorIndex, 
+      effectiveBalance: Math.min(validator.stakedEth, SimulatorConfig.MAX_EFFECTIVE_BALANCE) 
+    }));
 
     const proposerSchedule: string[] = [];
 
-    // Compute proposer for each of the 32 slots in the next epoch
+    // Compute proposer for each of the 32 slots in the target epoch
     for (let slotIndexInEpoch = 0; slotIndexInEpoch < SimulatorConfig.SLOTS_PER_EPOCH; slotIndexInEpoch++) {
-      const absoluteSlotNumber = nextEpoch * SimulatorConfig.SLOTS_PER_EPOCH + slotIndexInEpoch;
+      const absoluteSlotNumber = targetEpoch * SimulatorConfig.SLOTS_PER_EPOCH + slotIndexInEpoch;
 
       // Create unique seed for this specific slot by hashing: H(epochSeed || slotNumber)
       // This ensures each slot has independent randomness
@@ -88,9 +79,9 @@ export class RANDAO {
         // - Rearranged: randomByte * MAX_EFFECTIVE_BALANCE < effectiveBalance * 256
         // - We use 255 instead of 256 to avoid overflow (close enough approximation)
         //
-        // Example: If validator has 16 ETH (half of 32 ETH max):
-        //   - Accept if randomByte < 128 (50% chance)
-        // Example: If validator has 32 ETH (max):
+        // Example: If validator has 16 ETH (qtr of 64 ETH max):
+        //   - Accept if randomByte < 64 (25% chance)
+        // Example: If validator has 64 ETH (max):
         //   - Accept if randomByte < 255 (≈100% chance)
         const randomByte = randomnessBytes[8]; // Use 9th byte as random value [0-255]
         const acceptanceThreshold = (candidate.effectiveBalance * 255) / SimulatorConfig.MAX_EFFECTIVE_BALANCE;

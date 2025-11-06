@@ -20,7 +20,7 @@ export const SimulatorConfig = {
   
   // Proof of Stake (PoS) parameters
   SLOTS_PER_EPOCH: 32,       // Number of slots per epoch (Ethereum mainnet standard)
-  MAX_EFFECTIVE_BALANCE: 32, // Maximum effective balance in ETH for validators
+  MAX_EFFECTIVE_BALANCE: 64, // Maximum effective balance in ETH for validators
   
   // Constants
   REWARDER_NODE_ID: "COINBASE-REWARD",

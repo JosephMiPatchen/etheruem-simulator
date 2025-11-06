@@ -25,15 +25,17 @@ describe('RANDAO', () => {
   });
 
   describe('getProposerSchedule', () => {
-    it('should return 32 proposer addresses for next epoch', () => {
-      const schedule = RANDAO.getProposerSchedule(beaconState);
+    it('should return 32 proposer addresses for target epoch', () => {
+      const targetEpoch = 1;
+      const schedule = RANDAO.getProposerSchedule(beaconState, targetEpoch);
       
       expect(schedule).toHaveLength(32);
       expect(schedule.every(addr => typeof addr === 'string')).toBe(true);
     });
 
     it('should only select from active validators', () => {
-      const schedule = RANDAO.getProposerSchedule(beaconState);
+      const targetEpoch = 1;
+      const schedule = RANDAO.getProposerSchedule(beaconState, targetEpoch);
       const validAddresses = validators.map(v => v.nodeAddress);
       
       schedule.forEach(address => {
@@ -41,17 +43,19 @@ describe('RANDAO', () => {
       });
     });
 
-    it('should be deterministic for same beacon state', () => {
-      const schedule1 = RANDAO.getProposerSchedule(beaconState);
-      const schedule2 = RANDAO.getProposerSchedule(beaconState);
+    it('should be deterministic for same beacon state and epoch', () => {
+      const targetEpoch = 2;
+      const schedule1 = RANDAO.getProposerSchedule(beaconState, targetEpoch);
+      const schedule2 = RANDAO.getProposerSchedule(beaconState, targetEpoch);
       
       expect(schedule1).toEqual(schedule2);
     });
 
-    it('should throw error when no active validators', () => {
-      const emptyState = new BeaconState(genesisTime, []);
+    it('should produce different schedules for different epochs', () => {
+      const schedule1 = RANDAO.getProposerSchedule(beaconState, 1);
+      const schedule2 = RANDAO.getProposerSchedule(beaconState, 2);
       
-      expect(() => RANDAO.getProposerSchedule(emptyState)).toThrow('No active validators');
+      expect(schedule1).not.toEqual(schedule2);
     });
   });
 
