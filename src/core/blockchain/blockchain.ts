@@ -136,6 +136,12 @@ export class Blockchain {
         }
       }
       
+      // TODO: When implementing full PoS, also incrementally update:
+      // - RANDAO mixes (XOR with new block's RANDAO reveal)
+      // - Validator balances (apply rewards/penalties)
+      // - Slashing records (if any slashings in block)
+      // - Finality checkpoints (update justified/finalized epochs)
+      
       // Update HEAD to point to this block (extends canonical chain)
       this.blockTree.setHead(block.hash);
       
@@ -184,6 +190,13 @@ export class Blockchain {
     // Rebuild processed attestations from the new canonical chain
     if (this.beaconState) {
       this.beaconState.rebuildProcessedAttestations(newBlocks);
+      
+      // TODO: When implementing full PoS, also rebuild from scratch:
+      // - RANDAO mixes (recompute from all blocks in chain)
+      // - Validator balances (recompute from genesis + all rewards/penalties)
+      // - Slashing records (recompute from all slashing events)
+      // - Finality checkpoints (recompute justified/finalized epochs)
+      // - Epoch schedule (regenerate validator assignments)
     }
     
     return true;
