@@ -194,6 +194,12 @@ export class Node {
       const allTxids = blocks.flatMap(block => block.transactions.map(tx => tx.txid));
       this.mempool.removeTransactions(allTxids);
       
+      // Rebuild processed attestations set from the new canonical chain
+      // This is critical - when world state is rebuilt, we must also rebuild processed attestations
+      if (this.beaconState) {
+        this.beaconState.rebuildProcessedAttestations(blocks);
+      }
+      
       // Stop current mining operation if we were mining
       const wasMining = this.miner.isMining;
       this.miner.stopMining();

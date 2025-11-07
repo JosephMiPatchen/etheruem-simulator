@@ -168,6 +168,24 @@ export class BeaconState {
   }
   
   /**
+   * Rebuild processed attestations set from a chain of blocks
+   * Called when world state is rebuilt (e.g., during chain replacement)
+   */
+  rebuildProcessedAttestations(blocks: any[]): void {
+    // Clear existing set
+    this.processedAttestations.clear();
+    
+    // Add all attestations from all blocks in the chain
+    for (const block of blocks) {
+      if (block.attestations && block.attestations.length > 0) {
+        for (const attestation of block.attestations) {
+          this.markAttestationAsProcessed(attestation.blockHash, attestation.validatorAddress);
+        }
+      }
+    }
+  }
+  
+  /**
    * Generate initial RANDAO mix (placeholder for now)
    */
   private generateInitialRandao(): string {
