@@ -32,12 +32,17 @@ export class BeaconState {
   // Beacon pool - accumulates attestations from validators
   public beaconPool: Attestation[];
   
+  // Set of processed attestations (key: "blockHash-validatorAddress")
+  // Tracks attestations that have been included in blocks to prevent duplicates
+  public processedAttestations: Set<string>;
+  
   constructor(genesisTime: number, validators: Validator[]) {
     this.genesisTime = genesisTime;
     this.validators = validators;
     this.randaoMixes = new Map();
     this.currentEpochSchedule = new Map();
     this.beaconPool = [];
+    this.processedAttestations = new Set();
     
     // Initialize first RANDAO mix for epoch 0
     this.randaoMixes.set(0, this.generateInitialRandao());
@@ -130,6 +135,36 @@ export class BeaconState {
    */
   flushAttestationsForBlock(blockHash: string): void {
     this.beaconPool = this.beaconPool.filter(att => att.blockHash !== blockHash);
+  }
+  
+  /**
+   * Create attestation key for tracking processed attestations
+   */
+  private getAttestationKey(blockHash: string, validatorAddress: string): string {
+    return `${blockHash}-${validatorAddress}`;
+  }
+  
+  /**
+   * Mark an attestation as processed (included in a block)
+   */
+  markAttestationAsProcessed(blockHash: string, validatorAddress: string): void {
+    const key = this.getAttestationKey(blockHash, validatorAddress);
+    this.processedAttestations.add(key);
+  }
+  
+  /**
+   * Check if an attestation has already been processed
+   */
+  isAttestationProcessed(blockHash: string, validatorAddress: string): boolean {
+    const key = this.getAttestationKey(blockHash, validatorAddress);
+    return this.processedAttestations.has(key);
+  }
+  
+  /**
+   * Clear processed attestations set (called on chain reorganization)
+   */
+  clearProcessedAttestations(): void {
+    this.processedAttestations.clear();
   }
   
   /**

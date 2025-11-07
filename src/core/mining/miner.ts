@@ -245,8 +245,23 @@ export class Miner {
         const canonicalBlockHashes = new Set(canonicalChain.map(b => b.hash).filter((h): h is string => !!h));
         
         // Filter beacon pool to only include attestations for canonical chain blocks
+        // AND exclude attestations that have already been processed (included in a block)
         const allAttestations = beaconState.getBeaconPool();
-        attestations = allAttestations.filter((att: any) => canonicalBlockHashes.has(att.blockHash));
+        attestations = allAttestations.filter((att: any) => {
+          // Must be for a canonical chain block
+          if (!canonicalBlockHashes.has(att.blockHash)) return false;
+          
+          // Must not have been processed already
+          if (beaconState.isAttestationProcessed(att.blockHash, att.validatorAddress)) {
+            // Remove from beacon pool since it's already been processed
+            beaconState.beaconPool = beaconState.beaconPool.filter(
+              (a: any) => !(a.blockHash === att.blockHash && a.validatorAddress === att.validatorAddress)
+            );
+            return false;
+          }
+          
+          return true;
+        });
       }
       
       // Create the block header
