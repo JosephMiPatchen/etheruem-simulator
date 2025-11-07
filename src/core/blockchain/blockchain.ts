@@ -15,6 +15,7 @@ export class Blockchain {
   private worldState: WorldState;
   private nodeId: string;
   private minerAddress: string;
+  private beaconState?: any;  // Optional reference to BeaconState for rebuilding processed attestations
   
   constructor(nodeId: string, minerAddress: string) {
     this.nodeId = nodeId;
@@ -31,6 +32,13 @@ export class Blockchain {
     
     // Initialize world state from genesis
     this.worldState = WorldState.fromBlocks([genesisBlock]);
+  }
+  
+  /**
+   * Sets the BeaconState reference for rebuilding processed attestations
+   */
+  setBeaconState(beaconState: any): void {
+    this.beaconState = beaconState;
   }
   
   /**
@@ -124,6 +132,12 @@ export class Blockchain {
       // Update HEAD to point to this block (extends canonical chain)
       this.blockTree.setHead(block.hash);
       
+      // Rebuild processed attestations from new canonical chain
+      if (this.beaconState) {
+        const canonicalChain = this.blockTree.getCanonicalChain();
+        this.beaconState.rebuildProcessedAttestations(canonicalChain);
+      }
+      
       return true;
     } else {
       // Block creates a fork - added to tree but doesn't update HEAD or world state
@@ -165,6 +179,11 @@ export class Blockchain {
     
     // Rebuild world state from the new canonical chain
     this.worldState = WorldState.fromBlocks(newBlocks);
+    
+    // Rebuild processed attestations from the new canonical chain
+    if (this.beaconState) {
+      this.beaconState.rebuildProcessedAttestations(newBlocks);
+    }
     
     return true;
   }

@@ -47,6 +47,9 @@ export class Node {
     const defaultValidators = validators || [];
     this.beaconState = new BeaconState(defaultGenesisTime, defaultValidators);
     
+    // Set BeaconState reference on Blockchain so it can rebuild processed attestations when HEAD changes
+    this.blockchain.setBeaconState(this.beaconState);
+    
     // Initialize miner with callback for when a block is mined
     // Using .bind(this) ensures the handleMinedBlock method maintains the Node instance context
     // when called by the Miner. Without binding, 'this' would be undefined or refer to the wrong object
@@ -195,11 +198,7 @@ export class Node {
       const allTxids = blocks.flatMap(block => block.transactions.map(tx => tx.txid));
       this.mempool.removeTransactions(allTxids);
       
-      // Rebuild processed attestations set from the new canonical chain
-      // This is critical - when world state is rebuilt, we must also rebuild processed attestations
-      if (this.beaconState) {
-        this.beaconState.rebuildProcessedAttestations(blocks);
-      }
+      // Note: processedAttestations is automatically rebuilt by blockchain.replaceChain()
       
       // Stop current mining operation if we were mining
       const wasMining = this.miner.isMining;
