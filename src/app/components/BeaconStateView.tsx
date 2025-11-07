@@ -145,7 +145,7 @@ const BeaconStateView: React.FC<BeaconStateViewProps> = ({ beaconState, blockcha
                 <p className="empty-message">No attestations in beacon pool</p>
               ) : (
                 <div className="attestations-grid-compact">
-                  {beaconState.beaconPool.slice(-20).reverse().map((attestation, index) => {
+                  {beaconState.beaconPool.slice().reverse().map((attestation, index) => {
                     // Find the block being attested to get its height
                     const attestedBlock = blockchain.find((b: Block) => b.hash === attestation.blockHash);
                     const blockHeight = attestedBlock ? attestedBlock.header.height : '?';
