@@ -119,7 +119,7 @@ export class Blockchain {
         return false;
       }
       
-      // Update world state with all transactions in the block
+      // Update world state with all transactions in the block (incremental update)
       for (let i = 0; i < block.transactions.length; i++) {
         this.worldState.updateWithTransaction(
           block.transactions[i],
@@ -129,14 +129,15 @@ export class Blockchain {
         );
       }
       
+      // Update processed attestations with attestations from this block (incremental update)
+      if (this.beaconState && block.attestations && block.attestations.length > 0) {
+        for (const attestation of block.attestations) {
+          this.beaconState.markAttestationAsProcessed(attestation.blockHash, attestation.validatorAddress);
+        }
+      }
+      
       // Update HEAD to point to this block (extends canonical chain)
       this.blockTree.setHead(block.hash);
-      
-      // Rebuild processed attestations from new canonical chain
-      if (this.beaconState) {
-        const canonicalChain = this.blockTree.getCanonicalChain();
-        this.beaconState.rebuildProcessedAttestations(canonicalChain);
-      }
       
       return true;
     } else {
