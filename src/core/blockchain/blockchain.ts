@@ -119,28 +119,8 @@ export class Blockchain {
         return false;
       }
       
-      // Update world state with all transactions in the block (incremental update)
-      for (let i = 0; i < block.transactions.length; i++) {
-        this.worldState.updateWithTransaction(
-          block.transactions[i],
-          block.hash,
-          block.header.height,
-          i
-        );
-      }
-      
-      // Update processed attestations with attestations from this block (incremental update)
-      if (this.beaconState && block.attestations && block.attestations.length > 0) {
-        for (const attestation of block.attestations) {
-          this.beaconState.markAttestationAsProcessed(attestation.blockHash, attestation.validatorAddress);
-        }
-      }
-      
-      // TODO: When implementing full PoS, also incrementally update:
-      // - RANDAO mixes (XOR with new block's RANDAO reveal)
-      // - Validator balances (apply rewards/penalties)
-      // - Slashing records (if any slashings in block)
-      // - Finality checkpoints (update justified/finalized epochs)
+      // Apply this block's state changes (world state + beacon state)
+      this.applyBlockToState(block);
       
       // Update HEAD to point to this block (extends canonical chain)
       this.blockTree.setHead(block.hash);
@@ -184,19 +164,23 @@ export class Blockchain {
     const lastBlock = newBlocks[newBlocks.length - 1];
     this.blockTree.setHead(lastBlock.hash || '');
     
-    // Rebuild world state from the new canonical chain
-    this.worldState = WorldState.fromBlocks(newBlocks);
-    
-    // Rebuild processed attestations from the new canonical chain
+    // Rebuild both world state and beacon state from scratch by applying each block
+    // Reset to initial state first
+    this.worldState = new WorldState();
     if (this.beaconState) {
-      this.beaconState.rebuildProcessedAttestations(newBlocks);
+      this.beaconState.clearProcessedAttestations();
       
-      // TODO: When implementing full PoS, also rebuild from scratch:
-      // - RANDAO mixes (recompute from all blocks in chain)
-      // - Validator balances (recompute from genesis + all rewards/penalties)
-      // - Slashing records (recompute from all slashing events)
-      // - Finality checkpoints (recompute justified/finalized epochs)
-      // - Epoch schedule (regenerate validator assignments)
+      // TODO: When implementing full PoS, also reset:
+      // - RANDAO mixes (back to genesis)
+      // - Validator balances (back to initial stakes)
+      // - Slashing records (clear all)
+      // - Finality checkpoints (back to genesis)
+      // - Epoch schedule (regenerate from genesis)
+    }
+    
+    // Apply each block in the new canonical chain to rebuild state
+    for (const block of newBlocks) {
+      this.applyBlockToState(block);
     }
     
     return true;
@@ -207,6 +191,39 @@ export class Blockchain {
    */
   private async isValidChain(chain: Block[]): Promise<boolean> {
     return await validateChain(chain);
+  }
+  
+  /**
+   * Applies a block's state changes to both world state and beacon state
+   * This is the single source of truth for how blocks modify state
+   */
+  private applyBlockToState(block: Block): void {
+    // ========== World State Updates (Execution Layer) ==========
+    // Apply all transactions in the block to world state
+    for (let i = 0; i < block.transactions.length; i++) {
+      this.worldState.updateWithTransaction(
+        block.transactions[i],
+        block.hash,
+        block.header.height,
+        i
+      );
+    }
+    
+    // ========== Beacon State Updates (Consensus Layer) ==========
+    if (this.beaconState) {
+      // Mark all attestations in this block as processed
+      if (block.attestations && block.attestations.length > 0) {
+        for (const attestation of block.attestations) {
+          this.beaconState.markAttestationAsProcessed(attestation.blockHash, attestation.validatorAddress);
+        }
+      }
+      
+      // TODO: When implementing full PoS, also update:
+      // - RANDAO mixes (XOR with new block's RANDAO reveal)
+      // - Validator balances (apply rewards/penalties)
+      // - Slashing records (if any slashings in block)
+      // - Finality checkpoints (update justified/finalized epochs)
+    }
   }
   
   /**
