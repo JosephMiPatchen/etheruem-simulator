@@ -213,15 +213,22 @@ export class Blockchain {
     if (this.beaconState) {
       // Mark all attestations in this block as processed and remove from beacon pool
       if (block.attestations && block.attestations.length > 0) {
+        const poolSizeBefore = this.beaconState.beaconPool.length;
         for (const attestation of block.attestations) {
           // Mark as processed to prevent duplicate inclusion
           this.beaconState.markAttestationAsProcessed(attestation.blockHash, attestation.validatorAddress);
           
           // Remove from beacon pool (cleanup)
+          const poolSizeBeforeFilter = this.beaconState.beaconPool.length;
           this.beaconState.beaconPool = this.beaconState.beaconPool.filter(
             (att: any) => !(att.validatorAddress === attestation.validatorAddress && att.blockHash === attestation.blockHash)
           );
+          const removed = poolSizeBeforeFilter - this.beaconState.beaconPool.length;
+          if (removed === 0) {
+            console.warn(`[Blockchain] Attestation not found in beacon pool: ${attestation.blockHash.slice(0, 8)}-${attestation.validatorAddress.slice(-4)}`);
+          }
         }
+        console.log(`[Blockchain] Beacon pool cleanup: ${poolSizeBefore} -> ${this.beaconState.beaconPool.length} (removed ${poolSizeBefore - this.beaconState.beaconPool.length})`);
       }
       
       // TODO: When implementing full PoS, also update:
