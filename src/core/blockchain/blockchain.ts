@@ -211,10 +211,16 @@ export class Blockchain {
     
     // ========== Beacon State Updates (Consensus Layer) ==========
     if (this.beaconState) {
-      // Mark all attestations in this block as processed
+      // Mark all attestations in this block as processed and remove from beacon pool
       if (block.attestations && block.attestations.length > 0) {
         for (const attestation of block.attestations) {
+          // Mark as processed to prevent duplicate inclusion
           this.beaconState.markAttestationAsProcessed(attestation.blockHash, attestation.validatorAddress);
+          
+          // Remove from beacon pool (cleanup)
+          this.beaconState.beaconPool = this.beaconState.beaconPool.filter(
+            (att: any) => !(att.validatorAddress === attestation.validatorAddress && att.blockHash === attestation.blockHash)
+          );
         }
       }
       

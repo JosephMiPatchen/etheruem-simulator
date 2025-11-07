@@ -155,19 +155,7 @@ export class Node {
       const txids = block.transactions.map(tx => tx.txid);
       this.mempool.removeTransactions(txids);
       
-      // Process attestations that were included in this block (PoS consensus)
-      if (this.beaconState && block.attestations && block.attestations.length > 0) {
-        console.log(`[Node ${this.nodeId}] Processing ${block.attestations.length} attestations from block ${block.hash?.slice(0, 8)}`);
-        for (const attestation of block.attestations) {
-          // Mark attestation as processed to prevent duplicate inclusion
-          this.beaconState.markAttestationAsProcessed(attestation.blockHash, attestation.validatorAddress);
-          
-          // Remove this specific attestation from the pool
-          this.beaconState.beaconPool = this.beaconState.beaconPool.filter(
-            att => !(att.validatorAddress === attestation.validatorAddress && att.blockHash === attestation.blockHash)
-          );
-        }
-      }
+      // Note: Attestation processing and beacon pool cleanup now handled in blockchain.applyBlockToState()
       
       // Stop mining the current block
       this.miner.stopMining();
