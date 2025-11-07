@@ -154,6 +154,7 @@ export class Node {
       
       // Process attestations that were included in this block (PoS consensus)
       if (this.beaconState && block.attestations && block.attestations.length > 0) {
+        console.log(`[Node ${this.nodeId}] Processing ${block.attestations.length} attestations from block ${block.hash?.slice(0, 8)}`);
         for (const attestation of block.attestations) {
           // Mark attestation as processed to prevent duplicate inclusion
           this.beaconState.markAttestationAsProcessed(attestation.blockHash, attestation.validatorAddress);

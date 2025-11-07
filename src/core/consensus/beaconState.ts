@@ -150,6 +150,7 @@ export class BeaconState {
   markAttestationAsProcessed(blockHash: string, validatorAddress: string): void {
     const key = this.getAttestationKey(blockHash, validatorAddress);
     this.processedAttestations.add(key);
+    console.log(`[BeaconState] Marked as processed: ${key.slice(0, 20)}... (total: ${this.processedAttestations.size})`);
   }
   
   /**
@@ -157,7 +158,11 @@ export class BeaconState {
    */
   isAttestationProcessed(blockHash: string, validatorAddress: string): boolean {
     const key = this.getAttestationKey(blockHash, validatorAddress);
-    return this.processedAttestations.has(key);
+    const isProcessed = this.processedAttestations.has(key);
+    if (isProcessed) {
+      console.log(`[BeaconState] DUPLICATE DETECTED: ${key.slice(0, 20)}... already processed`);
+    }
+    return isProcessed;
   }
   
   /**
@@ -172,17 +177,25 @@ export class BeaconState {
    * Called when world state is rebuilt (e.g., during chain replacement)
    */
   rebuildProcessedAttestations(blocks: any[]): void {
+    console.log(`[BeaconState] REBUILDING processedAttestations from ${blocks.length} blocks`);
+    
     // Clear existing set
+    const oldSize = this.processedAttestations.size;
     this.processedAttestations.clear();
+    console.log(`[BeaconState] Cleared ${oldSize} old processed attestations`);
     
     // Add all attestations from all blocks in the chain
+    let totalAttestations = 0;
     for (const block of blocks) {
       if (block.attestations && block.attestations.length > 0) {
+        console.log(`[BeaconState] Block ${block.hash?.slice(0, 8)} has ${block.attestations.length} attestations`);
         for (const attestation of block.attestations) {
           this.markAttestationAsProcessed(attestation.blockHash, attestation.validatorAddress);
+          totalAttestations++;
         }
       }
     }
+    console.log(`[BeaconState] REBUILD COMPLETE: ${totalAttestations} attestations marked as processed`);
   }
   
   /**
