@@ -111,6 +111,7 @@
   display: flex;
   gap: 1rem;
   align-items: center;
+  justify-content: flex-start;
 }
 
 .block-tree-modal .legend-item {
