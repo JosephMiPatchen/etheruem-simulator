@@ -28,6 +28,7 @@ interface WorldStateViewProps {
   receipts?: ReceiptsDatabase; // Optional receipts database
   mempool?: EthereumTransaction[]; // Optional mempool transactions
   blockchainTree?: BlockchainTree; // Blockchain tree for visualization
+  beaconState?: any; // Optional beacon state for showing latest attestations
   allNodeIds?: string[];
   nodeId?: string; // Current node ID for which the modal is opened
 }
@@ -38,7 +39,7 @@ interface NodeOption {
   label: string;
 }
 
-const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, receipts, mempool, blockchainTree, allNodeIds = [], nodeId }) => {
+const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, receipts, mempool, blockchainTree, beaconState, allNodeIds = [], nodeId }) => {
   const { addressToNodeId } = useSimulatorContext();
   const [selectedNodes, setSelectedNodes] = useState<NodeOption[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -429,6 +430,7 @@ const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, receipts, m
       {showBlockTree && blockchainTree && (
         <BlockTreeView 
           blockchainTree={blockchainTree}
+          beaconState={beaconState}
           onClose={() => setShowBlockTree(false)}
         />
       )}

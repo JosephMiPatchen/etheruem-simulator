@@ -82,6 +82,7 @@ const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [], onAdd
                 receipts={nodeState.receipts}
                 mempool={nodeState.mempool}
                 blockchainTree={nodeState.blockchainTree}
+                beaconState={nodeState.beaconState}
                 allNodeIds={allNodeIds} 
                 nodeId={nodeState.nodeId} 
               />

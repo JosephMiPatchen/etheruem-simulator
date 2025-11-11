@@ -12,6 +12,7 @@ import './BlockTreeView.css';
 
 interface BlockTreeViewProps {
   blockchainTree: BlockchainTree;
+  beaconState?: any; // Optional beacon state for showing latest attestations
   onClose: () => void;
 }
 
@@ -29,7 +30,7 @@ interface TreeNodeData {
  * BlockTreeView - Visualizes the blockchain tree structure using react-d3-tree
  * Shows null root, all genesis blocks, and all forks with canonical chain highlighted
  */
-const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, onClose }) => {
+const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconState, onClose }) => {
   const [selectedBlock, setSelectedBlock] = useState<Block | null>(null);
   const [isSelectedBlockCanonical, setIsSelectedBlockCanonical] = useState(true);
   const [copied, setCopied] = useState(false);
@@ -194,16 +195,37 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, onClose }
                     
                     {/* Attested ETH annotation - plain text to the right (after fork icon if present) */}
                     {!isRoot && blockNode?.metadata?.attestedEth !== undefined && blockNode.metadata.attestedEth > 0 && (
-                      <text
-                        x={!isCanonical ? 55 : 40}
-                        y="5"
-                        fill="#ffffff"
-                        fontSize="11"
-                        fontWeight="600"
-                        textAnchor="start"
-                      >
-                        {blockNode.metadata.attestedEth} ETH
-                      </text>
+                      <>
+                        <text
+                          x={!isCanonical ? 55 : 40}
+                          y="5"
+                          fill="#ffffff"
+                          fontSize="11"
+                          fontWeight="600"
+                          textAnchor="start"
+                        >
+                          {blockNode.metadata.attestedEth} ETH
+                        </text>
+                        
+                        {/* Small attestation circles for leaf nodes with latest attestations */}
+                        {beaconState && blockNode.children.length === 0 && (() => {
+                          // Get latest attestations pointing to this block
+                          const attestationsForThisBlock = Array.from(beaconState.latestAttestations?.values() || [])
+                            .filter((att: any) => att.blockHash === blockNode.hash);
+                          
+                          return attestationsForThisBlock.map((att: any, idx: number) => (
+                            <circle
+                              key={`att-${idx}`}
+                              cx={(!isCanonical ? 55 : 40) + 50 + (idx * 12)}
+                              cy="0"
+                              r="5"
+                              fill="#667eea"
+                              stroke="#764ba2"
+                              strokeWidth="1"
+                            />
+                          ));
+                        })()}
+                      </>
                     )}
                     
                     {/* Block name or empty set symbol inside circle */}
