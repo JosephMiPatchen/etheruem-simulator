@@ -34,6 +34,12 @@ const AttestationCircle: React.FC<AttestationCircleProps> = ({
   
   // Simplified view for block tree
   if (simplified) {
+    // Format time as HH:MM
+    const date = new Date(attestation.timestamp);
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const timeStr = `${hours}:${minutes}`;
+    
     return (
       <div 
         className="attestation-circle attestation-simplified"
@@ -44,6 +50,7 @@ const AttestationCircle: React.FC<AttestationCircleProps> = ({
         <div className="attestation-circle-content">
           <div className="attestation-node-name" style={{ color: nodeColor }}>{nodeName}</div>
           <div className="attestation-label">Attest</div>
+          <div className="attestation-time">{timeStr}</div>
         </div>
       </div>
     );

@@ -80,3 +80,11 @@
   line-height: 1;
   margin-top: 2px;
 }
+
+.attestation-time {
+  font-size: 9px;
+  color: var(--text-secondary);
+  font-family: monospace;
+  line-height: 1;
+  margin-top: 2px;
+}
