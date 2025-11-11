@@ -24,11 +24,15 @@
   max-height: 90vh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .block-tree-modal .block-tree-content {
   width: 90vw;
-  height: 85vh;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .block-tree-modal .modal-header {
