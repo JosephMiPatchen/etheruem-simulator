@@ -206,11 +206,12 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
                     
                     {/* LMD GHOST HEAD text for GHOST-HEAD node - positioned to the left */}
                     {isGhostHead && (
-                      <g transform="translate(-120, 0)">
+                      <g transform="translate(-150, 0)">
                         <foreignObject width="110" height="20">
                           <div style={{ 
                             display: 'flex', 
                             alignItems: 'center',
+                            justifyContent: 'flex-end',
                             color: '#ff9800',
                             fontSize: '11px',
                             fontWeight: 'bold',
