@@ -8,13 +8,15 @@ interface AttestationCircleProps {
   blocks: Block[];
   addressToNodeId: Record<string, string>;
   onClick?: () => void;
+  simplified?: boolean; // Optional: show simplified view for block tree
 }
 
 const AttestationCircle: React.FC<AttestationCircleProps> = ({ 
   attestation, 
   blocks, 
   addressToNodeId,
-  onClick 
+  onClick,
+  simplified = false
 }) => {
   // Check if this attestation's block hash is in the canonical chain
   const isCanonical = blocks.some((b: Block) => b.hash === attestation.blockHash);
@@ -30,6 +32,24 @@ const AttestationCircle: React.FC<AttestationCircleProps> = ({
   // Get last 6 hex characters of block hash
   const hashSuffix = attestation.blockHash.slice(-6);
   
+  // Simplified view for block tree
+  if (simplified) {
+    return (
+      <div 
+        className="attestation-circle attestation-simplified"
+        style={{ borderColor: nodeColor }}
+        title={`Validator: ${nodeName}\nBlock: ${attestation.blockHash}\nHeight: ${blockHeight}`}
+        onClick={onClick}
+      >
+        <div className="attestation-circle-content">
+          <div className="attestation-node-name" style={{ color: nodeColor }}>{nodeName}</div>
+          <div className="attestation-label">Attest</div>
+        </div>
+      </div>
+    );
+  }
+  
+  // Default view
   return (
     <div 
       className={`attestation-circle ${isCanonical ? 'attestation-canonical' : ''}`}

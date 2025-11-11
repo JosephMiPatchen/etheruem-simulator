@@ -61,3 +61,22 @@
   line-height: 1;
   margin-top: 2px;
 }
+
+/* Simplified view for block tree */
+.attestation-simplified {
+  width: 60px;
+  height: 60px;
+}
+
+.attestation-node-name {
+  font-weight: bold;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.attestation-label {
+  font-size: 10px;
+  color: var(--text-secondary);
+  line-height: 1;
+  margin-top: 2px;
+}

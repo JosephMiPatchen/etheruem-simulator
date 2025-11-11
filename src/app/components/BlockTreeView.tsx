@@ -278,6 +278,7 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
                       blocks={allBlocks}
                       addressToNodeId={addressToNodeId}
                       onClick={() => setSelectedAttestation({ ...attestation, blockHeight, nodeName, isCanonical })}
+                      simplified={true}
                     />
                   );
                 })}
