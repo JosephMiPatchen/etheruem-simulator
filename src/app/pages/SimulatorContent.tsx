@@ -8,9 +8,8 @@ import { SimulatorProvider, useSimulatorContext } from '../contexts/SimulatorCon
  * Inner simulator component that uses the simulator context
  */
 const SimulatorContentInner: React.FC = () => {
-  // State for node states and mining status
+  // State for node states
   const [nodeStates, setNodeStates] = useState<Record<string, NodeState>>({});
-  const [isMining, setIsMining] = useState<boolean>(false);
   
   // Get context functions
   const { detectForks, setAddressToNodeId } = useSimulatorContext();
@@ -67,19 +66,6 @@ const SimulatorContentInner: React.FC = () => {
     }
   };
   
-  // Function to toggle mining on all nodes
-  const toggleMining = () => {
-    if (!networkManagerRef.current) return;
-    
-    if (isMining) {
-      networkManagerRef.current.stopAllMining();
-      setIsMining(false);
-    } else {
-      networkManagerRef.current.startAllMining();
-      setIsMining(true);
-    }
-  };
-  
   // Handle adding transaction to a node's mempool
   const handleAddTransaction = async (nodeId: string, recipient: string, amount: number) => {
     if (!networkManagerRef.current) return;
@@ -107,12 +93,6 @@ const SimulatorContentInner: React.FC = () => {
     <div className="app-container">
       <header className="app-header">
         <h1>Ethereum Simulator</h1>
-        <button 
-          className={`mining-control ${isMining ? 'mining' : ''}`}
-          onClick={toggleMining}
-        >
-          {isMining ? 'Stop Mining' : 'Start Mining'}
-        </button>
       </header>
       
       <main className="nodes-container">
