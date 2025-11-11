@@ -1,3 +1,5 @@
+import { LmdGhost } from '../LmdGhost';
+
 /**
  * BeaconState - Consensus Layer (CL) state for Ethereum PoS
  * 
@@ -36,10 +38,14 @@ export class BeaconState {
   // Tracks attestations that have been included in blocks to prevent duplicates
   public processedAttestations: Set<string>;
   
+  // LMD-GHOST fork choice handler
+  private lmdGhost: LmdGhost;
+  
   // Latest attestations from each validator (for LMD GHOST fork choice)
-  // Maps validatorAddress -> most recent Attestation
-  // Used to decorate block tree with attestedEth (weighted attestations)
-  public latestAttestations: Map<string, Attestation>;
+  // Exposed as getter for backward compatibility with UI
+  public get latestAttestations(): Map<string, Attestation> {
+    return this.lmdGhost.getLatestAttestations();
+  }
   
   // Reference to blockchain for triggering tree updates (set after construction)
   private blockchain?: any;
@@ -51,7 +57,7 @@ export class BeaconState {
     this.currentEpochSchedule = new Map();
     this.beaconPool = [];
     this.processedAttestations = new Set();
-    this.latestAttestations = new Map();
+    this.lmdGhost = new LmdGhost();
     
     // Initialize first RANDAO mix for epoch 0
     this.randaoMixes.set(0, this.generateInitialRandao());
@@ -233,11 +239,11 @@ export class BeaconState {
    * Returns true if updated, false if existing attestation was newer
    */
   updateLatestAttestation(attestation: Attestation): boolean {
-    const existing = this.latestAttestations.get(attestation.validatorAddress);
+    const existing = this.lmdGhost.getLatestAttestations().get(attestation.validatorAddress);
     
     // If no existing attestation or new one is more recent, update
     if (!existing || attestation.timestamp > existing.timestamp) {
-      this.latestAttestations.set(attestation.validatorAddress, attestation);
+      this.lmdGhost.recordAttestation(attestation);
       return true;
     }
     
@@ -248,7 +254,7 @@ export class BeaconState {
    * Clear all latest attestations (used during chain replacement)
    */
   clearLatestAttestations(): void {
-    this.latestAttestations.clear();
+    this.lmdGhost.clearAttestations();
   }
   
   /**
@@ -319,11 +325,11 @@ export class BeaconState {
    * Called after chain replacement or when rebuilding from scratch
    */
   private rebuildAttestedEthFromLatestAttestations(): void {
-    // Walk through each latest attestation and update the tree
-    for (const [validatorAddress, attestation] of this.latestAttestations) {
-      const stake = this.getValidatorStake(validatorAddress);
-      this.walkTreeAndUpdateAttestedEth(attestation.blockHash, stake);
-    }
+    if (!this.blockchain) return;
+    
+    // Use LMD-GHOST to decorate the entire tree
+    const blockTree = this.blockchain.getTree();
+    this.lmdGhost.decorateTree(blockTree);
   }
   
   /**
