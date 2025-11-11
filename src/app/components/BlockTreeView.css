@@ -70,9 +70,9 @@
 /* Tree Stats */
 .block-tree-modal .tree-stats {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
-  gap: 1.5rem;
+  gap: 2rem;
   margin-bottom: 0.75rem;
   padding: 0.75rem 1rem;
   background: rgba(98, 126, 234, 0.05);
