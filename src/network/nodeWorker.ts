@@ -4,7 +4,6 @@ import { Validator } from '../core/consensus/beaconState';
 import { 
   Message, 
   MessageType, 
-  BlockAnnouncementMessage,
   AttestationMessage
 } from './messages';
 import { createSignedTransaction } from '../core/blockchain/transaction';
@@ -46,9 +45,6 @@ export class NodeWorker {
    */
   receiveIncomingMessage(message: Message): void {
     switch (message.type) {
-      case MessageType.BLOCK_ANNOUNCEMENT:
-        this.handleBlockAnnouncement(message as BlockAnnouncementMessage);
-        break;
       case MessageType.ATTESTATION:
         this.handleAttestation(message as AttestationMessage);
         break;
@@ -100,18 +96,6 @@ export class NodeWorker {
   }
   
 
-  
-  /**
-   * Handles a block announcement message from another node
-   * After receiving and validating the block, creates an attestation
-   */
-  private handleBlockAnnouncement(message: BlockAnnouncementMessage): void {
-    // Process the received block
-    this._node.receiveBlock(message.block);
-    
-    // Create and broadcast attestation for this block (PoS consensus)
-    this.createAndBroadcastAttestation(message.block);
-  }
   
   /**
    * Creates and broadcasts an attestation for a received block

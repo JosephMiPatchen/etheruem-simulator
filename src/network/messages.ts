@@ -1,11 +1,10 @@
-import { Block, Attestation } from '../types/types';
+import { Attestation } from '../types/types';
 
 /**
  * Types of messages that can be sent between nodes
- * PoS uses only block announcements and attestations
+ * PoS uses attestations (block proposals will be added later)
  */
 export enum MessageType {
-  BLOCK_ANNOUNCEMENT = 'BLOCK_ANNOUNCEMENT',
   ATTESTATION = 'ATTESTATION',
 }
 
@@ -19,14 +18,6 @@ export interface NetworkMessage {
 }
 
 /**
- * Message for announcing a new block
- */
-export interface BlockAnnouncementMessage extends NetworkMessage {
-  type: MessageType.BLOCK_ANNOUNCEMENT;
-  block: Block;
-}
-
-/**
  * Message for broadcasting an attestation (PoS consensus)
  */
 export interface AttestationMessage extends NetworkMessage {
@@ -37,6 +28,4 @@ export interface AttestationMessage extends NetworkMessage {
 /**
  * Union type for all network messages (PoS only)
  */
-export type Message = 
-  | BlockAnnouncementMessage
-  | AttestationMessage;
+export type Message = AttestationMessage;
