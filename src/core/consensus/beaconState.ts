@@ -41,8 +41,8 @@ export class BeaconState {
   // Used to decorate block tree with attestedEth (weighted attestations)
   public latestAttestations: Map<string, Attestation>;
   
-  // Callback for when attestation is added (used to update tree decoration)
-  private onAttestationAdded?: () => void;
+  // Reference to blockchain for triggering tree updates (set after construction)
+  private blockchain?: any;
   
   constructor(genesisTime: number, validators: Validator[]) {
     this.genesisTime = genesisTime;
@@ -55,6 +55,14 @@ export class BeaconState {
     
     // Initialize first RANDAO mix for epoch 0
     this.randaoMixes.set(0, this.generateInitialRandao());
+  }
+  
+  /**
+   * Set blockchain reference for triggering tree updates
+   * Called by Blockchain after construction
+   */
+  setBlockchain(blockchain: any): void {
+    this.blockchain = blockchain;
   }
   
   /**
@@ -109,7 +117,7 @@ export class BeaconState {
   
   /**
    * Add an attestation to the beacon pool
-   * Prevents duplicate attestations (same validator + block hash)
+   * Eagerly updates tree decoration (LMD GHOST fork choice)
    */
   addAttestation(attestation: Attestation): void {
     // Check if this exact attestation already exists (same validator + block hash)
@@ -120,6 +128,12 @@ export class BeaconState {
     
     if (!exists) {
       this.beaconPool.push(attestation);
+      
+      // Eagerly update tree decoration when new attestation arrives
+      // This matches Ethereum's behavior where fork choice updates immediately
+      if (this.blockchain) {
+        this.blockchain.updateLatestAttestationsAndTree();
+      }
     }
   }
   

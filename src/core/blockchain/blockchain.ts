@@ -36,9 +36,14 @@ export class Blockchain {
   
   /**
    * Sets the BeaconState reference for rebuilding processed attestations
+   * Also sets blockchain reference in BeaconState for eager tree updates
    */
   setBeaconState(beaconState: any): void {
     this.beaconState = beaconState;
+    // Set bidirectional reference so BeaconState can trigger tree updates
+    if (beaconState) {
+      beaconState.setBlockchain(this);
+    }
   }
   
   /**
