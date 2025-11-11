@@ -199,57 +199,19 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
                     
                     {/* Attested ETH - same styling as block hash */}
                     {!isRoot && blockNode?.metadata?.attestedEth !== undefined && blockNode.metadata.attestedEth > 0 && (
-                      <>
-                        <text
-                          fill="#ffffff"
-                          stroke="none"
-                          x={!isCanonical ? 55 : 40}
-                          y="5"
-                          textAnchor="start"
-                          fontSize="11"
-                          fontWeight="bold"
-                          fontFamily="monospace"
-                          style={{ pointerEvents: 'none', userSelect: 'none' }}
-                        >
-                          {blockNode.metadata.attestedEth} ETH
-                        </text>
-                        
-                        {/* Attestation circles for nodes with latest attestations pointing to them */}
-                        {beaconState && (() => {
-                          const attestationsForThisBlock = Array.from(beaconState.latestAttestations?.values() || [])
-                            .filter((att: any) => att.blockHash === blockNode.hash);
-                          
-                          if (attestationsForThisBlock.length === 0) return null;
-                          
-                          const allBlocks = blockchainTree.getAllBlocks();
-                          const baseX = (!isCanonical ? 55 : 40) + 50; // Start after ETH text
-                          
-                          return attestationsForThisBlock.map((att: any, idx: number) => {
-                            const attestedBlock = allBlocks.find((b: Block) => b.hash === att.blockHash);
-                            const blockHeight = attestedBlock ? attestedBlock.header.height : '?';
-                            const nodeName = addressToNodeId[att.validatorAddress] || 'Unknown';
-                            const isCanonical = allBlocks.some((b: Block) => b.hash === att.blockHash);
-                            
-                            return (
-                              <foreignObject
-                                key={`att-circle-${idx}`}
-                                x={baseX + (idx * 60)}
-                                y="-25"
-                                width="55"
-                                height="55"
-                              >
-                                <AttestationCircle
-                                  attestation={att}
-                                  blocks={allBlocks}
-                                  addressToNodeId={addressToNodeId}
-                                  onClick={() => setSelectedAttestation({ ...att, blockHeight, nodeName, isCanonical })}
-                                  simplified={true}
-                                />
-                              </foreignObject>
-                            );
-                          });
-                        })()}
-                      </>
+                      <text
+                        fill="#ffffff"
+                        stroke="none"
+                        x={!isCanonical ? 55 : 40}
+                        y="5"
+                        textAnchor="start"
+                        fontSize="11"
+                        fontWeight="bold"
+                        fontFamily="monospace"
+                        style={{ pointerEvents: 'none', userSelect: 'none' }}
+                      >
+                        {blockNode.metadata.attestedEth} ETH
+                      </text>
                     )}
                     
                     {/* Block name or empty set symbol inside circle */}
@@ -296,6 +258,33 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
               <li><span className="legend-dot fork"></span> <strong>Fork</strong> - Block on non-canonical branch</li>
             </ul>
           </div>
+          
+          {/* Attestation Circles - Separate section to prevent click propagation */}
+          {beaconState && beaconState.latestAttestations && beaconState.latestAttestations.size > 0 && (
+            <div className="tree-attestations-section">
+              <h3>Latest Attestations ({beaconState.latestAttestations.size})</h3>
+              <div className="attestations-grid-compact">
+                {Array.from(beaconState.latestAttestations.values()).map((attestation: any, index: number) => {
+                  const allBlocks = blockchainTree.getAllBlocks();
+                  const attestedBlock = allBlocks.find((b: Block) => b.hash === attestation.blockHash);
+                  const blockHeight = attestedBlock ? attestedBlock.header.height : '?';
+                  const nodeName = addressToNodeId[attestation.validatorAddress] || 'Unknown';
+                  const isCanonical = allBlocks.some((b: Block) => b.hash === attestation.blockHash);
+                  
+                  return (
+                    <AttestationCircle
+                      key={`latest-att-${attestation.validatorAddress}-${index}`}
+                      attestation={attestation}
+                      blocks={allBlocks}
+                      addressToNodeId={addressToNodeId}
+                      onClick={() => setSelectedAttestation({ ...attestation, blockHeight, nodeName, isCanonical })}
+                      simplified={true}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          )}
           
           <div className="modal-footer">
             <button className="modal-button" onClick={onClose}>Close</button>
