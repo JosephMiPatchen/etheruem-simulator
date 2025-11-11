@@ -144,31 +144,10 @@ export class NetworkManager {
   }
   
   /**
-   * Starts mining on all nodes
-   */
-  startAllMining(): void {
-    for (const node of this.nodesMap.values()) {
-      node.startMining();
-    }
-  }
-  
-  /**
-   * Stops mining on all nodes
-   */
-  stopAllMining(): void {
-    for (const node of this.nodesMap.values()) {
-      node.stopMining();
-    }
-  }
-  
-  /**
    * Stops all nodes and cleans up resources
    * Used for test cleanup and when shutting down the network
    */
   stopAllNodes(): void {
-    // Stop mining on all nodes
-    this.stopAllMining();
-    
     // Clear any references or resources
     this.nodesMap.clear();
     this.networkTopology.clear();
@@ -239,19 +218,6 @@ export class NetworkManager {
     }
     
     return await node.addTransactionToMempool(recipient, amount);
-  }
-  
-  /**
-   * Simulates periodic height requests between nodes
-   * This is a key part of the Nakamoto consensus protocol
-   */
-  startPeriodicHeightRequests(intervalMs: number = 5000): NodeJS.Timeout {
-    // Start a timer to periodically request heights
-    return setInterval(() => {
-      for (const node of this.nodesMap.values()) {
-        node.requestHeightFromPeers();
-      }
-    }, intervalMs);
   }
   
   /**

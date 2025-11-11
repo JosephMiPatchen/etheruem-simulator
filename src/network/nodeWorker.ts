@@ -5,10 +5,6 @@ import {
   Message, 
   MessageType, 
   BlockAnnouncementMessage,
-  ChainRequestMessage,
-  ChainResponseMessage,
-  HeightRequestMessage,
-  HeightResponseMessage,
   AttestationMessage
 } from './messages';
 import { createSignedTransaction } from '../core/blockchain/transaction';
@@ -53,18 +49,6 @@ export class NodeWorker {
       case MessageType.BLOCK_ANNOUNCEMENT:
         this.handleBlockAnnouncement(message as BlockAnnouncementMessage);
         break;
-      case MessageType.CHAIN_REQUEST:
-        this.handleChainRequest(message as ChainRequestMessage);
-        break;
-      case MessageType.CHAIN_RESPONSE:
-        this.handleChainResponse(message as ChainResponseMessage);
-        break;
-      case MessageType.HEIGHT_REQUEST:
-        this.handleHeightRequest(message as HeightRequestMessage);
-        break;
-      case MessageType.HEIGHT_RESPONSE:
-        this.handleHeightResponse(message as HeightResponseMessage);
-        break;
       case MessageType.ATTESTATION:
         this.handleAttestation(message as AttestationMessage);
         break;
@@ -89,20 +73,6 @@ export class NodeWorker {
   }
   
 
-  
-  /**
-   * Starts mining on this node
-   */
-  startMining(): void {
-    this._node.startMining();
-  }
-  
-  /**
-   * Stops mining on this node
-   */
-  stopMining(): void {
-    this._node.stopMining();
-  }
   
   /**
    * Gets the current state of the node
@@ -182,73 +152,6 @@ export class NodeWorker {
   }
   
   /**
-   * Handles a chain request message from another node
-   * Responds with this node's blockchain
-   */
-  private handleChainRequest(message: ChainRequestMessage): void {
-    if (!this.onOutgoingMessageCallback) return;
-    
-    // Get all blocks in the chain
-    const blocks = this._node.getBlocks();
-    
-    // Create a chain response message
-    const response: ChainResponseMessage = {
-      type: MessageType.CHAIN_RESPONSE,
-      fromNodeId: this._node.getState().nodeId,
-      toNodeId: message.fromNodeId,
-      blocks
-    };
-    
-    // Send the response to the network for routing
-    this.onOutgoingMessageCallback(response);
-  }
-  
-  /**
-   * Handles a chain response message from another node
-   */
-  private handleChainResponse(message: ChainResponseMessage): void {
-    // Process the received chain
-    if (message.blocks.length > 0) {
-      this._node.receiveChain(message.blocks);
-    }
-  }
-  
-  /**
-   * Handles a height request message from another node
-   * Responds with this node's current blockchain height
-   */
-  private handleHeightRequest(message: HeightRequestMessage): void {
-    if (!this.onOutgoingMessageCallback) return;
-    
-    // Get our current blockchain height
-    const ourHeight = this._node.getBlockchainHeight();
-    
-    // Create a height response message
-    const response: HeightResponseMessage = {
-      type: MessageType.HEIGHT_RESPONSE,
-      fromNodeId: this._node.getState().nodeId,
-      toNodeId: message.fromNodeId,
-      height: ourHeight
-    };
-    
-    // Send the response to the network for routing
-    this.onOutgoingMessageCallback(response);
-  }
-  
-  /**
-   * Handles a height response message from another node
-   */
-  private handleHeightResponse(message: HeightResponseMessage): void {
-    // Get our current blockchain height
-    const ourHeight = this._node.getBlockchainHeight();
-    
-    // Always request longer chains to stay in sync
-    if (message.height > ourHeight) {
-      this.requestChain(message.fromNodeId);
-    }
-  }
-  
-  /**
    * Handles an attestation message from another validator
    * Adds the attestation to the local beacon pool
    */
@@ -257,53 +160,6 @@ export class NodeWorker {
     const beaconState = this._node.getState().beaconState;
     if (beaconState) {
       beaconState.addAttestation(message.attestation);
-    }
-  }
-  
-  /**
-   * Requests the blockchain from a specific node
-   */
-  requestChain(fromNodeId: string): void {
-    if (!this.onOutgoingMessageCallback) return;
-    
-    // Create a chain request message
-    const message: ChainRequestMessage = {
-      type: MessageType.CHAIN_REQUEST,
-      fromNodeId: this._node.getState().nodeId,
-      toNodeId: fromNodeId
-    };
-    
-    // Send the message to the network for routing
-    this.onOutgoingMessageCallback(message);
-  }
-  
-  /**
-   * Requests the blockchain height from a specific node
-   */
-  requestHeight(nodeId: string): void {
-    if (!this.onOutgoingMessageCallback) return;
-    
-    // Create a height request message
-    const message: HeightRequestMessage = {
-      type: MessageType.HEIGHT_REQUEST,
-      fromNodeId: this._node.getState().nodeId,
-      toNodeId: nodeId
-    };
-    
-    // Send the message to the network for routing
-    this.onOutgoingMessageCallback(message);
-  }
-  
-  /**
-   * Requests the blockchain height from all peers
-   */
-  requestHeightFromPeers(): void {
-    // Get peer IDs from the peer information map
-    const peerIds = Object.keys(this._node.getPeerInfos());
-    
-    // Request height from each peer
-    for (const peerId of peerIds) {
-      this.requestHeight(peerId);
     }
   }
   

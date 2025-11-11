@@ -2,13 +2,10 @@ import { Block, Attestation } from '../types/types';
 
 /**
  * Types of messages that can be sent between nodes
+ * PoS uses only block announcements and attestations
  */
 export enum MessageType {
   BLOCK_ANNOUNCEMENT = 'BLOCK_ANNOUNCEMENT',
-  CHAIN_REQUEST = 'CHAIN_REQUEST',
-  CHAIN_RESPONSE = 'CHAIN_RESPONSE',
-  HEIGHT_REQUEST = 'HEIGHT_REQUEST',
-  HEIGHT_RESPONSE = 'HEIGHT_RESPONSE',
   ATTESTATION = 'ATTESTATION',
 }
 
@@ -30,40 +27,6 @@ export interface BlockAnnouncementMessage extends NetworkMessage {
 }
 
 /**
- * Message for requesting the chain from a node
- */
-export interface ChainRequestMessage extends NetworkMessage {
-  type: MessageType.CHAIN_REQUEST;
-  toNodeId: string; // Required for direct messages
-}
-
-/**
- * Message for responding to a chain request
- */
-export interface ChainResponseMessage extends NetworkMessage {
-  type: MessageType.CHAIN_RESPONSE;
-  toNodeId: string; // Required for direct messages
-  blocks: Block[];
-}
-
-/**
- * Message for requesting the current blockchain height
- */
-export interface HeightRequestMessage extends NetworkMessage {
-  type: MessageType.HEIGHT_REQUEST;
-  toNodeId: string; // Required for direct messages
-}
-
-/**
- * Message for responding to a height request
- */
-export interface HeightResponseMessage extends NetworkMessage {
-  type: MessageType.HEIGHT_RESPONSE;
-  toNodeId: string; // Required for direct messages
-  height: number;
-}
-
-/**
  * Message for broadcasting an attestation (PoS consensus)
  */
 export interface AttestationMessage extends NetworkMessage {
@@ -72,12 +35,8 @@ export interface AttestationMessage extends NetworkMessage {
 }
 
 /**
- * Union type for all network messages
+ * Union type for all network messages (PoS only)
  */
 export type Message = 
   | BlockAnnouncementMessage
-  | ChainRequestMessage
-  | ChainResponseMessage
-  | HeightRequestMessage
-  | HeightResponseMessage
   | AttestationMessage;
