@@ -17,7 +17,6 @@ const SimulatorContentInner: React.FC = () => {
   // Reference to the network manager instance
   const networkManagerRef = useRef<NetworkManager | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const heightIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   // Initialize the network on component mount
   useEffect(() => {
@@ -34,11 +33,8 @@ const SimulatorContentInner: React.FC = () => {
     
     // Update the UI with initial node states
     updateNodeStates();
-    
-    // Start periodic height requests to help with convergence
-    heightIntervalRef.current = networkManager.startPeriodicHeightRequests(1000);
 
-    // Set up interval to update UI regardless of mining status
+    // Set up interval to update UI
     intervalRef.current = setInterval(() => {
       updateNodeStates();
     }, 500);
@@ -47,9 +43,6 @@ const SimulatorContentInner: React.FC = () => {
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
-      }
-      if (heightIntervalRef.current) {
-        clearInterval(heightIntervalRef.current);
       }
       networkManager.stopAllNodes();
     };
