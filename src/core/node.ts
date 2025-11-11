@@ -3,6 +3,7 @@ import { Blockchain } from './blockchain/blockchain';
 import { Miner } from './mining/miner';
 import { Mempool } from './mempool/mempool';
 import { BeaconState, Validator } from './consensus/beaconState';
+import { Sync } from './consensus/Sync';
 import { generatePrivateKey, derivePublicKey, generateAddress } from '../utils/cryptoUtils';
 
 /**
@@ -15,6 +16,7 @@ export class Node {
   private miner: Miner;
   private mempool: Mempool;
   private beaconState: BeaconState; // Consensus Layer state
+  private sync: Sync; // PoS synchronization
   private peers: PeerInfoMap = {};
   
   // Security-related properties
@@ -48,6 +50,9 @@ export class Node {
     
     // Set BeaconState reference on Blockchain so it can rebuild processed attestations when HEAD changes
     this.blockchain.setBeaconState(this.beaconState);
+    
+    // Initialize Sync for LMD-GHOST head synchronization
+    this.sync = new Sync(this.blockchain, this.beaconState, this.nodeId);
     
     // Initialize miner with callback for when a block is mined
     // Using .bind(this) ensures the handleMinedBlock method maintains the Node instance context
@@ -281,6 +286,13 @@ export class Node {
    */
   getBeaconState(): BeaconState {
     return this.beaconState;
+  }
+  
+  /**
+   * Gets the Sync instance for LMD-GHOST head synchronization
+   */
+  getSync(): Sync {
+    return this.sync;
   }
   
   /**
