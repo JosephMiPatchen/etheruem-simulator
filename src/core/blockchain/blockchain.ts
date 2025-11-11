@@ -28,9 +28,14 @@ export class Blockchain {
     // Create and add this node's genesis block
     const genesisBlock = createGenesisBlock(this.nodeId, this.minerAddress);
     this.blockTree.addBlock(genesisBlock);
-    this.blockTree.setHead(genesisBlock.hash || '');
     
-    // Initialize world state from genesis
+    // Apply genesis block to world state
+    this.applyBlockToState(genesisBlock);
+    
+    // Initialize LMD-GHOST with genesis as GHOST-HEAD
+    if (this.beaconState) {
+      this.updateLatestAttestationsAndTree();
+    }
     this.worldState = WorldState.fromBlocks([genesisBlock]);
   }
   
@@ -47,10 +52,11 @@ export class Blockchain {
   }
   
   /**
-   * Gets all blocks in the canonical blockchain (computed from tree)
+   * Gets all blocks in the canonical blockchain (computed from GHOST-HEAD)
    */
   getBlocks(): Block[] {
-    return this.blockTree.getCanonicalChain();
+    const ghostHead = this.beaconState?.ghostHead;
+    return this.blockTree.getCanonicalChain(ghostHead);
   }
   
   /**
@@ -75,13 +81,11 @@ export class Blockchain {
   }
   
   /**
-   * Gets the latest block in the canonical chain (HEAD)
+   * Gets the latest block in the canonical chain (GHOST-HEAD)
    */
-  getLatestBlock(): Block {
-    const head = this.blockTree.getCanonicalHead();
-    if (!head.block) {
-      throw new Error('HEAD points to null root - no genesis block added');
-    }
+  getLatestBlock(): Block | null {
+    const ghostHead = this.beaconState?.ghostHead;
+    const head = this.blockTree.getCanonicalHead(ghostHead);
     return head.block;
   }
   
@@ -110,8 +114,9 @@ export class Blockchain {
       return false;
     }
     
-    // Check if this block extends the current canonical chain
-    const currentHead = this.blockTree.getCanonicalHead();
+    // Check if this block extends the current canonical chain (GHOST-HEAD)
+    const ghostHead = this.beaconState?.ghostHead;
+    const currentHead = this.blockTree.getCanonicalHead(ghostHead);
     const extendsCanonical = block.header.previousHeaderHash === (currentHead.block?.hash || '');
     
     if (extendsCanonical) {
@@ -127,10 +132,8 @@ export class Blockchain {
       // Apply this block's state changes (world state + beacon state)
       this.applyBlockToState(block);
       
-      // Update HEAD to point to this block (extends canonical chain)
-      this.blockTree.setHead(block.hash);
-      
       // Update LMD GHOST tree decoration (latest attestations + attestedEth)
+      // This also computes GHOST-HEAD, which determines the canonical chain
       this.updateLatestAttestationsAndTree();
       
       return true;
@@ -153,8 +156,9 @@ export class Blockchain {
       return false;
     }
     
-    // Check if the new chain is longer than current canonical chain
-    const currentCanonicalChain = this.blockTree.getCanonicalChain();
+    // Check if the new chain is longer than current canonical chain (GHOST-HEAD)
+    const ghostHead = this.beaconState?.ghostHead;
+    const currentCanonicalChain = this.blockTree.getCanonicalChain(ghostHead);
     if (newBlocks.length <= currentCanonicalChain.length) {
       return false;
     }
@@ -167,10 +171,6 @@ export class Blockchain {
         this.blockTree.addBlock(block);
       }
     }
-    
-    // Update HEAD to point to the last block of the new chain
-    const lastBlock = newBlocks[newBlocks.length - 1];
-    this.blockTree.setHead(lastBlock.hash || '');
     
     // Rebuild both world state and beacon state from scratch by applying each block
     // Reset to initial state first
@@ -279,10 +279,11 @@ export class Blockchain {
   }
   
   /**
-   * Gets a block by its height (from canonical chain)
+   * Gets a block by its height (from canonical chain determined by GHOST-HEAD)
    */
   getBlockByHeight(height: number): Block | undefined {
-    const canonicalChain = this.blockTree.getCanonicalChain();
+    const ghostHead = this.beaconState?.ghostHead;
+    const canonicalChain = this.blockTree.getCanonicalChain(ghostHead);
     return height >= 0 && height < canonicalChain.length ? canonicalChain[height] : undefined;
   }
 }
