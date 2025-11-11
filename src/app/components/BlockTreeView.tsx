@@ -135,7 +135,15 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
               <div className="legend-items">
                 <span className="legend-item"><span className="legend-dot root"></span> Null Root</span>
                 <span className="legend-item"><span className="legend-dot canonical"></span> Canonical</span>
+                <span className="legend-item"><span className="legend-dot ghost-head"></span> GHOST-HEAD</span>
                 <span className="legend-item"><span className="legend-dot fork"></span> Fork</span>
+                <span className="legend-item legend-attestations">
+                  <span className="attestation-color-dot green"></span>
+                  <span className="attestation-color-dot yellow"></span>
+                  <span className="attestation-color-dot red"></span>
+                  <span className="attestation-color-dot blue"></span>
+                  Latest Attestations
+                </span>
               </div>
             </div>
           </div>
@@ -167,6 +175,9 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
                   ) || null;
                 }
                 
+                // Check if this node is the GHOST-HEAD
+                const isGhostHead = beaconState && blockNode && beaconState.ghostHead === blockNode.hash;
+                
                 const handleClick = () => {
                   if (blockNode?.block) {
                     setSelectedBlock(blockNode.block);
@@ -184,8 +195,8 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
                     <circle
                       r={30}
                       fill={isRoot ? '#4d4d4d' : isCanonical ? '#667eea' : '#6c757d'}
-                      stroke={isRoot ? '#ff9800' : isCanonical ? '#764ba2' : '#95a5a6'}
-                      strokeWidth={isRoot ? 3 : 2}
+                      stroke={isGhostHead ? '#ff9800' : isRoot ? 'none' : isCanonical ? '#764ba2' : '#95a5a6'}
+                      strokeWidth={isGhostHead ? 3 : isRoot ? 0 : 2}
                     />
                     
                     {/* Fork icon for non-canonical blocks - positioned outside to the right */}
