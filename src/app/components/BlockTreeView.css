@@ -28,7 +28,7 @@
 
 .block-tree-modal .block-tree-content {
   width: 90vw;
-  height: 65vh;
+  height: 72vh;
 }
 
 .block-tree-modal .modal-header {
@@ -69,11 +69,12 @@
 
 /* Tree Stats */
 .block-tree-modal .tree-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1rem;
-  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 0.75rem;
+  padding: 0.75rem 1rem;
   background: rgba(98, 126, 234, 0.05);
   border-radius: 8px;
   border: 1px solid var(--primary-color);
@@ -83,6 +84,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  flex-shrink: 0;
 }
 
 .block-tree-modal .stat-label {
@@ -95,6 +97,28 @@
   font-size: 1.25rem;
   color: var(--primary-color);
   font-weight: 700;
+}
+
+/* Legend in Stats Row */
+.block-tree-modal .legend-stat {
+  flex-grow: 1;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.block-tree-modal .legend-items {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.block-tree-modal .legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  white-space: nowrap;
 }
 
 /* Tree Container */

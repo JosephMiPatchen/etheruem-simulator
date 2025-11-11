@@ -130,6 +130,14 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
               <span className="stat-label">Chain Tips:</span>
               <span className="stat-value">{stats.numberOfLeaves}</span>
             </div>
+            <div className="stat-item legend-stat">
+              <span className="stat-label">Legend:</span>
+              <div className="legend-items">
+                <span className="legend-item"><span className="legend-dot root"></span> Null Root</span>
+                <span className="legend-item"><span className="legend-dot canonical"></span> Canonical</span>
+                <span className="legend-item"><span className="legend-dot fork"></span> Fork</span>
+              </div>
+            </div>
           </div>
           
           <div className="tree-container">
@@ -291,19 +299,6 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
                 );
               }}
             />
-          </div>
-          
-          <div className="tree-legend">
-            <h3>Legend</h3>
-            <ul>
-              <li><span className="legend-dot root"></span> <strong>Null Root</strong> - Parent of all genesis blocks</li>
-              <li><span className="legend-dot canonical"></span> <strong>Canonical</strong> - Block on canonical chain (from HEAD)</li>
-              <li><span className="legend-dot fork"></span> <strong>Fork</strong> - Block on non-canonical branch</li>
-            </ul>
-          </div>
-          
-          <div className="modal-footer">
-            <button className="modal-button" onClick={onClose}>Close</button>
           </div>
         </div>
       </div>
