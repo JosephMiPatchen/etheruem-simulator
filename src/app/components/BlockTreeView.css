@@ -102,9 +102,13 @@
 /* Legend in Stats Row */
 .block-tree-modal .legend-stat {
   flex-grow: 1;
-  flex-direction: row;
+  flex-direction: row !important;
   align-items: center;
   gap: 0.75rem;
+}
+
+.block-tree-modal .legend-stat .stat-label {
+  flex-shrink: 0;
 }
 
 .block-tree-modal .legend-items {
@@ -112,6 +116,7 @@
   gap: 1rem;
   align-items: center;
   justify-content: flex-start;
+  flex-wrap: nowrap;
 }
 
 .block-tree-modal .legend-item {
