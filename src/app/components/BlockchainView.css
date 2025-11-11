@@ -167,84 +167,105 @@
   white-space: nowrap;
 }
 
-/* Block Modal */
+/* Block Modal - Consistent with BeaconStateView */
 .block-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.85);
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   z-index: 1000;
+  padding: var(--spacing-md);
 }
 
 .block-modal {
-  background-color: var(--background-color);
-  border: 1px solid var(--primary-color);
+  background: var(--panel-background);
   border-radius: var(--border-radius-lg);
-  padding: 20px;
+  padding: var(--spacing-lg);
   max-width: 800px;
-  width: 90%;
-  max-height: 90vh;
+  max-height: 85vh;
   overflow-y: auto;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-lg);
+  width: 90vw;
 }
 
 .block-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-lg);
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .block-modal-header h3 {
   margin: 0;
   color: var(--primary-color);
+  font-size: var(--font-size-xl);
 }
 
 .modal-header-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--spacing-sm);
 }
 
 .close-button {
   background: none;
   border: none;
+  font-size: 2rem;
   color: var(--text-color);
-  font-size: 24px;
   cursor: pointer;
   padding: 0;
-  line-height: 1;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--border-radius-sm);
+  transition: all 0.2s;
+}
+
+.close-button:hover {
+  background: var(--overlay-background);
+  color: var(--primary-color);
 }
 
 .block-modal-content {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--spacing-lg);
 }
 
 .block-info {
+  background: var(--overlay-background);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-md);
   display: grid;
-  gap: 10px;
+  gap: var(--spacing-sm);
 }
 
 .info-row {
   display: flex;
-  gap: 10px;
+  gap: var(--spacing-md);
   align-items: center;
 }
 
 .info-label {
   color: var(--primary-color);
-  font-weight: bold;
-  min-width: 120px;
+  font-weight: 600;
+  min-width: 140px;
 }
 
 .info-value {
   font-family: monospace;
+  color: var(--text-color);
 }
 
 .hash-value {
