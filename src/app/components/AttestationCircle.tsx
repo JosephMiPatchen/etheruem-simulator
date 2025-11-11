@@ -9,6 +9,7 @@ interface AttestationCircleProps {
   addressToNodeId: Record<string, string>;
   onClick?: () => void;
   simplified?: boolean; // Optional: show simplified view for block tree
+  size?: number; // Optional: override size in pixels (default: 80 for normal, 40 for simplified)
 }
 
 const AttestationCircle: React.FC<AttestationCircleProps> = ({ 
@@ -16,7 +17,8 @@ const AttestationCircle: React.FC<AttestationCircleProps> = ({
   blocks, 
   addressToNodeId,
   onClick,
-  simplified = false
+  simplified = false,
+  size
 }) => {
   // Check if this attestation's block hash is in the canonical chain
   const isCanonical = blocks.some((b: Block) => b.hash === attestation.blockHash);
@@ -32,6 +34,9 @@ const AttestationCircle: React.FC<AttestationCircleProps> = ({
   // Get last 6 hex characters of block hash
   const hashSuffix = attestation.blockHash.slice(-6);
   
+  // Determine size - use prop if provided, otherwise defaults
+  const circleSize = size || (simplified ? 40 : 80);
+  
   // Simplified view for block tree
   if (simplified) {
     // Format time as MM:SS
@@ -43,7 +48,11 @@ const AttestationCircle: React.FC<AttestationCircleProps> = ({
     return (
       <div 
         className="attestation-circle attestation-simplified"
-        style={{ borderColor: nodeColor }}
+        style={{ 
+          borderColor: nodeColor,
+          width: `${circleSize}px`,
+          height: `${circleSize}px`
+        }}
         title={`Validator: ${nodeName}\nBlock: ${attestation.blockHash}\nHeight: ${blockHeight}`}
         onClick={onClick}
       >
@@ -60,7 +69,11 @@ const AttestationCircle: React.FC<AttestationCircleProps> = ({
   return (
     <div 
       className={`attestation-circle ${isCanonical ? 'attestation-canonical' : ''}`}
-      style={{ borderColor: nodeColor }}
+      style={{ 
+        borderColor: nodeColor,
+        width: `${circleSize}px`,
+        height: `${circleSize}px`
+      }}
       title={`Validator: ${nodeName}\nBlock: ${attestation.blockHash}\nHeight: ${blockHeight}`}
       onClick={onClick}
     >
