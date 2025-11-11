@@ -131,9 +131,7 @@ export class BeaconState {
       
       // Eagerly update tree decoration when new attestation arrives
       // This matches Ethereum's behavior where fork choice updates immediately
-      if (this.blockchain) {
-        this.blockchain.updateLatestAttestationsAndTree();
-      }
+      this.updateLatestAttestationsAndTree();
     }
   }
   
@@ -271,6 +269,118 @@ export class BeaconState {
     }
     
     return allAttestations;
+  }
+  
+  /**
+   * Walk up from a block to null root, updating attestedEth values
+   * Used to increment or decrement attestedEth along a path
+   */
+  private walkTreeAndUpdateAttestedEth(blockHash: string, ethDelta: number): void {
+    if (!this.blockchain) return;
+    
+    const blockTree = this.blockchain.getTree();
+    let currentNode = blockTree.getNode(blockHash);
+    
+    while (currentNode) {
+      // Initialize attestedEth if not set
+      if (currentNode.metadata.attestedEth === undefined) {
+        currentNode.metadata.attestedEth = 0;
+      }
+      
+      // Update attestedEth
+      currentNode.metadata.attestedEth += ethDelta;
+      
+      // Ensure it doesn't go negative (shouldn't happen, but safety check)
+      if (currentNode.metadata.attestedEth < 0) {
+        currentNode.metadata.attestedEth = 0;
+      }
+      
+      // Move to parent (stops at null root since its parent is null)
+      currentNode = currentNode.parent ?? undefined;
+    }
+  }
+  
+  /**
+   * Clear all attestedEth values in the tree (set to 0)
+   * Used during chain replacement before rebuilding
+   */
+  private clearAllAttestedEth(): void {
+    if (!this.blockchain) return;
+    
+    const blockTree = this.blockchain.getTree();
+    const allNodes = blockTree.getAllNodes();
+    for (const node of allNodes) {
+      node.metadata.attestedEth = 0;
+    }
+  }
+  
+  /**
+   * Rebuild attestedEth values for entire tree from latest attestations
+   * Called after chain replacement or when rebuilding from scratch
+   */
+  private rebuildAttestedEthFromLatestAttestations(): void {
+    // Walk through each latest attestation and update the tree
+    for (const [validatorAddress, attestation] of this.latestAttestations) {
+      const stake = this.getValidatorStake(validatorAddress);
+      this.walkTreeAndUpdateAttestedEth(attestation.blockHash, stake);
+    }
+  }
+  
+  /**
+   * Update latest attestations and tree decoration
+   * This is the main entry point for updating LMD GHOST state
+   * Called when new attestations arrive or blocks are added
+   */
+  updateLatestAttestationsAndTree(): void {
+    if (!this.blockchain) return;
+    
+    // Get all attestations (beacon pool + blockchain)
+    const allBlocks = this.blockchain.getTree().getAllBlocks();
+    const allAttestations = this.getAllAttestations(allBlocks);
+    
+    // Update latest attestations for each validator
+    for (const attestation of allAttestations) {
+      const oldAttestation = this.latestAttestations.get(attestation.validatorAddress);
+      const wasUpdated = this.updateLatestAttestation(attestation);
+      
+      if (wasUpdated) {
+        const stake = this.getValidatorStake(attestation.validatorAddress);
+        
+        // Decrement old attestation path if it existed
+        if (oldAttestation) {
+          this.walkTreeAndUpdateAttestedEth(oldAttestation.blockHash, -stake);
+        }
+        
+        // Increment new attestation path
+        this.walkTreeAndUpdateAttestedEth(attestation.blockHash, stake);
+      }
+    }
+  }
+  
+  /**
+   * Full rebuild of latest attestations and attestedEth
+   * Used during chain replacement - clears everything and rebuilds from scratch
+   */
+  rebuildLatestAttestationsAndTree(): void {
+    if (!this.blockchain) return;
+    
+    // Clear all attestedEth values
+    this.clearAllAttestedEth();
+    
+    // Clear latest attestations
+    this.clearLatestAttestations();
+    
+    // Rebuild from beacon pool + blockchain
+    const allBlocks = this.blockchain.getTree().getAllBlocks();
+    const allAttestations = this.getAllAttestations(allBlocks);
+    
+    // Update latest attestations (this will pick the most recent for each validator)
+    for (const attestation of allAttestations) {
+      this.updateLatestAttestation(attestation);
+    }
+    
+    // Rebuild attestedEth from latest attestations
+    this.rebuildAttestedEthFromLatestAttestations();
   }
   
   /**
