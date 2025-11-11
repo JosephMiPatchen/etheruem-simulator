@@ -6,8 +6,10 @@ import { calculateBlockHeaderHash } from '../../core/validation/blockValidator';
 import { isHashBelowCeiling } from '../../utils/cryptoUtils';
 import { SimulatorConfig } from '../../config/config';
 import TransactionView from './TransactionView';
+import AttestationCircle from './AttestationCircle';
 import { MdContentCopy, MdCheck } from 'react-icons/md';
 import { BiFork } from 'react-icons/bi';
+import { useSimulatorContext } from '../contexts/SimulatorContext';
 import './BlockTreeView.css';
 
 interface BlockTreeViewProps {
@@ -33,7 +35,9 @@ interface TreeNodeData {
 const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconState, onClose }) => {
   const [selectedBlock, setSelectedBlock] = useState<Block | null>(null);
   const [isSelectedBlockCanonical, setIsSelectedBlockCanonical] = useState(true);
+  const [selectedAttestation, setSelectedAttestation] = useState<any | null>(null);
   const [copied, setCopied] = useState(false);
+  const { addressToNodeId } = useSimulatorContext();
   const stats = blockchainTree.getStats();
 
   const copyToClipboard = async (text: string) => {
@@ -193,39 +197,17 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
                       </g>
                     )}
                     
-                    {/* Attested ETH annotation - plain text to the right (after fork icon if present) */}
+                    {/* Attested ETH - simple white text */}
                     {!isRoot && blockNode?.metadata?.attestedEth !== undefined && blockNode.metadata.attestedEth > 0 && (
-                      <>
-                        <text
-                          x={!isCanonical ? 55 : 40}
-                          y="5"
-                          fill="#ffffff"
-                          fontSize="11"
-                          fontWeight="600"
-                          textAnchor="start"
-                        >
-                          {blockNode.metadata.attestedEth} ETH
-                        </text>
-                        
-                        {/* Small attestation circles for leaf nodes with latest attestations */}
-                        {beaconState && blockNode.children.length === 0 && (() => {
-                          // Get latest attestations pointing to this block
-                          const attestationsForThisBlock = Array.from(beaconState.latestAttestations?.values() || [])
-                            .filter((att: any) => att.blockHash === blockNode.hash);
-                          
-                          return attestationsForThisBlock.map((att: any, idx: number) => (
-                            <circle
-                              key={`att-${idx}`}
-                              cx={(!isCanonical ? 55 : 40) + 50 + (idx * 12)}
-                              cy="0"
-                              r="5"
-                              fill="#667eea"
-                              stroke="#764ba2"
-                              strokeWidth="1"
-                            />
-                          ));
-                        })()}
-                      </>
+                      <text
+                        x={!isCanonical ? 55 : 40}
+                        y="5"
+                        fill="white"
+                        fontSize="12"
+                        fontFamily="system-ui, -apple-system, sans-serif"
+                      >
+                        {blockNode.metadata.attestedEth} ETH
+                      </text>
                     )}
                     
                     {/* Block name or empty set symbol inside circle */}
@@ -272,6 +254,32 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
               <li><span className="legend-dot fork"></span> <strong>Fork</strong> - Block on non-canonical branch</li>
             </ul>
           </div>
+          
+          {/* Latest Attestations Section */}
+          {beaconState && beaconState.latestAttestations && beaconState.latestAttestations.size > 0 && (
+            <div className="tree-attestations-section">
+              <h3>Latest Attestations ({beaconState.latestAttestations.size})</h3>
+              <div className="attestations-grid-compact">
+                {Array.from(beaconState.latestAttestations.values()).map((attestation: any, index: number) => {
+                  const allBlocks = blockchainTree.getAllBlocks();
+                  const attestedBlock = allBlocks.find((b: Block) => b.hash === attestation.blockHash);
+                  const blockHeight = attestedBlock ? attestedBlock.header.height : '?';
+                  const nodeName = addressToNodeId[attestation.validatorAddress] || 'Unknown';
+                  const isCanonical = allBlocks.some((b: Block) => b.hash === attestation.blockHash);
+                  
+                  return (
+                    <AttestationCircle
+                      key={`latest-att-${attestation.validatorAddress}-${index}`}
+                      attestation={attestation}
+                      blocks={allBlocks}
+                      addressToNodeId={addressToNodeId}
+                      onClick={() => setSelectedAttestation({ ...attestation, blockHeight, nodeName, isCanonical })}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          )}
           
           <div className="modal-footer">
             <button className="modal-button" onClick={onClose}>Close</button>
@@ -353,6 +361,49 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
                     transaction={tx} 
                   />
                 ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Attestation Detail Modal */}
+      {selectedAttestation && (
+        <div className="block-modal-overlay" onClick={() => setSelectedAttestation(null)}>
+          <div className="block-modal attestation-detail-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Attestation Details</h3>
+              <button className="close-button" onClick={() => setSelectedAttestation(null)}>×</button>
+            </div>
+            
+            <div className="block-modal-content">
+              <div className="attestation-detail-section">
+                <div className="info-row">
+                  <span className="info-label">Validator Node:</span>
+                  <span className="info-value" style={{ fontWeight: 'bold' }}>
+                    {selectedAttestation.nodeName}
+                  </span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Validator Address:</span>
+                  <span className="info-value hash-value">{selectedAttestation.validatorAddress}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Block Hash:</span>
+                  <span className="info-value hash-value">{selectedAttestation.blockHash}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Block Height:</span>
+                  <span className="info-value">{selectedAttestation.blockHeight}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Timestamp:</span>
+                  <span className="info-value">{new Date(selectedAttestation.timestamp).toLocaleString()}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Canonical:</span>
+                  <span className="info-value">{selectedAttestation.isCanonical ? '✓ Yes' : '✗ No'}</span>
+                </div>
               </div>
             </div>
           </div>

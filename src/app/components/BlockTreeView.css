@@ -240,6 +240,28 @@
   font-weight: 700;
 }
 
+/* Latest Attestations Section */
+.tree-attestations-section {
+  background: var(--overlay-background);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-md);
+  margin-top: var(--spacing-md);
+}
+
+.tree-attestations-section h3 {
+  margin: 0 0 var(--spacing-md) 0;
+  color: var(--primary-color);
+  font-size: var(--font-size-md);
+}
+
+.attestation-detail-section {
+  background: var(--overlay-background);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-md);
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .block-tree-modal .block-tree-content {
