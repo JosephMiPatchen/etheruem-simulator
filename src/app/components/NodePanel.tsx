@@ -66,6 +66,7 @@ const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [], onAdd
         blocks={nodeState.blockchain} 
         worldState={nodeState.worldState}
         receipts={nodeState.receipts}
+        blockchainTree={nodeState.blockchainTree}
       />
       
       {/* UTXO Modal */}

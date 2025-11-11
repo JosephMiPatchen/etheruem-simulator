@@ -133,6 +133,44 @@ const BeaconStateView: React.FC<BeaconStateViewProps> = ({ beaconState, blockcha
             </div>
           </div>
 
+          {/* Latest Attestations (LMD GHOST Fork Choice) */}
+          <div className="beacon-section">
+            <h3>Latest Attestations (Fork Choice)</h3>
+            <div className="beacon-pool-info">
+              <span className="beacon-label">Total Validators:</span>
+              <span className="beacon-value">{beaconState.latestAttestations.size}</span>
+            </div>
+            <div className="beacon-pool-list">
+              {beaconState.latestAttestations.size === 0 ? (
+                <p className="empty-message">No latest attestations</p>
+              ) : (
+                <div className="attestations-grid-compact">
+                  {Array.from(beaconState.latestAttestations.values()).map((attestation, index) => {
+                    // Find the block being attested to get its height
+                    const attestedBlock = blockchain.find((b: Block) => b.hash === attestation.blockHash);
+                    const blockHeight = attestedBlock ? attestedBlock.header.height : '?';
+                    
+                    // Get node name (color) from address using context
+                    const nodeName = addressToNodeId[attestation.validatorAddress] || 'Unknown';
+                    
+                    // Check if canonical for modal data
+                    const isCanonical = blockchain.some((b: Block) => b.hash === attestation.blockHash);
+
+                    return (
+                      <AttestationCircle
+                        key={`latest-${attestation.validatorAddress}-${attestation.timestamp}-${index}`}
+                        attestation={attestation}
+                        blocks={blockchain}
+                        addressToNodeId={addressToNodeId}
+                        onClick={() => setSelectedAttestation({ ...attestation, blockHeight, nodeName, isCanonical })}
+                      />
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Beacon Pool (Attestations) */}
           <div className="beacon-section">
             <h3>Beacon Pool (Attestations)</h3>
