@@ -74,15 +74,22 @@
   line-height: 1;
 }
 
+.attestation-latest {
+  font-weight: bold;
+  font-size: 9px;
+  line-height: 1;
+  color: var(--text-color);
+}
+
 .attestation-label {
-  font-size: 7px;
+  font-size: 8px;
   color: var(--text-secondary);
   line-height: 1;
   margin-top: 1px;
 }
 
 .attestation-time {
-  font-size: 7px;
+  font-size: 6px;
   color: var(--text-secondary);
   font-family: monospace;
   line-height: 1;

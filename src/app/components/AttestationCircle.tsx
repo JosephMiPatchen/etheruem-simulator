@@ -57,7 +57,7 @@ const AttestationCircle: React.FC<AttestationCircleProps> = ({
         onClick={onClick}
       >
         <div className="attestation-circle-content">
-          <div className="attestation-node-name" style={{ color: nodeColor }}>{nodeName}</div>
+          <div className="attestation-latest">Latest</div>
           <div className="attestation-label">Attest</div>
           <div className="attestation-time">{timeStr}</div>
         </div>
