@@ -34,11 +34,11 @@ const AttestationCircle: React.FC<AttestationCircleProps> = ({
   
   // Simplified view for block tree
   if (simplified) {
-    // Format time as HH:MM
+    // Format time as MM:SS
     const date = new Date(attestation.timestamp);
-    const hours = date.getHours().toString().padStart(2, '0');
     const minutes = date.getMinutes().toString().padStart(2, '0');
-    const timeStr = `${hours}:${minutes}`;
+    const seconds = date.getSeconds().toString().padStart(2, '0');
+    const timeStr = `${minutes}:${seconds}`;
     
     return (
       <div 

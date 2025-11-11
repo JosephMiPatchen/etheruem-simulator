@@ -233,10 +233,10 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
                             return (
                               <foreignObject
                                 key={`att-circle-${idx}`}
-                                x={baseX + (idx * 70)}
-                                y="-30"
-                                width="65"
-                                height="65"
+                                x={baseX + (idx * 60)}
+                                y="-25"
+                                width="55"
+                                height="55"
                               >
                                 <AttestationCircle
                                   attestation={att}
@@ -296,33 +296,6 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
               <li><span className="legend-dot fork"></span> <strong>Fork</strong> - Block on non-canonical branch</li>
             </ul>
           </div>
-          
-          {/* Latest Attestations Section */}
-          {beaconState && beaconState.latestAttestations && beaconState.latestAttestations.size > 0 && (
-            <div className="tree-attestations-section">
-              <h3>Latest Attestations ({beaconState.latestAttestations.size})</h3>
-              <div className="attestations-grid-compact">
-                {Array.from(beaconState.latestAttestations.values()).map((attestation: any, index: number) => {
-                  const allBlocks = blockchainTree.getAllBlocks();
-                  const attestedBlock = allBlocks.find((b: Block) => b.hash === attestation.blockHash);
-                  const blockHeight = attestedBlock ? attestedBlock.header.height : '?';
-                  const nodeName = addressToNodeId[attestation.validatorAddress] || 'Unknown';
-                  const isCanonical = allBlocks.some((b: Block) => b.hash === attestation.blockHash);
-                  
-                  return (
-                    <AttestationCircle
-                      key={`latest-att-${attestation.validatorAddress}-${index}`}
-                      attestation={attestation}
-                      blocks={allBlocks}
-                      addressToNodeId={addressToNodeId}
-                      onClick={() => setSelectedAttestation({ ...attestation, blockHeight, nodeName, isCanonical })}
-                      simplified={true}
-                    />
-                  );
-                })}
-              </div>
-            </div>
-          )}
           
           <div className="modal-footer">
             <button className="modal-button" onClick={onClose}>Close</button>
