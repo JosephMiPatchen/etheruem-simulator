@@ -16,10 +16,9 @@ interface BlockchainViewProps {
   blocks: Block[];
   worldState?: Record<string, Account>; // Optional world state for smart contract display
   receipts?: ReceiptsDatabase; // Optional receipts database
-  blockchainTree?: any; // Optional blockchain tree for attestedEth metadata
 }
 
-const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, receipts, blockchainTree }) => {
+const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, receipts }) => {
   const [selectedBlock, setSelectedBlock] = useState<Block | null>(null);
   const [selectedAttestation, setSelectedAttestation] = useState<any | null>(null);
   const [copied, setCopied] = useState(false);
@@ -43,13 +42,6 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, rec
   
   // Get the last 6 characters of a hash for display
   const shortenHash = (hash: string) => hash.substring(hash.length - 6);
-  
-  // Get attestedEth for a block from the tree metadata
-  const getAttestedEth = (blockHash: string): number => {
-    if (!blockchainTree) return 0;
-    const node = blockchainTree.getNode(blockHash);
-    return node?.metadata?.attestedEth ?? 0;
-  };
   
   // Sort blocks by height
   const sortedBlocks = [...blocks].sort((a, b) => a.header.height - b.header.height);
@@ -105,11 +97,6 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, rec
                     <div className="block-attestation-count">{block.attestations.length} att</div>
                   )}
                 </div>
-                {blockchainTree && (
-                  <div className="block-attested-eth">
-                    {getAttestedEth(hash)} ETH
-                  </div>
-                )}
                 {isForkedBlock(block) && <div className="fork-icon"><BiFork /></div>}
               </div>
             );
