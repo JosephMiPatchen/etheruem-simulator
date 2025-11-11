@@ -13,8 +13,19 @@ export class LmdGhost {
   // Map of validator address to their latest attestation
   private latestAttestations: Map<string, Attestation>;
   
+  // GHOST-HEAD: The canonical chain head according to LMD-GHOST fork choice
+  private ghostHead: string | null;
+  
   constructor() {
     this.latestAttestations = new Map();
+    this.ghostHead = null;
+  }
+  
+  /**
+   * Get the current GHOST-HEAD (canonical chain head)
+   */
+  public getGhostHead(): string | null {
+    return this.ghostHead;
   }
   
   /**
@@ -119,6 +130,72 @@ export class LmdGhost {
   public getDirectAttestedEth(blockHash: string): number {
     const attestations = this.getAttestationsForBlock(blockHash);
     return attestations.length * 32; // 32 ETH per attestation
+  }
+  
+  /**
+   * Handle attestation set changes
+   * This is called whenever:
+   * - New attestations arrive in beacon pool
+   * - Blocks are added to blockchain
+   * - Chain is replaced
+   * 
+   * Consolidates all logic that needs to happen when attestations change:
+   * 1. Update latest attestations from all sources
+   * 2. Decorate tree with attestedEth
+   * 3. Compute and update GHOST-HEAD
+   */
+  public onAttestationSetChanged(
+    tree: BlockchainTree,
+    allAttestations: Attestation[]
+  ): void {
+    // 1. Update latest attestations for each validator
+    for (const attestation of allAttestations) {
+      this.recordAttestation(attestation);
+    }
+    
+    // 2. Decorate tree with attestedEth
+    this.decorateTree(tree);
+    
+    // 3. Compute and update GHOST-HEAD
+    this.ghostHead = this.computeGhostHead(tree);
+  }
+  
+  /**
+   * Compute GHOST-HEAD using LMD-GHOST fork choice rule
+   * Returns the block hash of the canonical chain head
+   * 
+   * Algorithm:
+   * 1. Start at genesis (tree root)
+   * 2. At each fork, choose the child with highest attestedEth
+   * 3. Continue until reaching a leaf (chain tip)
+   */
+  private computeGhostHead(tree: BlockchainTree): string | null {
+    const root = tree.getRoot();
+    if (!root) return null;
+    
+    // Start at root and follow the heaviest path
+    let current = root;
+    
+    while (current.children.length > 0) {
+      // Find child with highest attestedEth
+      let heaviestChild = current.children[0];
+      let maxAttestedEth = heaviestChild.metadata?.attestedEth || 0;
+      
+      for (let i = 1; i < current.children.length; i++) {
+        const child = current.children[i];
+        const childAttestedEth = child.metadata?.attestedEth || 0;
+        
+        if (childAttestedEth > maxAttestedEth) {
+          heaviestChild = child;
+          maxAttestedEth = childAttestedEth;
+        }
+      }
+      
+      current = heaviestChild;
+    }
+    
+    // Return the hash of the leaf node (chain tip)
+    return current.hash;
   }
 }
 

@@ -47,6 +47,12 @@ export class BeaconState {
     return this.lmdGhost.getLatestAttestations();
   }
   
+  // GHOST-HEAD: Canonical chain head according to LMD-GHOST fork choice
+  // Exposed as getter
+  public get ghostHead(): string | null {
+    return this.lmdGhost.getGhostHead();
+  }
+  
   // Reference to blockchain for triggering tree updates (set after construction)
   private blockchain?: any;
   
@@ -278,35 +284,6 @@ export class BeaconState {
   }
   
   /**
-   * Walk up from a block to null root, updating attestedEth values
-   * Used to increment or decrement attestedEth along a path
-   */
-  private walkTreeAndUpdateAttestedEth(blockHash: string, ethDelta: number): void {
-    if (!this.blockchain) return;
-    
-    const blockTree = this.blockchain.getTree();
-    let currentNode = blockTree.getNode(blockHash);
-    
-    while (currentNode) {
-      // Initialize attestedEth if not set
-      if (currentNode.metadata.attestedEth === undefined) {
-        currentNode.metadata.attestedEth = 0;
-      }
-      
-      // Update attestedEth
-      currentNode.metadata.attestedEth += ethDelta;
-      
-      // Ensure it doesn't go negative (shouldn't happen, but safety check)
-      if (currentNode.metadata.attestedEth < 0) {
-        currentNode.metadata.attestedEth = 0;
-      }
-      
-      // Move to parent (stops at null root since its parent is null)
-      currentNode = currentNode.parent ?? undefined;
-    }
-  }
-  
-  /**
    * Clear all attestedEth values in the tree (set to 0)
    * Used during chain replacement before rebuilding
    */
@@ -321,21 +298,14 @@ export class BeaconState {
   }
   
   /**
-   * Rebuild attestedEth values for entire tree from latest attestations
-   * Called after chain replacement or when rebuilding from scratch
-   */
-  private rebuildAttestedEthFromLatestAttestations(): void {
-    if (!this.blockchain) return;
-    
-    // Use LMD-GHOST to decorate the entire tree
-    const blockTree = this.blockchain.getTree();
-    this.lmdGhost.decorateTree(blockTree);
-  }
-  
-  /**
    * Update latest attestations and tree decoration
    * This is the main entry point for updating LMD GHOST state
    * Called when new attestations arrive or blocks are added
+   * 
+   * Consolidates all attestation set change logic:
+   * - Updates latest attestations
+   * - Decorates tree with attestedEth
+   * - Computes GHOST-HEAD
    */
   updateLatestAttestationsAndTree(): void {
     if (!this.blockchain) return;
@@ -344,23 +314,9 @@ export class BeaconState {
     const allBlocks = this.blockchain.getTree().getAllBlocks();
     const allAttestations = this.getAllAttestations(allBlocks);
     
-    // Update latest attestations for each validator
-    for (const attestation of allAttestations) {
-      const oldAttestation = this.latestAttestations.get(attestation.validatorAddress);
-      const wasUpdated = this.updateLatestAttestation(attestation);
-      
-      if (wasUpdated) {
-        const stake = this.getValidatorStake(attestation.validatorAddress);
-        
-        // Decrement old attestation path if it existed
-        if (oldAttestation) {
-          this.walkTreeAndUpdateAttestedEth(oldAttestation.blockHash, -stake);
-        }
-        
-        // Increment new attestation path
-        this.walkTreeAndUpdateAttestedEth(attestation.blockHash, stake);
-      }
-    }
+    // Use LMD-GHOST to handle all attestation set changes
+    const tree = this.blockchain.getTree();
+    this.lmdGhost.onAttestationSetChanged(tree, allAttestations);
   }
   
   /**
@@ -380,13 +336,9 @@ export class BeaconState {
     const allBlocks = this.blockchain.getTree().getAllBlocks();
     const allAttestations = this.getAllAttestations(allBlocks);
     
-    // Update latest attestations (this will pick the most recent for each validator)
-    for (const attestation of allAttestations) {
-      this.updateLatestAttestation(attestation);
-    }
-    
-    // Rebuild attestedEth from latest attestations
-    this.rebuildAttestedEthFromLatestAttestations();
+    // Use LMD-GHOST to handle all attestation set changes
+    const tree = this.blockchain.getTree();
+    this.lmdGhost.onAttestationSetChanged(tree, allAttestations);
   }
   
   /**
