@@ -241,14 +241,14 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
                       </g>
                     )}
                     
-                    {/* Attested ETH - same styling as block hash */}
+                    {/* Attested ETH - blue color with two lines */}
                     {!isRoot && blockNode?.metadata?.attestedEth !== undefined && blockNode.metadata.attestedEth > 0 && (
                       <>
                         <text
-                          fill="#ffffff"
+                          fill="#667eea"
                           stroke="none"
                           x={!isCanonical ? 55 : 40}
-                          y="5"
+                          y="2"
                           textAnchor="start"
                           fontSize="11"
                           fontWeight="bold"
@@ -256,6 +256,19 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
                           style={{ pointerEvents: 'none', userSelect: 'none' }}
                         >
                           {blockNode.metadata.attestedEth} ETH
+                        </text>
+                        <text
+                          fill="#667eea"
+                          stroke="none"
+                          x={!isCanonical ? 55 : 40}
+                          y="13"
+                          textAnchor="start"
+                          fontSize="9"
+                          fontWeight="normal"
+                          fontFamily="monospace"
+                          style={{ pointerEvents: 'none', userSelect: 'none' }}
+                        >
+                          Attested
                         </text>
                         
                         {/* Attestation circles - with stopPropagation to prevent block modal */}
