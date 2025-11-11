@@ -9,7 +9,6 @@ import TransactionView from './TransactionView';
 import AttestationCircle from './AttestationCircle';
 import { MdContentCopy, MdCheck } from 'react-icons/md';
 import { BiFork } from 'react-icons/bi';
-import { FaGhost } from 'react-icons/fa';
 import { useSimulatorContext } from '../contexts/SimulatorContext';
 import './BlockTreeView.css';
 
@@ -140,8 +139,7 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
                   className="legend-item" 
                   title="LMD-GHOST HEAD: Latest Message Driven - Greedy Heaviest Observed SubTree. The canonical chain head chosen by following the fork with the most attested ETH at each branch."
                 >
-                  <span className="legend-dot ghost-head"></span>
-                  <FaGhost style={{ fontSize: '12px', marginRight: '2px' }} /> HEAD
+                  <span className="legend-dot ghost-head"></span> LMD GHOST HEAD
                 </span>
                 <span className="legend-item"><span className="legend-dot fork"></span> Fork</span>
                 <span className="legend-item legend-attestations">
@@ -206,20 +204,20 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
                       strokeWidth={isGhostHead ? 3 : isRoot ? 0 : 2}
                     />
                     
-                    {/* Ghost icon and HEAD text for GHOST-HEAD node - positioned to the left */}
+                    {/* LMD GHOST HEAD text for GHOST-HEAD node - positioned to the left */}
                     {isGhostHead && (
-                      <g transform="translate(-80, 0)">
-                        <foreignObject width="70" height="20">
+                      <g transform="translate(-120, 0)">
+                        <foreignObject width="110" height="20">
                           <div style={{ 
                             display: 'flex', 
-                            alignItems: 'center', 
-                            gap: '4px',
+                            alignItems: 'center',
                             color: '#ff9800',
-                            fontSize: '14px',
+                            fontSize: '11px',
                             fontWeight: 'bold',
-                            whiteSpace: 'nowrap'
+                            whiteSpace: 'nowrap',
+                            letterSpacing: '0.5px'
                           }}>
-                            <FaGhost /> HEAD
+                            LMD GHOST HEAD
                           </div>
                         </foreignObject>
                       </g>
