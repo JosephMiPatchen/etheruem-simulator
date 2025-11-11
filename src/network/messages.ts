@@ -1,11 +1,14 @@
-import { Attestation } from '../types/types';
+import { Block, Attestation } from '../types/types';
 
 /**
  * Types of messages that can be sent between nodes
- * PoS uses attestations (block proposals will be added later)
+ * PoS uses attestations and LMD-GHOST head synchronization
  */
 export enum MessageType {
   ATTESTATION = 'ATTESTATION',
+  LMD_GHOST_BROADCAST = 'LMD_GHOST_BROADCAST',
+  CHAIN_REQUEST = 'CHAIN_REQUEST',
+  CHAIN_RESPONSE = 'CHAIN_RESPONSE',
 }
 
 /**
@@ -26,6 +29,40 @@ export interface AttestationMessage extends NetworkMessage {
 }
 
 /**
+ * Message for broadcasting LMD-GHOST head for synchronization
+ * Nodes periodically broadcast their current GHOST-HEAD to all peers
+ */
+export interface LmdGhostBroadcastMessage extends NetworkMessage {
+  type: MessageType.LMD_GHOST_BROADCAST;
+  ghostHeadHash: string; // Hash of the node's current LMD-GHOST head
+}
+
+/**
+ * Message for requesting a chain for a specific head
+ * Sent when a node receives a GHOST head it doesn't have
+ */
+export interface ChainRequestMessage extends NetworkMessage {
+  type: MessageType.CHAIN_REQUEST;
+  toNodeId: string; // Required for direct request
+  requestedHeadHash: string; // The head hash to get the chain for
+}
+
+/**
+ * Message for responding with a chain branch
+ * Returns the chain from the requested head to genesis
+ */
+export interface ChainResponseMessage extends NetworkMessage {
+  type: MessageType.CHAIN_RESPONSE;
+  toNodeId: string; // Required for direct response
+  requestedHeadHash: string; // The head that was requested
+  blocks: Block[]; // Chain from requested head to genesis
+}
+
+/**
  * Union type for all network messages (PoS only)
  */
-export type Message = AttestationMessage;
+export type Message = 
+  | AttestationMessage
+  | LmdGhostBroadcastMessage
+  | ChainRequestMessage
+  | ChainResponseMessage;
