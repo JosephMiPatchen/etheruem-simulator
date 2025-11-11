@@ -233,10 +233,10 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
                             return (
                               <foreignObject
                                 key={`att-circle-${idx}`}
-                                x={baseX + (idx * 55)}
-                                y="-22"
-                                width="50"
-                                height="50"
+                                x={baseX + (idx * 60)}
+                                y="-25"
+                                width="55"
+                                height="55"
                                 onClick={(e: any) => {
                                   e.stopPropagation();
                                   setSelectedAttestation({ ...att, blockHeight, nodeName, isCanonical });
@@ -248,7 +248,7 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
                                   blocks={allBlocks}
                                   addressToNodeId={addressToNodeId}
                                   simplified={true}
-                                  size={45}
+                                  size={50}
                                 />
                               </foreignObject>
                             );
