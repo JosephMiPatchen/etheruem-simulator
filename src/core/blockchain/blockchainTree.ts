@@ -26,6 +26,7 @@ export interface BlockTreeNode {
   metadata: {
     weight?: number;           // For GHOST: total attestation weight
     attestationCount?: number; // Number of attestations
+    attestedEth?: number;      // For LMD GHOST: total staked ETH attesting to this subtree
     [key: string]: any;        // Allow any future metadata
   };
 }
@@ -263,5 +264,23 @@ export class BlockchainTree {
     });
     
     return lines.join('\n');
+  }
+  
+  /**
+   * Get all blocks in the tree (excluding null root)
+   * Used for collecting all attestations from the blockchain
+   */
+  getAllBlocks(): Block[] {
+    const blocks: Block[] = [];
+    
+    const traverse = (node: BlockTreeNode) => {
+      if (!node.isNullRoot && node.block) {
+        blocks.push(node.block);
+      }
+      node.children.forEach(child => traverse(child));
+    };
+    
+    traverse(this.nullRoot);
+    return blocks;
   }
 }

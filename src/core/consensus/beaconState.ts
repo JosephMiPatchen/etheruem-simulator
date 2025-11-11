@@ -36,6 +36,14 @@ export class BeaconState {
   // Tracks attestations that have been included in blocks to prevent duplicates
   public processedAttestations: Set<string>;
   
+  // Latest attestations from each validator (for LMD GHOST fork choice)
+  // Maps validatorAddress -> most recent Attestation
+  // Used to decorate block tree with attestedEth (weighted attestations)
+  public latestAttestations: Map<string, Attestation>;
+  
+  // Callback for when attestation is added (used to update tree decoration)
+  private onAttestationAdded?: () => void;
+  
   constructor(genesisTime: number, validators: Validator[]) {
     this.genesisTime = genesisTime;
     this.validators = validators;
@@ -43,6 +51,7 @@ export class BeaconState {
     this.currentEpochSchedule = new Map();
     this.beaconPool = [];
     this.processedAttestations = new Set();
+    this.latestAttestations = new Map();
     
     // Initialize first RANDAO mix for epoch 0
     this.randaoMixes.set(0, this.generateInitialRandao());
@@ -196,6 +205,58 @@ export class BeaconState {
       }
     }
     console.log(`[BeaconState] REBUILD COMPLETE: ${totalAttestations} attestations marked as processed`);
+  }
+  
+  /**
+   * Get validator's staked ETH by address
+   * Returns 0 if validator not found
+   */
+  getValidatorStake(validatorAddress: string): number {
+    const validator = this.validators.find(v => v.nodeAddress === validatorAddress);
+    return validator ? validator.stakedEth : 0;
+  }
+  
+  /**
+   * Update latest attestation for a validator if the new one is more recent
+   * Returns true if updated, false if existing attestation was newer
+   */
+  updateLatestAttestation(attestation: Attestation): boolean {
+    const existing = this.latestAttestations.get(attestation.validatorAddress);
+    
+    // If no existing attestation or new one is more recent, update
+    if (!existing || attestation.timestamp > existing.timestamp) {
+      this.latestAttestations.set(attestation.validatorAddress, attestation);
+      return true;
+    }
+    
+    return false;
+  }
+  
+  /**
+   * Clear all latest attestations (used during chain replacement)
+   */
+  clearLatestAttestations(): void {
+    this.latestAttestations.clear();
+  }
+  
+  /**
+   * Get all attestations from beacon pool + blockchain
+   * This is the union set used for computing latest attestations
+   */
+  getAllAttestations(blockchain: any[]): Attestation[] {
+    const allAttestations: Attestation[] = [];
+    
+    // Add attestations from beacon pool
+    allAttestations.push(...this.beaconPool);
+    
+    // Add attestations from all blocks in blockchain
+    for (const block of blockchain) {
+      if (block.attestations && block.attestations.length > 0) {
+        allAttestations.push(...block.attestations);
+      }
+    }
+    
+    return allAttestations;
   }
   
   /**
