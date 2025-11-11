@@ -9,6 +9,7 @@ import TransactionView from './TransactionView';
 import AttestationCircle from './AttestationCircle';
 import { MdContentCopy, MdCheck } from 'react-icons/md';
 import { BiFork } from 'react-icons/bi';
+import { FaGhost } from 'react-icons/fa';
 import { useSimulatorContext } from '../contexts/SimulatorContext';
 import './BlockTreeView.css';
 
@@ -135,7 +136,13 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
               <div className="legend-items">
                 <span className="legend-item"><span className="legend-dot root"></span> Null Root</span>
                 <span className="legend-item"><span className="legend-dot canonical"></span> Canonical</span>
-                <span className="legend-item"><span className="legend-dot ghost-head"></span> GHOST-HEAD</span>
+                <span 
+                  className="legend-item" 
+                  title="LMD-GHOST HEAD: Latest Message Driven - Greedy Heaviest Observed SubTree. The canonical chain head chosen by following the fork with the most attested ETH at each branch."
+                >
+                  <span className="legend-dot ghost-head"></span>
+                  <FaGhost style={{ fontSize: '12px', marginRight: '2px' }} /> HEAD
+                </span>
                 <span className="legend-item"><span className="legend-dot fork"></span> Fork</span>
                 <span className="legend-item legend-attestations">
                   <span className="attestation-color-dot green"></span>
@@ -198,6 +205,25 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
                       stroke={isGhostHead ? '#ff9800' : isRoot ? 'none' : isCanonical ? '#764ba2' : '#95a5a6'}
                       strokeWidth={isGhostHead ? 3 : isRoot ? 0 : 2}
                     />
+                    
+                    {/* Ghost icon and HEAD text for GHOST-HEAD node - positioned to the left */}
+                    {isGhostHead && (
+                      <g transform="translate(-80, 0)">
+                        <foreignObject width="70" height="20">
+                          <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '4px',
+                            color: '#ff9800',
+                            fontSize: '14px',
+                            fontWeight: 'bold',
+                            whiteSpace: 'nowrap'
+                          }}>
+                            <FaGhost /> HEAD
+                          </div>
+                        </foreignObject>
+                      </g>
+                    )}
                     
                     {/* Fork icon for non-canonical blocks - positioned outside to the right */}
                     {!isCanonical && !isRoot && (
