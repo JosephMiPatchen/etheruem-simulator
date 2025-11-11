@@ -192,34 +192,18 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, onClose }
                       </g>
                     )}
                     
-                    {/* Attested ETH annotation - positioned to the right of the circle */}
+                    {/* Attested ETH annotation - plain text to the right (after fork icon if present) */}
                     {!isRoot && blockNode?.metadata?.attestedEth !== undefined && blockNode.metadata.attestedEth > 0 && (
-                      <g transform="translate(42, 0)">
-                        {/* Background with gradient effect */}
-                        <rect
-                          x="0"
-                          y="-11"
-                          width="65"
-                          height="22"
-                          fill="#667eea"
-                          stroke="#764ba2"
-                          strokeWidth="1.5"
-                          rx="4"
-                          opacity="0.95"
-                        />
-                        {/* White text */}
-                        <text
-                          x="32.5"
-                          y="5"
-                          fill="#ffffff"
-                          fontSize="12"
-                          fontWeight="700"
-                          textAnchor="middle"
-                          style={{ letterSpacing: '0.3px' }}
-                        >
-                          {blockNode.metadata.attestedEth} ETH
-                        </text>
-                      </g>
+                      <text
+                        x={!isCanonical ? 55 : 40}
+                        y="5"
+                        fill="#ffffff"
+                        fontSize="11"
+                        fontWeight="600"
+                        textAnchor="start"
+                      >
+                        {blockNode.metadata.attestedEth} ETH
+                      </text>
                     )}
                     
                     {/* Block name or empty set symbol inside circle */}
