@@ -16,7 +16,6 @@ export class Node {
   private mempool: Mempool;
   private beaconState: BeaconState; // Consensus Layer state
   private peers: PeerInfoMap = {};
-  private shouldBeMining: boolean = false;
   
   // Security-related properties
   private privateKey: string;
@@ -103,23 +102,6 @@ export class Node {
   }
   
   /**
-   * Starts mining a new block
-   */
-  async startMining(): Promise<void> {
-    this.shouldBeMining = true;
-    const latestBlock = this.blockchain.getLatestBlock();
-    await this.miner.startMining(latestBlock);
-  }
-  
-  /**
-   * Stops mining
-   */
-  stopMining(): void {
-    this.shouldBeMining = false;
-    this.miner.stopMining();
-  }
-  
-  /**
    * Gets transactions from the mempool
    * @param maxCount Maximum number of transactions to return
    * @returns Array of transactions from mempool
@@ -157,14 +139,6 @@ export class Node {
       
       // Note: Attestation processing and beacon pool cleanup now handled in blockchain.applyBlockToState()
       
-      // Stop mining the current block
-      this.miner.stopMining();
-      
-      // Only start mining if we should be mining
-      if (this.shouldBeMining) {
-        this.startMining();
-      }
-      
       // Notify that the chain was updated
       if (this.onChainUpdated) {
         this.onChainUpdated();
@@ -187,15 +161,6 @@ export class Node {
       this.mempool.removeTransactions(allTxids);
       
       // Note: processedAttestations is automatically rebuilt by blockchain.replaceChain()
-      
-      // Stop current mining operation if we were mining
-      const wasMining = this.miner.isMining;
-      this.miner.stopMining();
-      
-      // Only restart mining if we were mining before
-      if (wasMining) {
-        this.startMining();
-      }
       
       // Notify that the chain was updated
       if (this.onChainUpdated) {
@@ -221,9 +186,6 @@ export class Node {
       if (this.onBlockBroadcast) {
         this.onBlockBroadcast(block);
       }
-      
-      // Start mining a new block
-      this.startMining();
       
       // Notify that the chain was updated
       if (this.onChainUpdated) {
