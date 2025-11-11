@@ -194,24 +194,28 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, onClose }
                     
                     {/* Attested ETH annotation - positioned to the right of the circle */}
                     {!isRoot && blockNode?.metadata?.attestedEth !== undefined && blockNode.metadata.attestedEth > 0 && (
-                      <g transform="translate(40, 0)">
+                      <g transform="translate(42, 0)">
+                        {/* Background with gradient effect */}
                         <rect
                           x="0"
-                          y="-10"
-                          width="60"
-                          height="20"
-                          fill="var(--panel-background)"
-                          stroke="#f59e0b"
-                          strokeWidth="1"
-                          rx="3"
+                          y="-11"
+                          width="65"
+                          height="22"
+                          fill="#667eea"
+                          stroke="#764ba2"
+                          strokeWidth="1.5"
+                          rx="4"
+                          opacity="0.95"
                         />
+                        {/* White text */}
                         <text
-                          x="30"
+                          x="32.5"
                           y="5"
-                          fill="#f59e0b"
-                          fontSize="11"
-                          fontWeight="600"
+                          fill="#ffffff"
+                          fontSize="12"
+                          fontWeight="700"
                           textAnchor="middle"
+                          style={{ letterSpacing: '0.3px' }}
                         >
                           {blockNode.metadata.attestedEth} ETH
                         </text>
