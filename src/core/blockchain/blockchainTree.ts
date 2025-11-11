@@ -39,7 +39,6 @@ export class BlockchainTree {
   private nullRoot: BlockTreeNode;                 // Null root (parent of all genesis blocks)
   private nodesByHash: Map<string, BlockTreeNode>; // Fast lookup by hash
   private leaves: Set<BlockTreeNode>;              // All leaf nodes (chain tips)
-  private head: BlockTreeNode;                     // HEAD pointer to canonical chain tip
   
   constructor() {
     // Create null root node
@@ -58,7 +57,6 @@ export class BlockchainTree {
     this.nodesByHash.set(this.nullRoot.hash, this.nullRoot);
     
     this.leaves = new Set();
-    this.head = this.nullRoot; // Initially points to null root
   }
   
   /**
@@ -118,33 +116,19 @@ export class BlockchainTree {
   }
   
   /**
-   * Sets the HEAD pointer to a new canonical chain tip
-   * Canonical chain is determined by walking from HEAD to null root
+   * Gets the canonical chain as an array of blocks (from GHOST-HEAD to genesis)
+   * Excludes the null root
+   * @param ghostHeadHash - Hash of the GHOST-HEAD (canonical chain tip from LMD-GHOST)
    */
-  setHead(headHash: string): boolean {
-    const headNode = this.nodesByHash.get(headHash);
-    if (!headNode || headNode.isNullRoot) {
-      return false;
+  getCanonicalChain(ghostHeadHash?: string | null): Block[] {
+    const chain: Block[] = [];
+    
+    // If no ghostHeadHash provided, return empty chain
+    if (!ghostHeadHash) {
+      return chain;
     }
     
-    this.head = headNode;
-    return true;
-  }
-  
-  /**
-   * Alias for setHead for backward compatibility
-   */
-  setCanonicalHead(headHash: string): boolean {
-    return this.setHead(headHash);
-  }
-  
-  /**
-   * Gets the canonical chain as an array of blocks (from HEAD to genesis)
-   * Excludes the null root
-   */
-  getCanonicalChain(): Block[] {
-    const chain: Block[] = [];
-    let current: BlockTreeNode | null = this.head;
+    let current: BlockTreeNode | null | undefined = this.nodesByHash.get(ghostHeadHash);
     
     while (current && !current.isNullRoot) {
       if (current.block) {
@@ -171,10 +155,16 @@ export class BlockchainTree {
   }
   
   /**
-   * Gets the HEAD node (canonical chain tip)
+   * Gets the GHOST-HEAD node (canonical chain tip from LMD-GHOST)
+   * @param ghostHeadHash - Hash of the GHOST-HEAD
    */
-  getCanonicalHead(): BlockTreeNode {
-    return this.head;
+  getCanonicalHead(ghostHeadHash?: string | null): BlockTreeNode {
+    if (!ghostHeadHash) {
+      return this.nullRoot;
+    }
+    
+    const headNode = this.nodesByHash.get(ghostHeadHash);
+    return headNode || this.nullRoot;
   }
   
   /**
@@ -208,8 +198,9 @@ export class BlockchainTree {
   
   /**
    * Gets tree statistics
+   * @param ghostHeadHash - Hash of the GHOST-HEAD for canonical chain calculation
    */
-  getStats(): {
+  getStats(ghostHeadHash?: string | null): {
     totalBlocks: number;
     canonicalChainLength: number;
     numberOfLeaves: number;
@@ -217,7 +208,7 @@ export class BlockchainTree {
   } {
     return {
       totalBlocks: this.nodesByHash.size,
-      canonicalChainLength: this.getCanonicalChain().length,
+      canonicalChainLength: this.getCanonicalChain(ghostHeadHash).length,
       numberOfLeaves: this.leaves.size,
       numberOfForks: this.leaves.size - 1 // Forks = leaves - 1
     };
@@ -226,16 +217,19 @@ export class BlockchainTree {
   /**
    * Simple tree visualization for debugging
    * Returns a string representation of the tree structure
+   * @param ghostHeadHash - Hash of the GHOST-HEAD for canonical chain marking
    */
-  visualize(): string {
+  visualize(ghostHeadHash?: string | null): string {
     const lines: string[] = [];
     
-    // Build set of canonical node hashes by walking from HEAD to null root
+    // Build set of canonical node hashes by walking from GHOST-HEAD to null root
     const canonicalHashes = new Set<string>();
-    let current: BlockTreeNode | null = this.head;
-    while (current && !current.isNullRoot) {
-      canonicalHashes.add(current.hash);
-      current = current.parent;
+    if (ghostHeadHash) {
+      let current: BlockTreeNode | null | undefined = this.nodesByHash.get(ghostHeadHash);
+      while (current && !current.isNullRoot) {
+        canonicalHashes.add(current.hash);
+        current = current.parent;
+      }
     }
     
     const traverse = (node: BlockTreeNode, prefix: string, isLast: boolean) => {
