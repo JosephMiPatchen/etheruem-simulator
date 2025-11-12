@@ -6,10 +6,30 @@
 
 import * as secp from 'noble-secp256k1';
 import { sha256 } from '@noble/hashes/sha2';
-import { bytesToHex, hexToBytes } from '@noble/hashes/utils';
+import { bytesToHex, hexToBytes as nobleHexToBytes } from '@noble/hashes/utils';
 
-// Re-export utility functions from @noble/hashes
-export { bytesToHex, hexToBytes };
+// Re-export bytesToHex as-is
+export { bytesToHex };
+
+/**
+ * Convert hex string to bytes, handling optional 0x prefix
+ * Standardized to accept Ethereum-style hex strings with 0x prefix
+ * @param hex Hex string with or without 0x prefix (e.g., '0x1234' or '1234')
+ * @returns Uint8Array of bytes
+ */
+export function hexToBytes(hex: string): Uint8Array {
+  // Strip 0x prefix if present (Ethereum standard format)
+  const cleanHex = hex.startsWith('0x') || hex.startsWith('0X') 
+    ? hex.slice(2) 
+    : hex;
+  
+  // Validate even length
+  if (cleanHex.length % 2 !== 0) {
+    throw new Error(`hex-string must have an even number of characters (got ${cleanHex.length})`);
+  }
+  
+  return nobleHexToBytes(cleanHex);
+}
 
 /**
  * Signature input data for Ethereum transactions
