@@ -106,10 +106,11 @@ export class Blockchain {
   }
   
   /**
-   * Gets the current blockchain height (hops from HEAD to null root)
+   * Gets the current blockchain height (latest block height)
    */
   getHeight(): number {
-    return this.blockTree.getHeight();
+    const latestBlock = this.getLatestBlock();
+    return latestBlock ? latestBlock.header.height : 0;
   }
   
   /**

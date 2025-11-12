@@ -1,12 +1,11 @@
 /**
- * Blockchain Tree Structure with Null Root
+ * Blockchain Tree Structure with Genesis Root
  * 
  * Architecture:
- * - Null root block serves as parent to all genesis blocks
- * - Multiple genesis blocks can coexist (from different nodes)
- * - HEAD pointer points to canonical chain tip (leaf node)
- * - Height = number of hops from HEAD to null root
- * - Supports GHOST fork-choice by changing HEAD pointer
+ * - Genesis block (height 0) is the root of the tree
+ * - All nodes share the same deterministic genesis block
+ * - All other blocks descend from genesis
+ * - Supports GHOST/LMD-GHOST fork-choice
  */
 
 import { Block } from '../../types/types';
@@ -16,11 +15,10 @@ import { Block } from '../../types/types';
  * Extensible for future metadata (attestations, weight, etc.)
  */
 export interface BlockTreeNode {
-  block: Block | null;  // null for root node
+  block: Block;
   hash: string;
-  parent: BlockTreeNode | null;
+  parent: BlockTreeNode | null;  // null only for genesis (root)
   children: BlockTreeNode[];
-  isNullRoot: boolean;  // True only for the null root node
   
   // Metadata (extensible for future use)
   metadata: {
@@ -32,36 +30,23 @@ export interface BlockTreeNode {
 }
 
 /**
- * Blockchain Tree class with Null Root
- * Maintains a tree of all blocks with multiple genesis blocks supported
+ * Blockchain Tree class with Genesis Root
+ * Maintains a tree of all blocks starting from a shared genesis block
  */
 export class BlockchainTree {
-  private nullRoot: BlockTreeNode;                 // Null root (parent of all genesis blocks)
+  private root: BlockTreeNode | null;              // Genesis block (root of tree)
   private nodesByHash: Map<string, BlockTreeNode>; // Fast lookup by hash
   private leaves: Set<BlockTreeNode>;              // All leaf nodes (chain tips)
   
   constructor() {
-    // Create null root node
-    this.nullRoot = {
-      block: null,
-      hash: 'NULL_ROOT',
-      parent: null,
-      children: [],
-      isNullRoot: true,
-      metadata: {
-        weight: 0
-      }
-    };
-    
+    this.root = null;  // Will be set when genesis block is added
     this.nodesByHash = new Map();
-    this.nodesByHash.set(this.nullRoot.hash, this.nullRoot);
-    
     this.leaves = new Set();
   }
   
   /**
    * Adds a block to the tree
-   * Genesis blocks (height 0) are added as children of null root
+   * Genesis block (height 0) becomes the root
    * Other blocks are added as children of their parent block
    * Returns the new tree node if successful, null if parent not found
    */
@@ -72,11 +57,11 @@ export class BlockchainTree {
       return null;
     }
     
-    // Determine parent: null root for genesis blocks, otherwise find by hash
+    // Determine parent
     let parentNode: BlockTreeNode | null = null;
     if (block.header.height === 0) {
-      // Genesis block - parent is null root
-      parentNode = this.nullRoot;
+      // Genesis block - becomes the root (no parent)
+      parentNode = null;
     } else {
       // Regular block - find parent by previousHeaderHash
       const parentHash = block.header.previousHeaderHash;
@@ -94,22 +79,30 @@ export class BlockchainTree {
       hash: block.hash || '',
       parent: parentNode,
       children: [],
-      isNullRoot: false,
       metadata: {
         weight: 0
       }
     };
     
-    // Add to parent's children
-    parentNode.children.push(newNode);
+    // If this is genesis (height 0), set as root
+    if (block.header.height === 0) {
+      this.root = newNode;
+    } else {
+      // Add to parent's children
+      if (parentNode) {
+        parentNode.children.push(newNode);
+        
+        // Update leaves: remove parent if it was a leaf
+        if (this.leaves.has(parentNode)) {
+          this.leaves.delete(parentNode);
+        }
+      }
+    }
     
     // Add to lookup map
     this.nodesByHash.set(newNode.hash, newNode);
     
-    // Update leaves: remove parent if it was a leaf, add new node
-    if (this.leaves.has(parentNode)) {
-      this.leaves.delete(parentNode);
-    }
+    // Add new node as a leaf
     this.leaves.add(newNode);
     
     return newNode;
@@ -117,7 +110,6 @@ export class BlockchainTree {
   
   /**
    * Gets the canonical chain as an array of blocks (from GHOST-HEAD to genesis)
-   * Excludes the null root
    * @param ghostHeadHash - Hash of the GHOST-HEAD (canonical chain tip from LMD-GHOST)
    */
   getCanonicalChain(ghostHeadHash?: string | null): Block[] {
@@ -130,10 +122,9 @@ export class BlockchainTree {
     
     let current: BlockTreeNode | null | undefined = this.nodesByHash.get(ghostHeadHash);
     
-    while (current && !current.isNullRoot) {
-      if (current.block) {
-        chain.unshift(current.block);
-      }
+    // Walk up to genesis (root)
+    while (current) {
+      chain.unshift(current.block);
       current = current.parent;
     }
     
@@ -158,36 +149,23 @@ export class BlockchainTree {
    * Gets the GHOST-HEAD node (canonical chain tip from LMD-GHOST)
    * @param ghostHeadHash - Hash of the GHOST-HEAD
    */
-  getCanonicalHead(ghostHeadHash?: string | null): BlockTreeNode {
+  getCanonicalHead(ghostHeadHash?: string | null): BlockTreeNode | null {
     if (!ghostHeadHash) {
-      return this.nullRoot;
+      return this.root;
     }
     
     const headNode = this.nodesByHash.get(ghostHeadHash);
-    return headNode || this.nullRoot;
+    return headNode || this.root;
   }
   
   /**
-   * Gets the null root node
+   * Gets the genesis block (root of tree)
    */
-  getRoot(): BlockTreeNode {
-    return this.nullRoot;
+  getRoot(): BlockTreeNode | null {
+    return this.root;
   }
   
-  /**
-   * Gets the height of the canonical chain (hops from HEAD to null root)
-   */
-  getHeight(): number {
-    let height = 0;
-    let current: BlockTreeNode | null = this.head;
-    
-    while (current && !current.isNullRoot) {
-      height++;
-      current = current.parent;
-    }
-    
-    return height - 1; // Subtract 1 because genesis is height 0
-  }
+
   
   /**
    * Gets all blocks in the tree (for debugging/visualization)
@@ -222,11 +200,15 @@ export class BlockchainTree {
   visualize(ghostHeadHash?: string | null): string {
     const lines: string[] = [];
     
-    // Build set of canonical node hashes by walking from GHOST-HEAD to null root
+    if (!this.root) {
+      return '[Empty tree - no genesis block]';
+    }
+    
+    // Build set of canonical node hashes by walking from GHOST-HEAD to genesis
     const canonicalHashes = new Set<string>();
     if (ghostHeadHash) {
       let current: BlockTreeNode | null | undefined = this.nodesByHash.get(ghostHeadHash);
-      while (current && !current.isNullRoot) {
+      while (current) {
         canonicalHashes.add(current.hash);
         current = current.parent;
       }
@@ -235,14 +217,11 @@ export class BlockchainTree {
     const traverse = (node: BlockTreeNode, prefix: string, isLast: boolean) => {
       const marker = isLast ? '└── ' : '├── ';
       const canonical = canonicalHashes.has(node.hash) ? ' [CANONICAL]' : '';
+      const isGenesis = node.block.header.height === 0 ? ' [GENESIS]' : '';
       
-      if (node.isNullRoot) {
-        lines.push(`${prefix}${marker}[NULL ROOT]`);
-      } else if (node.block) {
-        const height = node.block.header.height;
-        const shortHash = node.hash.substring(0, 8);
-        lines.push(`${prefix}${marker}Block ${height} (${shortHash})${canonical}`);
-      }
+      const height = node.block.header.height;
+      const shortHash = node.hash.substring(0, 8);
+      lines.push(`${prefix}${marker}Block ${height} (${shortHash})${canonical}${isGenesis}`);
       
       const childPrefix = prefix + (isLast ? '    ' : '│   ');
       node.children.forEach((child, index) => {
@@ -251,30 +230,29 @@ export class BlockchainTree {
       });
     };
     
-    lines.push('[NULL ROOT]');
-    this.nullRoot.children.forEach((child, index) => {
-      const isLastChild = index === this.nullRoot.children.length - 1;
-      traverse(child, '', isLastChild);
-    });
+    // Start from root (genesis)
+    traverse(this.root, '', true);
     
     return lines.join('\n');
   }
   
   /**
-   * Get all blocks in the tree (excluding null root)
+   * Get all blocks in the tree
    * Used for collecting all attestations from the blockchain
    */
   getAllBlocks(): Block[] {
     const blocks: Block[] = [];
     
+    if (!this.root) {
+      return blocks;
+    }
+    
     const traverse = (node: BlockTreeNode) => {
-      if (!node.isNullRoot && node.block) {
-        blocks.push(node.block);
-      }
+      blocks.push(node.block);
       node.children.forEach(child => traverse(child));
     };
     
-    traverse(this.nullRoot);
+    traverse(this.root);
     return blocks;
   }
 }
