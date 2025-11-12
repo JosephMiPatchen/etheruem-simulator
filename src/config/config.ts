@@ -31,4 +31,9 @@ export const SimulatorConfig = {
   // UI parameters
   MINING_BATCH_SIZE: 1000,   // Number of hash attempts per batch
   UPDATE_INTERVAL_MS: 500,   // UI update interval in milliseconds
+  
+  // Debug logging toggles
+  DEBUG_SYNC: false,         // Enable/disable sync-related console logs
+  DEBUG_BLOCK_CREATOR: true, // Enable/disable BlockCreator debug logs
+  DEBUG_CONSENSUS: true,     // Enable/disable Consensus debug logs
 };

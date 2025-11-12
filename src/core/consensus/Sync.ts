@@ -2,6 +2,7 @@ import { Block } from '../../types/types';
 import { Blockchain } from '../blockchain/blockchain';
 import { BeaconState } from './beaconState';
 import { MessageType } from '../../network/messages';
+import { SimulatorConfig } from '../../config/config';
 
 /**
  * Sync class handles LMD-GHOST head synchronization for PoS
@@ -149,20 +150,28 @@ export class Sync {
    */
   async handleChainResponse(requestedHeadHash: string, blocks: Block[]): Promise<void> {
     if (blocks.length === 0) {
-      console.warn(`[Sync] Received empty chain response for head: ${requestedHeadHash.slice(0, 8)}`);
+      if (SimulatorConfig.DEBUG_SYNC) {
+        console.warn(`[Sync] Received empty chain response for head: ${requestedHeadHash.slice(0, 8)}`);
+      }
       return;
     }
     
-    console.log(`[Sync] Received chain with ${blocks.length} blocks for head: ${requestedHeadHash.slice(0, 8)}`);
+    if (SimulatorConfig.DEBUG_SYNC) {
+      console.log(`[Sync] Received chain with ${blocks.length} blocks for head: ${requestedHeadHash.slice(0, 8)}`);
+    }
     
     // Try to add the received chain to our blockchain
     // This will trigger chain replacement if the new chain is valid
     const replaced = await this.blockchain.replaceChain(blocks);
     
     if (replaced) {
-      console.log(`[Sync] Successfully synced chain for head: ${requestedHeadHash.slice(0, 8)}`);
+      if (SimulatorConfig.DEBUG_SYNC) {
+        console.log(`[Sync] Successfully synced chain for head: ${requestedHeadHash.slice(0, 8)}`);
+      }
     } else {
-      console.log(`[Sync] Chain not replaced (may be shorter or invalid): ${requestedHeadHash.slice(0, 8)}`);
+      if (SimulatorConfig.DEBUG_SYNC) {
+        console.log(`[Sync] Chain not replaced (may be shorter or invalid): ${requestedHeadHash.slice(0, 8)}`);
+      }
     }
   }
 }
