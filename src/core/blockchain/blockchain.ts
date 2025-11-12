@@ -74,6 +74,13 @@ export class Blockchain {
   }
   
   /**
+   * Gets the WorldState object for validation
+   */
+  getWorldStateObject(): WorldState {
+    return this.worldState;
+  }
+  
+  /**
    * Gets the transaction receipts database
    */
   getReceipts(): any {

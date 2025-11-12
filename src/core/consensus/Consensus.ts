@@ -237,7 +237,7 @@ export class Consensus {
     // 1. Validate the block
     const latestBlock = this.blockchain.getLatestBlock();
     const previousHash = latestBlock?.hash || '';
-    const worldState = this.blockchain.getWorldState();
+    const worldState = this.blockchain.getWorldStateObject();
     const isValid = await validateBlock(block, worldState, previousHash);
     if (!isValid) {
       console.warn(`[Consensus] Invalid block received for slot ${slot}`);
