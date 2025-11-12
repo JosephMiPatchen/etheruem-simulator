@@ -74,6 +74,10 @@ export class BeaconState {
     this.processedAttestations = new Set();
     this.lmdGhost = new LmdGhost();
     
+    // Initialize RANDAO mix for epoch -1 with 0x0
+    // This allows epoch 0 to compute its proposer schedule
+    this.randaoMixes.set(-1, '0x0');
+    
     // Initialize first RANDAO mix for epoch 0
     this.randaoMixes.set(0, this.generateInitialRandao());
   }
