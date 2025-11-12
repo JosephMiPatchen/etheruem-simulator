@@ -18,6 +18,7 @@ const SimulatorContentInner: React.FC = () => {
   const networkManagerRef = useRef<NetworkManager | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const ghostHeadIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const slotIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   // Initialize the network on component mount
   useEffect(() => {
@@ -45,6 +46,11 @@ const SimulatorContentInner: React.FC = () => {
       networkManager.broadcastAllGhostHeads();
     }, 1000);
     
+    // Set up interval to process consensus slots every 12 seconds (PoS slot time)
+    slotIntervalRef.current = setInterval(() => {
+      networkManager.processAllSlots();
+    }, 12000);
+    
     // Cleanup on unmount
     return () => {
       if (intervalRef.current) {
@@ -52,6 +58,9 @@ const SimulatorContentInner: React.FC = () => {
       }
       if (ghostHeadIntervalRef.current) {
         clearInterval(ghostHeadIntervalRef.current);
+      }
+      if (slotIntervalRef.current) {
+        clearInterval(slotIntervalRef.current);
       }
       networkManager.stopAllNodes();
     };
