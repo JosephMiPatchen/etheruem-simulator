@@ -1,11 +1,21 @@
 import { Block, EthereumTransaction, PeerInfoMap } from '../../types/types';
+import { SimulatorConfig } from '../../config/config';
+import { 
+  createCoinbaseTransaction, 
+  createPeerPaymentTransactions,
+  createSignatureInput
+} from '../blockchain/transaction';
+import { calculateBlockHeaderHash, calculateTransactionHash, validateBlock } from '../validation/blockValidator';
+import { generateSignature as cryptoGenerateSignature } from '../../utils/cryptoUtils';
+import { Node } from '../node';
+import { sha256 } from '@noble/hashes/sha256';
+import { bytesToHex } from '@noble/hashes/utils';
+import { getNodePaintColor } from '../../utils/nodeColorUtils';
 import { BeaconState } from './beaconState';
 import { Blockchain } from '../blockchain/blockchain';
 import { RANDAO } from './randao';
 import { MessageType } from '../../network/messages';
 import { Mempool } from '../mempool/mempool';
-import { calculateBlockHeaderHash, calculateTransactionHash, validateBlock } from '../validation/blockValidator';
-import { Node } from '../node';
 
 /**
  * Consensus class handles PoS consensus logic
@@ -19,6 +29,7 @@ export class Consensus {
   private node: Node;
   private nodeAddress: string;
   private mempool: Mempool;
+  private paintingComplete: boolean = false; // Flag to stop creating paint transactions
   
   // Constants
   private readonly SECONDS_PER_SLOT = 12;
@@ -38,6 +49,21 @@ export class Consensus {
     this.node = node;
     this.nodeAddress = node.getAddress();
     this.mempool = mempool;
+  }
+  
+  /**
+   * Mark painting as complete - stops creating paint transactions
+   */
+  public markPaintingComplete(): void {
+    this.paintingComplete = true;
+    console.log(`${this.node.getNodeId()}: Painting complete - no more paint transactions will be created`);
+  }
+  
+  /**
+   * Check if painting is complete
+   */
+  public isPaintingComplete(): boolean {
+    return this.paintingComplete;
   }
   
   /**
@@ -166,8 +192,6 @@ export class Consensus {
    * @returns Promise resolving to array of transactions for the block
    */
   private async createBlockTransactions(height: number): Promise<EthereumTransaction[]> {
-    const { createCoinbaseTransaction, createPeerPaymentTransactions } = await import('../blockchain/transaction');
-    
     // Create coinbase transaction (proposer receives block reward)
     const coinbaseTransaction = createCoinbaseTransaction(this.nodeAddress);
     
@@ -189,8 +213,7 @@ export class Consensus {
     
     // IMPORTANT: Add mempool transactions FIRST
     // This ensures peer payments and paint transactions use nonces that come after mempool transactions
-    const { MAX_BLOCK_TRANSACTIONS } = await import('../../config/config').then(m => m.SimulatorConfig);
-    const maxMempoolSlots = MAX_BLOCK_TRANSACTIONS - 1 - Object.keys(validPeers).length; // Reserve slots for coinbase, peer payments, and paint tx
+    const maxMempoolSlots = SimulatorConfig.MAX_BLOCK_TRANSACTIONS - 1 - Object.keys(validPeers).length; // Reserve slots for coinbase, peer payments, and paint tx
     const mempoolTransactions = this.mempool.getTransactions(Math.max(0, maxMempoolSlots));
     transactions.push(...mempoolTransactions);
     
@@ -225,12 +248,10 @@ export class Consensus {
    * @returns Paint transaction or null if insufficient balance
    */
   private async createPaintTransaction(nonce: number): Promise<EthereumTransaction | null> {
-    const { SimulatorConfig } = await import('../../config/config');
-    const { sha256 } = await import('@noble/hashes/sha256');
-    const { bytesToHex } = await import('@noble/hashes/utils');
-    const { generateSignature } = await import('../../utils/cryptoUtils');
-    const { createSignatureInput } = await import('../blockchain/transaction');
-    const { getNodePaintColor } = await import('../../utils/nodeColorUtils');
+    // Don't create paint transactions if painting is complete
+    if (this.paintingComplete) {
+      return null;
+    }
     
     // Get proposer's current account state
     const worldState = this.blockchain.getWorldState();
@@ -272,7 +293,7 @@ export class Consensus {
     // Generate signature
     let signature;
     try {
-      signature = await generateSignature(signatureInput, this.node.getPrivateKey());
+      signature = await cryptoGenerateSignature(signatureInput, this.node.getPrivateKey());
     } catch (error) {
       console.error('[Consensus] Error generating signature for paint transaction:', error);
       signature = `error-${timestamp}`;
