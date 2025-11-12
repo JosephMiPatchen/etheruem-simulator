@@ -98,7 +98,14 @@ export class NodeWorker {
     return this._node.getAddress();
   }
   
-
+  /**
+   * Recomputes the Epoch 0 proposer schedule
+   * Called after validator addresses are updated during node initialization
+   * This ensures the schedule has the correct validator addresses instead of placeholders
+   */
+  recomputeEpoch0Schedule(): void {
+    this._node.getConsensus().recomputeScheduleForEpoch(0);
+  }
   
   /**
    * Gets the current state of the node

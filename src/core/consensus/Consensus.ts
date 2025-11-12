@@ -118,6 +118,16 @@ export class Consensus {
   }
   
   /**
+   * Forces recomputation of proposer schedule for a specific epoch
+   * Used to update Epoch 0 schedule after validator addresses are finalized
+   * Public method called from NodeWorker during initialization
+   */
+  public recomputeScheduleForEpoch(epoch: number): void {
+    console.log(`[Consensus ${this.nodeAddress.slice(0, 8)}] Recomputing schedule for epoch ${epoch}`);
+    this.computeProposerSchedule(epoch);
+  }
+  
+  /**
    * Main consensus logic - called every slot
    * 1. Calculate current slot and epoch
    * 2. Ensure proposer schedule exists for current epoch

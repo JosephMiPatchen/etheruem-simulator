@@ -45,6 +45,11 @@ export class NetworkManager {
     // Update the validator's address now that we have the node
     this.beaconValidators[validatorIndex].nodeAddress = nodeWorker.getNodeAddress();
     
+    // IMPORTANT: Recompute Epoch 0 schedule now that validator has real address
+    // The Consensus constructor computed it with placeholder address ('')
+    // We need to recompute so the schedule has the correct validator addresses
+    nodeWorker.recomputeEpoch0Schedule();
+    
     // Set up message handling
     nodeWorker.setOnOutgoingMessage(this.routeMessageFromNode.bind(this));
     
