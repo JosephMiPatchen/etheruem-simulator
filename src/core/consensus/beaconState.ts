@@ -23,11 +23,8 @@ export class BeaconState {
   // RANDAO mixes - one per epoch, continuously updated with XOR
   public randaoMixes: Map<number, string>; // epoch -> random mix
   
-  // Current epoch schedule - maps slot to validator node ID
-  public currentEpochSchedule: Map<number, string>; // slot -> nodeId
-  
   // Proposer schedules - maps epoch to (slot -> validator address)
-  // For debugging: shows which validator proposes at each slot in each epoch
+  // Shows which validator proposes at each slot in each epoch
   public proposerSchedules: Map<number, Map<number, string>>; // epoch -> (slot -> validator address)
   
   // Current proposer for the current slot
@@ -68,7 +65,6 @@ export class BeaconState {
     this.genesisTime = genesisTime;
     this.validators = validators;
     this.randaoMixes = new Map();
-    this.currentEpochSchedule = new Map();
     this.proposerSchedules = new Map();
     this.currentProposer = null;
     this.beaconPool = [];
@@ -126,16 +122,20 @@ export class BeaconState {
   
   /**
    * Get validator assigned to a specific slot
+   * Looks up the proposer from the proposerSchedules map
    */
   getValidatorForSlot(slot: number): string | undefined {
-    return this.currentEpochSchedule.get(slot);
-  }
-  
-  /**
-   * Set validator schedule for current epoch
-   */
-  setEpochSchedule(schedule: Map<number, string>): void {
-    this.currentEpochSchedule = schedule;
+    // Calculate which epoch this slot belongs to
+    const epoch = Math.floor(slot / SimulatorConfig.SLOTS_PER_EPOCH);
+    
+    // Get the schedule for that epoch
+    const epochSchedule = this.proposerSchedules.get(epoch);
+    if (!epochSchedule) {
+      return undefined;
+    }
+    
+    // Return the validator for this slot
+    return epochSchedule.get(slot);
   }
   
   /**
@@ -387,7 +387,10 @@ export class BeaconState {
       currentEpoch: this.getCurrentEpoch(),
       validators: this.validators,
       randaoMixes: Array.from(this.randaoMixes.entries()),
-      currentEpochSchedule: Array.from(this.currentEpochSchedule.entries()),
+      proposerSchedules: Array.from(this.proposerSchedules.entries()).map(([epoch, schedule]) => [
+        epoch,
+        Array.from(schedule.entries())
+      ]),
     };
   }
 }

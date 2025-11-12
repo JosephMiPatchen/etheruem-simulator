@@ -22,7 +22,10 @@ const BeaconStateView: React.FC<BeaconStateViewProps> = ({ beaconState, blockcha
   const currentEpoch = beaconState.getCurrentEpoch();
   const validators = beaconState.validators;
   const randaoMixes = Array.from(beaconState.randaoMixes.entries());
-  const epochSchedule = Array.from(beaconState.currentEpochSchedule.entries());
+  
+  // Get all proposer schedules (epoch -> (slot -> validator))
+  const proposerSchedules = Array.from(beaconState.proposerSchedules.entries())
+    .sort(([epochA], [epochB]) => epochA - epochB); // Sort by epoch
 
   return (
     <div className="beacon-state-modal-overlay" onClick={onClose}>
@@ -114,21 +117,53 @@ const BeaconStateView: React.FC<BeaconStateViewProps> = ({ beaconState, blockcha
             </div>
           </div>
 
-          {/* Current Epoch Schedule */}
+          {/* Proposer Schedules (All Epochs) */}
           <div className="beacon-section">
-            <h3>Current Epoch Schedule</h3>
+            <h3>Proposer Schedules ({proposerSchedules.length} {proposerSchedules.length === 1 ? 'Epoch' : 'Epochs'})</h3>
             <div className="schedule-list">
-              {epochSchedule.length === 0 ? (
-                <p className="empty-message">No schedule set for current epoch</p>
+              {proposerSchedules.length === 0 ? (
+                <p className="empty-message">No proposer schedules computed yet</p>
               ) : (
-                <div className="schedule-grid">
-                  {epochSchedule.map(([slot, nodeId]) => (
-                    <div key={slot} className="schedule-item">
-                      <span className="schedule-slot">Slot {slot}:</span>
-                      <span className="schedule-validator">{nodeId}</span>
+                proposerSchedules.map(([epoch, schedule]) => {
+                  const slots = Array.from(schedule.entries()).sort(([slotA], [slotB]) => slotA - slotB);
+                  const isCurrentEpoch = epoch === currentEpoch;
+                  
+                  return (
+                    <div key={epoch} className="epoch-schedule-container">
+                      <h4 className={`epoch-schedule-header ${isCurrentEpoch ? 'current-epoch' : ''}`}>
+                        Epoch {epoch} {isCurrentEpoch && '(Current)'}
+                        <span className="epoch-schedule-info">
+                          {slots.length} slots (Slot {slots[0]?.[0]} - {slots[slots.length - 1]?.[0]})
+                        </span>
+                      </h4>
+                      <div className="schedule-grid">
+                        {slots.map(([slot, validatorAddress]) => {
+                          const nodeId = addressToNodeId[validatorAddress] || 'Unknown';
+                          const nodeColor = getNodeColorCSS(nodeId);
+                          const nodeEmoji = getNodeColorEmoji(nodeId);
+                          const isPastSlot = slot < currentSlot;
+                          const isCurrentSlot = slot === currentSlot;
+                          
+                          return (
+                            <div 
+                              key={slot} 
+                              className={`schedule-item ${isPastSlot ? 'past-slot' : ''} ${isCurrentSlot ? 'current-slot' : ''}`}
+                              style={{ borderLeftColor: nodeColor, borderLeftWidth: '3px' }}
+                            >
+                              <span className="schedule-slot">
+                                Slot {slot}:
+                                {isCurrentSlot && ' ⏰'}
+                              </span>
+                              <span className="schedule-validator" style={{ color: nodeColor }}>
+                                {nodeId} {nodeEmoji}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
-                  ))}
-                </div>
+                  );
+                })
               )}
             </div>
           </div>

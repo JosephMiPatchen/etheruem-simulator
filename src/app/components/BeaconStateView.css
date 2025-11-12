@@ -205,6 +205,37 @@
   overflow-y: auto;
 }
 
+/* Epoch Schedule Container */
+.epoch-schedule-container {
+  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-sm);
+  background: var(--panel-background);
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.epoch-schedule-header {
+  margin: 0 0 var(--spacing-sm) 0;
+  color: var(--text-color);
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: var(--spacing-xs);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.epoch-schedule-header.current-epoch {
+  color: var(--primary-color);
+}
+
+.epoch-schedule-info {
+  font-size: var(--font-size-sm);
+  font-weight: normal;
+  color: var(--text-secondary);
+}
+
 .schedule-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -219,6 +250,18 @@
   background: var(--overlay-background);
   border-radius: var(--border-radius-sm);
   border: 1px solid var(--border-color);
+  border-left-style: solid;
+  transition: all 0.2s;
+}
+
+.schedule-item.past-slot {
+  opacity: 0.5;
+}
+
+.schedule-item.current-slot {
+  background: rgba(var(--primary-color-rgb), 0.1);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 8px rgba(var(--primary-color-rgb), 0.3);
 }
 
 .schedule-slot {
@@ -230,6 +273,7 @@
 .schedule-validator {
   font-size: var(--font-size-sm);
   color: var(--text-color);
+  font-weight: 500;
 }
 
 /* Beacon Pool */
