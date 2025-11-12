@@ -83,14 +83,21 @@ export class BlockCreator {
     const nodeAccount = worldState[nodeAddress];
     const baseNonce = nodeAccount ? nodeAccount.nonce : 0;
     
+    console.log(`[BlockCreator] Creating block transactions for ${nodeAddress.slice(0, 8)}: baseNonce=${baseNonce}, balance=${nodeAccount?.balance || 0}`);
+    
     // IMPORTANT: Add mempool transactions FIRST
     // This ensures peer payments and paint transactions use nonces that come after mempool transactions
     const maxMempoolSlots = SimulatorConfig.MAX_BLOCK_TRANSACTIONS - 1 - Object.keys(validPeers).length; // Reserve slots for coinbase, peer payments, and paint tx
     const mempoolTransactions = mempool.getTransactions(Math.max(0, maxMempoolSlots));
     transactions.push(...mempoolTransactions);
     
+    console.log(`[BlockCreator] Mempool transactions: ${mempoolTransactions.length}, peerCount: ${Object.keys(validPeers).length}`);
+    
     // Calculate starting nonce for peer payments (after mempool transactions)
     const peerPaymentStartNonce = baseNonce + mempoolTransactions.length;
+    console.log(`[BlockCreator] Calculating peer payment start nonce: baseNonce=${baseNonce}, mempoolTransactions.length=${mempoolTransactions.length}, peerPaymentStartNonce=${peerPaymentStartNonce}`);
+    
+    console.log(`[BlockCreator] Peer payment start nonce: ${peerPaymentStartNonce}`);
     
     // Create peer payment transactions (one per peer)
     const peerPayments = await createPeerPaymentTransactions(
