@@ -251,6 +251,13 @@ export class Consensus {
       this.paintingComplete
     );
     
+    console.log(`[Consensus] Created ${transactions.length} transactions for block at slot ${slot}`);
+    console.log(`[Consensus] Transaction types: ${transactions.map(tx => {
+      if (tx.from === SimulatorConfig.REWARDER_NODE_ID) return 'coinbase';
+      if (tx.to === '0xEPM_PAINT_CONTRACT') return 'paint';
+      return 'peer-payment';
+    }).join(', ')}`);
+    
     // Create block header with slot and nonce 0x0 (no PoW)
     const header = {
       transactionHash: calculateTransactionHash(transactions),
