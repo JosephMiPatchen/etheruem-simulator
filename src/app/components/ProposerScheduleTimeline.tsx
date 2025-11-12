@@ -38,12 +38,12 @@ const ProposerScheduleTimeline: React.FC<ProposerScheduleTimelineProps> = ({
     color: getNodeColorCSS(nodeId)
   }));
   
-  // Auto-scroll to bottom on initial mount only (not on every update)
+  // Auto-scroll to bottom when new epochs are added
   useEffect(() => {
     if (gridContainerRef.current) {
       gridContainerRef.current.scrollTop = gridContainerRef.current.scrollHeight;
     }
-  }, []); // Empty dependency array = only run once on mount
+  }, [proposerSchedules.length]); // Scroll when number of epochs changes
   
   return (
     <div className="schedule-timeline-panel">

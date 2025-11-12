@@ -110,10 +110,10 @@
   background: var(--text-secondary);
 }
 
-/* Epochs Grid - Multi-column layout (wider to fit horizontal slots) */
+/* Epochs Grid - Multi-column layout (smaller to fit more per row) */
 .epochs-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 6px;
 }
 
@@ -132,8 +132,9 @@
 }
 
 .epoch-cell.current-epoch {
-  border-color: var(--text-color);
+  border-color: var(--accent-color);
   border-width: 2px;
+  box-shadow: 0 0 0 1px var(--accent-color);
 }
 
 .epoch-cell-header {
@@ -153,8 +154,8 @@
 
 /* Individual Slot Cell */
 .slot-cell {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: var(--border-radius-sm);
   border: 1px solid rgba(0, 0, 0, 0.3);
   transition: all 0.2s;
@@ -195,6 +196,6 @@
   }
   
   .epochs-grid {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
   }
 }
