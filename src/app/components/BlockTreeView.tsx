@@ -60,45 +60,40 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
   // Convert BlockchainTree to react-d3-tree format
   const treeData = useMemo(() => {
     const root = blockchainTree.getRoot();
+    
+    // Handle empty tree
+    if (!root) {
+      return {
+        name: 'Empty Tree',
+        attributes: { canonical: 'no' }
+      };
+    }
+    
     const canonicalHead = blockchainTree.getCanonicalHead();
     
-    // Build set of canonical node hashes
+    // Build set of canonical node hashes (walk from head to genesis)
     const canonicalHashes = new Set<string>();
     let current: BlockTreeNode | null = canonicalHead;
-    while (current && !current.isNullRoot) {
+    while (current) {
       canonicalHashes.add(current.hash);
       current = current.parent;
     }
     
     const convertNode = (node: BlockTreeNode): TreeNodeData => {
       const isCanonical = canonicalHashes.has(node.hash);
+      const height = node.block.header.height;
+      const shortHash = node.hash.slice(-6); // Last 6 characters
+      const isGenesis = height === 0;
       
-      if (node.isNullRoot) {
-        return {
-          name: 'NULL ROOT',
-          attributes: {
-            canonical: 'root'
-          },
-          children: node.children.map(convertNode)
-        };
-      }
-      
-      if (node.block) {
-        const height = node.block.header.height;
-        const shortHash = node.hash.slice(-6); // Last 6 characters
-        
-        return {
-          name: `Block ${height}`,
-          attributes: {
-            height: `${height}`,
-            hash: shortHash,
-            canonical: isCanonical ? 'yes' : 'no'
-          },
-          children: node.children.map(convertNode)
-        };
-      }
-      
-      return { name: 'Unknown' };
+      return {
+        name: isGenesis ? `Genesis (Block 0)` : `Block ${height}`,
+        attributes: {
+          height: `${height}`,
+          hash: shortHash,
+          canonical: isCanonical ? 'yes' : isGenesis ? 'genesis' : 'no'
+        },
+        children: node.children.map(convertNode)
+      };
     };
     
     return convertNode(root);
@@ -133,7 +128,7 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
             <div className="stat-item legend-stat">
               <span className="stat-label">Legend:</span>
               <div className="legend-items">
-                <span className="legend-item"><span className="legend-dot root"></span> Null Root</span>
+                <span className="legend-item"><span className="legend-dot root"></span> Genesis Block</span>
                 <span className="legend-item"><span className="legend-dot canonical"></span> Canonical</span>
                 <span 
                   className="legend-item" 
