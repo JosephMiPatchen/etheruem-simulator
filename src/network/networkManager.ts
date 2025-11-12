@@ -30,20 +30,26 @@ export class NetworkManager {
    * Creates a new node in the network
    */
   createNode(nodeId: string): NodeWorker {
+    // IMPORTANT: Add validator BEFORE creating node
+    // The node's Consensus constructor needs the validator set to compute initial schedule
+    // We'll use a placeholder address that will be updated after node creation
+    const validatorIndex = this.beaconValidators.length;
+    this.beaconValidators.push({
+      nodeAddress: '', // Placeholder, will be updated below
+      stakedEth: 32
+    });
+    
     // Create a new node worker with shared beacon state initialization
     const nodeWorker = new NodeWorker(nodeId, this.beaconGenesisTime, this.beaconValidators);
+    
+    // Update the validator's address now that we have the node
+    this.beaconValidators[validatorIndex].nodeAddress = nodeWorker.getNodeAddress();
     
     // Set up message handling
     nodeWorker.setOnOutgoingMessage(this.routeMessageFromNode.bind(this));
     
     // Add the node to the network
     this.nodesMap.set(nodeId, nodeWorker);
-    
-    // Add this node as a validator (every node is a validator with 32 ETH staked)
-    this.beaconValidators.push({
-      nodeAddress: nodeWorker.getNodeAddress(),
-      stakedEth: 32
-    });
     
     return nodeWorker;
   }
