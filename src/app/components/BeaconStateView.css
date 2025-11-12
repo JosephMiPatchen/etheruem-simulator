@@ -5,7 +5,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(98, 126, 234, 0.15) 0%, rgba(140, 141, 252, 0.15) 100%), rgba(0, 0, 0, 0.85);
+  background: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -15,14 +15,14 @@
 }
 
 .beacon-state-modal {
-  background: linear-gradient(135deg, rgba(30, 30, 40, 0.98) 0%, rgba(25, 25, 35, 0.98) 100%);
+  background: var(--panel-background);
   border-radius: var(--border-radius-lg);
   padding: var(--spacing-lg);
   max-width: 900px;
   max-height: 85vh;
   overflow-y: auto;
-  border: 1px solid rgba(98, 126, 234, 0.3);
-  box-shadow: 0 8px 32px rgba(98, 126, 234, 0.2), 0 0 0 1px rgba(98, 126, 234, 0.1);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-lg);
   width: 90vw;
 }
 
@@ -70,16 +70,16 @@
 
 /* Sections */
 .beacon-section {
-  background: linear-gradient(135deg, rgba(98, 126, 234, 0.08) 0%, rgba(140, 141, 252, 0.08) 100%);
-  border: 1px solid rgba(98, 126, 234, 0.2);
+  background: var(--panel-background);
+  border: 1px solid var(--border-color);
   border-radius: var(--border-radius-md);
   padding: var(--spacing-md);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-sm);
 }
 
 .beacon-section h3 {
   margin: 0 0 var(--spacing-md) 0;
-  color: var(--primary-color);
+  color: var(--text-color);
   font-size: var(--font-size-lg);
 }
 
