@@ -18,6 +18,7 @@ export class Node {
   private mempool: Mempool;
   private beaconState: BeaconState; // Consensus Layer state
   private sync: Sync; // PoS synchronization
+  private consensus: Consensus; // PoS consensus and block proposal
   private peers: PeerInfoMap = {};
   
   // Security-related properties
@@ -54,6 +55,9 @@ export class Node {
     
     // Initialize Sync for LMD-GHOST head synchronization
     this.sync = new Sync(this.blockchain, this.beaconState, this.nodeId);
+    
+    // Initialize Consensus for PoS block proposal and validation
+    this.consensus = new Consensus(this.beaconState, this.blockchain, this, this.mempool);
     
     // Initialize miner with callback for when a block is mined
     // Using .bind(this) ensures the handleMinedBlock method maintains the Node instance context
@@ -294,6 +298,13 @@ export class Node {
    */
   getSync(): Sync {
     return this.sync;
+  }
+  
+  /**
+   * Gets the Consensus instance for PoS block proposal
+   */
+  getConsensus(): Consensus {
+    return this.consensus;
   }
   
   /**
