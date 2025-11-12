@@ -315,6 +315,7 @@ export class Consensus {
    */
   async handleProposedBlock(block: Block, slot: number, fromAddress: string): Promise<boolean> {
     console.log(`[Consensus] Received proposed block for slot ${slot} from ${fromAddress.slice(0, 8)}`);
+    console.log(`[Consensus] Block has randaoReveal: ${!!block.randaoReveal}, value: ${block.randaoReveal?.slice(0, 16)}...`);
     
     // 1. Validate the block
     const latestBlock = this.blockchain.getLatestBlock();
@@ -332,6 +333,8 @@ export class Consensus {
       console.log(`[Consensus] Processing RANDAO reveal for epoch ${currentEpoch} from block`);
       RANDAO.updateRandaoMix(this.beaconState, currentEpoch, block.randaoReveal);
       console.log(`[Consensus] Updated RANDAO mix for epoch ${currentEpoch}`);
+    } else {
+      console.warn(`[Consensus] ⚠️  Block for slot ${slot} has NO randaoReveal field!`);
     }
     
     // 3. Add to blockchain
