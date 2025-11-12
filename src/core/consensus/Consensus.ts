@@ -1,7 +1,7 @@
 import { Block, EthereumTransaction } from '../../types/types';
-import { BeaconState, Validator } from './beaconState';
+import { BeaconState } from './beaconState';
 import { Blockchain } from '../blockchain/blockchain';
-import { Randao } from './Randao';
+import { RANDAO } from './randao';
 import { MessageType } from '../../network/messages';
 import { Mempool } from '../mempool/mempool';
 
@@ -14,7 +14,7 @@ import { Mempool } from '../mempool/mempool';
 export class Consensus {
   private beaconState: BeaconState;
   private blockchain: Blockchain;
-  private randao: Randao;
+  private randao: RANDAO;
   private nodeAddress: string;
   private mempool: Mempool;
   
@@ -34,7 +34,7 @@ export class Consensus {
     this.blockchain = blockchain;
     this.nodeAddress = nodeAddress;
     this.mempool = mempool;
-    this.randao = new Randao(beaconState);
+    this.randao = new RANDAO(beaconState);
   }
   
   /**

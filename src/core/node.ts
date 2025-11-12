@@ -4,6 +4,7 @@ import { Miner } from './mining/miner';
 import { Mempool } from './mempool/mempool';
 import { BeaconState, Validator } from './consensus/beaconState';
 import { Sync } from './consensus/Sync';
+import { Consensus } from './consensus/Consensus';
 import { generatePrivateKey, derivePublicKey, generateAddress } from '../utils/cryptoUtils';
 
 /**
