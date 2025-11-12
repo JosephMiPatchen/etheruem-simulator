@@ -54,6 +54,7 @@ export interface Block {
   header: BlockHeader;
   transactions: EthereumTransaction[];
   attestations: Attestation[]; // Attestations for the previous block (PoS consensus)
+  randaoReveal?: string; // BLS signature revealing proposer's RANDAO contribution for this epoch
   hash?: string;      // Calculated hash of the block header
 }
 

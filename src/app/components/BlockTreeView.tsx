@@ -403,6 +403,12 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
                   <span className="info-label">Ceiling:</span>
                   <span className="info-value hash-value">0x{SimulatorConfig.CEILING}</span>
                 </div>
+                {selectedBlock.randaoReveal && (
+                  <div className="info-row">
+                    <span className="info-label">RANDAO Reveal:</span>
+                    <span className="info-value hash-value">{selectedBlock.randaoReveal.slice(0, 16)}...{selectedBlock.randaoReveal.slice(-8)}</span>
+                  </div>
+                )}
                 <div className="modal-row">
                   <div className="modal-label">Valid Hash:</div>
                   <div className="modal-value">

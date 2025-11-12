@@ -227,6 +227,17 @@ export class Consensus {
       return;
     }
     
+    // Calculate current epoch
+    const currentEpoch = this.getEpoch(slot);
+    
+    // Generate RANDAO reveal for this epoch
+    const randaoReveal = RANDAO.calculateRandaoReveal(currentEpoch, this.node);
+    console.log(`[Consensus] Generated RANDAO reveal for epoch ${currentEpoch}: ${randaoReveal.slice(0, 16)}...`);
+    
+    // Update RANDAO mix with our reveal
+    RANDAO.updateRandaoMix(this.beaconState, currentEpoch, randaoReveal);
+    console.log(`[Consensus] Updated RANDAO mix for epoch ${currentEpoch}`);
+    
     // Create all transactions for the block using BlockCreator
     const transactions = await BlockCreator.createBlockTransactions(
       this.node,
@@ -247,11 +258,12 @@ export class Consensus {
       slot: slot
     };
     
-    // Create block
+    // Create block with RANDAO reveal
     const block: Block = {
       header,
       transactions,
-      attestations: []
+      attestations: [],
+      randaoReveal: randaoReveal // Include RANDAO reveal in block
     };
     
     // Compute block hash (includes slot in hash)
@@ -306,7 +318,15 @@ export class Consensus {
       return;
     }
     
-    // 2. Add to blockchain
+    // 2. Process RANDAO reveal if present
+    if (block.randaoReveal) {
+      const currentEpoch = this.getEpoch(slot);
+      console.log(`[Consensus] Processing RANDAO reveal for epoch ${currentEpoch} from block`);
+      RANDAO.updateRandaoMix(this.beaconState, currentEpoch, block.randaoReveal);
+      console.log(`[Consensus] Updated RANDAO mix for epoch ${currentEpoch}`);
+    }
+    
+    // 3. Add to blockchain
     const added = await this.blockchain.addBlock(block);
     if (!added) {
       console.warn(`[Consensus] Failed to add received block for slot ${slot}`);
