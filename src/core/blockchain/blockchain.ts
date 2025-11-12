@@ -215,6 +215,7 @@ export class Blockchain {
         console.log(`[Blockchain] Reorganization detected: ${oldGhostHead?.slice(0, 8)} → ${newGhostHead?.slice(0, 8)} (rebuilding state)`);
         
         // Rebuild world state and beacon state from the new canonical chain
+        // Clear blockchain built states
         this.worldState = new WorldState();
         this.beaconState.clearProcessedAttestations();
         
@@ -223,6 +224,10 @@ export class Blockchain {
         for (const block of canonicalChain) {
           this.applyBlockToElAndClState(block);
         }
+        
+        // Update attestations and attestedEth after reorganization
+        // This ensures attestedEth values are current with the new canonical chain
+        this.updateLatestAttestationsAndTree();
       }
     }
     
