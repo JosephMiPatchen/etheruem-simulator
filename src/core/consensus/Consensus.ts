@@ -24,6 +24,9 @@ export class Consensus {
   private mempool: Mempool;
   private paintingComplete: boolean = false; // Flag to stop creating paint transactions
   
+  // Consensus status for UI display
+  public consensusStatus: 'idle' | 'validating' | 'proposing' = 'idle';
+  
   // Callback for sending messages to network
   private onSendMessage?: (message: any) => void;
   
@@ -154,9 +157,14 @@ export class Consensus {
     // 4. If we are the proposer, create and broadcast block
     if (proposer === this.nodeAddress) {
       console.log(`[Consensus ${this.nodeAddress.slice(0, 8)}] I am the proposer for slot ${currentSlot}!`);
+      this.consensusStatus = 'proposing';
       await this.proposeBlock(currentSlot);
+      // After proposing, go back to validating (not idle) to avoid flashing
+      this.consensusStatus = 'validating';
+    } else {
+      // 5. If not proposer, we are validating (waiting for block)
+      this.consensusStatus = 'validating';
     }
-    // 5. If not proposer, do nothing (wait for block from proposer)
   }
   
   /**

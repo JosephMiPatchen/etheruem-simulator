@@ -49,6 +49,35 @@
   background-color: var(--error-color);
 }
 
+/* Network Toggle Button */
+.network-toggle-button {
+  color: white;
+  border: none;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  font-size: var(--font-size-base);
+  border-radius: var(--border-radius-md);
+  font-weight: bold;
+  cursor: pointer;
+  transition: all var(--transition-speed) var(--transition-timing);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.network-toggle-button:hover {
+  filter: brightness(90%);
+  box-shadow: var(--shadow-hover);
+}
+
+.network-toggle-button.running {
+  background-color: var(--success-color);
+}
+
+.network-toggle-button.stopped {
+  background-color: var(--error-color);
+}
+
 .nodes-container {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

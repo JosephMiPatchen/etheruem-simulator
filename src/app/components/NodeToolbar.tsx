@@ -17,6 +17,7 @@ const QuestionIcon = () => (
 
 interface NodeToolbarProps {
   isMining: boolean;
+  consensusStatus?: 'idle' | 'validating' | 'proposing';
   totalEth: number;
   onUtxoClick: () => void;
   onBeaconStateClick: () => void;
@@ -25,7 +26,8 @@ interface NodeToolbarProps {
 }
 
 const NodeToolbar: React.FC<NodeToolbarProps> = ({ 
-  isMining, 
+  isMining,
+  consensusStatus = 'idle',
   totalEth, 
   onUtxoClick,
   onBeaconStateClick,
@@ -34,13 +36,22 @@ const NodeToolbar: React.FC<NodeToolbarProps> = ({
 }) => {
   const [showTooltip, setShowTooltip] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+  
+  // Get status display text and class
+  const getStatusDisplay = () => {
+    if (consensusStatus === 'proposing') return { text: 'Proposing', class: 'proposing' };
+    if (consensusStatus === 'validating') return { text: 'Validating', class: 'validating' };
+    return { text: 'Idle', class: 'idle' };
+  };
+  
+  const status = getStatusDisplay();
 
   return (
     <>
       <div className="node-toolbar">
-        <div className={`toolbar-item node-status ${isMining ? 'mining' : 'idle'}`}>
+        <div className={`toolbar-item node-status ${status.class}`}>
           <LuPickaxe size={16} />
-          <span>{isMining ? 'Mining' : 'Idle'}</span>
+          <span>{status.text}</span>
         </div>
         
         <div className="divider"><RxDividerVertical size={20} color="var(--border-color)" /></div>

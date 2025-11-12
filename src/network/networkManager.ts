@@ -265,6 +265,17 @@ export class NetworkManager {
   }
   
   /**
+   * Sets consensus status for all nodes (used when stopping/starting network)
+   * @param status Status to set for all nodes
+   */
+  setAllConsensusStatus(status: 'idle' | 'validating' | 'proposing'): void {
+    this.nodesMap.forEach(nodeWorker => {
+      const consensus = nodeWorker.node.getConsensus();
+      consensus.consensusStatus = status;
+    });
+  }
+  
+  /**
    * Generates a random network delay to simulate network latency
    */
   private getRandomNetworkDelay(): number {

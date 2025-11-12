@@ -12,6 +12,9 @@ const SimulatorContentInner: React.FC = () => {
   // State for node states
   const [nodeStates, setNodeStates] = useState<Record<string, NodeState>>({});
   
+  // State for network running status
+  const [isNetworkRunning, setIsNetworkRunning] = useState(true);
+  
   // Get context functions
   const { detectForks, setAddressToNodeId } = useSimulatorContext();
   
@@ -101,10 +104,40 @@ const SimulatorContentInner: React.FC = () => {
     }
   };
   
+  // Toggle network running state
+  const toggleNetwork = () => {
+    if (!networkManagerRef.current) return;
+    
+    if (isNetworkRunning) {
+      // Stop the network
+      if (slotIntervalRef.current) {
+        clearInterval(slotIntervalRef.current);
+        slotIntervalRef.current = null;
+      }
+      // Set all nodes to idle
+      networkManagerRef.current.setAllConsensusStatus('idle');
+      setIsNetworkRunning(false);
+      console.log('[Network] Stopped');
+    } else {
+      // Start the network
+      slotIntervalRef.current = setInterval(() => {
+        networkManagerRef.current?.processAllSlots();
+      }, SimulatorConfig.SECONDS_PER_SLOT * 1000);
+      setIsNetworkRunning(true);
+      console.log('[Network] Started');
+    }
+  };
+  
   return (
     <div className="app-container">
       <header className="app-header">
         <h1>Ethereum Simulator</h1>
+        <button 
+          className={`network-toggle-button ${isNetworkRunning ? 'running' : 'stopped'}`}
+          onClick={toggleNetwork}
+        >
+          {isNetworkRunning ? '⏸ Stop Network' : '▶ Start Network'}
+        </button>
       </header>
       
       <main className="nodes-container">

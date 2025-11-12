@@ -53,6 +53,7 @@ const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [], onAdd
           </div>
           <NodeToolbar 
             isMining={nodeState.isMining}
+            consensusStatus={nodeState.consensusStatus}
             totalEth={totalEth}
             onUtxoClick={() => setShowUtxoModal(true)}
             onBeaconStateClick={() => setShowBeaconStateModal(true)}

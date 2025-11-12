@@ -97,22 +97,33 @@
   width: var(--mining-status-width);
 }
 
-.node-status.mining {
-  color: var(--success-color);
-  animation: pulse 1.5s infinite;
-}
-
-.node-status.mining svg {
-  stroke: var(--success-color);
-  animation: pulse 1.5s infinite;
-}
-
+/* Idle status - gray */
 .node-status.idle {
   color: var(--text-secondary);
 }
 
 .node-status.idle svg {
   stroke: var(--text-secondary);
+}
+
+/* Validating status - green */
+.node-status.validating {
+  color: var(--success-color);
+}
+
+.node-status.validating svg {
+  stroke: var(--success-color);
+}
+
+/* Proposing status - orange */
+.node-status.proposing {
+  color: var(--warning-color);
+  animation: pulse 1.5s infinite;
+}
+
+.node-status.proposing svg {
+  stroke: var(--warning-color);
+  animation: pulse 1.5s infinite;
 }
 
 /* UTXO Button */

@@ -105,6 +105,7 @@ export class Node {
       receipts: this.blockchain.getReceipts(),
       mempool: this.mempool.getAllTransactions(),
       isMining: this.miner.getIsMining(),
+      consensusStatus: this.consensus.consensusStatus,
       peerIds: Object.keys(this.peers),
       publicKey: this.publicKey,
       address: this.address
