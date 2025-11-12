@@ -4,6 +4,7 @@ import { Block } from '../../types/types';
 import { useSimulatorContext } from '../contexts/SimulatorContext';
 import { getNodeColorCSS, getNodeColorEmoji } from '../../utils/nodeColorUtils';
 import AttestationCircle from './AttestationCircle';
+import ProposerScheduleTimeline from './ProposerScheduleTimeline';
 import './BeaconStateView.css';
 
 interface BeaconStateViewProps {
@@ -22,10 +23,6 @@ const BeaconStateView: React.FC<BeaconStateViewProps> = ({ beaconState, blockcha
   const currentEpoch = beaconState.getCurrentEpoch();
   const validators = beaconState.validators;
   const randaoMixes = Array.from(beaconState.randaoMixes.entries());
-  
-  // Get all proposer schedules (epoch -> (slot -> validator))
-  const proposerSchedules = Array.from(beaconState.proposerSchedules.entries())
-    .sort(([epochA], [epochB]) => epochA - epochB); // Sort by epoch
 
   return (
     <div className="beacon-state-modal-overlay" onClick={onClose}>
@@ -117,56 +114,11 @@ const BeaconStateView: React.FC<BeaconStateViewProps> = ({ beaconState, blockcha
             </div>
           </div>
 
-          {/* Proposer Schedules (All Epochs) */}
-          <div className="beacon-section">
-            <h3>Proposer Schedules ({proposerSchedules.length} {proposerSchedules.length === 1 ? 'Epoch' : 'Epochs'})</h3>
-            <div className="schedule-list">
-              {proposerSchedules.length === 0 ? (
-                <p className="empty-message">No proposer schedules computed yet</p>
-              ) : (
-                proposerSchedules.map(([epoch, schedule]) => {
-                  const slots = Array.from(schedule.entries()).sort(([slotA], [slotB]) => slotA - slotB);
-                  const isCurrentEpoch = epoch === currentEpoch;
-                  
-                  return (
-                    <div key={epoch} className="epoch-schedule-container">
-                      <h4 className={`epoch-schedule-header ${isCurrentEpoch ? 'current-epoch' : ''}`}>
-                        Epoch {epoch} {isCurrentEpoch && '(Current)'}
-                        <span className="epoch-schedule-info">
-                          {slots.length} slots (Slot {slots[0]?.[0]} - {slots[slots.length - 1]?.[0]})
-                        </span>
-                      </h4>
-                      <div className="schedule-grid">
-                        {slots.map(([slot, validatorAddress]) => {
-                          const nodeId = addressToNodeId[validatorAddress] || 'Unknown';
-                          const nodeColor = getNodeColorCSS(nodeId);
-                          const nodeEmoji = getNodeColorEmoji(nodeId);
-                          const isPastSlot = slot < currentSlot;
-                          const isCurrentSlot = slot === currentSlot;
-                          
-                          return (
-                            <div 
-                              key={slot} 
-                              className={`schedule-item ${isPastSlot ? 'past-slot' : ''} ${isCurrentSlot ? 'current-slot' : ''}`}
-                              style={{ borderLeftColor: nodeColor, borderLeftWidth: '3px' }}
-                            >
-                              <span className="schedule-slot">
-                                Slot {slot}:
-                                {isCurrentSlot && ' ⏰'}
-                              </span>
-                              <span className="schedule-validator" style={{ color: nodeColor }}>
-                                {nodeId} {nodeEmoji}
-                              </span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
+          {/* Proposer Schedule Timeline - Compact Visualization */}
+          <ProposerScheduleTimeline 
+            beaconState={beaconState}
+            addressToNodeId={addressToNodeId}
+          />
 
           {/* Latest Attestations (LMD GHOST Fork Choice) */}
           <div className="beacon-section">

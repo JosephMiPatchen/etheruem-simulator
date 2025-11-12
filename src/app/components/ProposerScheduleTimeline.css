@@ -1,0 +1,177 @@
+/* Proposer Schedule Timeline - Compact visualization */
+.schedule-timeline {
+  background: linear-gradient(135deg, rgba(98, 126, 234, 0.08) 0%, rgba(140, 141, 252, 0.08) 100%);
+  border: 1px solid rgba(98, 126, 234, 0.2);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-md);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid rgba(98, 126, 234, 0.2);
+}
+
+.timeline-header h3 {
+  margin: 0;
+  color: var(--primary-color);
+  font-size: var(--font-size-lg);
+}
+
+.timeline-info {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+}
+
+.current-slot-indicator {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.current-epoch-indicator {
+  font-size: var(--font-size-sm);
+  color: var(--primary-color);
+  font-weight: 700;
+  padding: 2px 8px;
+  background: rgba(98, 126, 234, 0.15);
+  border-radius: var(--border-radius-sm);
+}
+
+/* Timeline Epochs Container */
+.timeline-epochs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+/* Individual Epoch Row */
+.timeline-epoch {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xs);
+  background: linear-gradient(135deg, rgba(98, 126, 234, 0.04) 0%, rgba(140, 141, 252, 0.04) 100%);
+  border-radius: var(--border-radius-sm);
+  border: 1px solid rgba(98, 126, 234, 0.1);
+  transition: all 0.2s;
+}
+
+.timeline-epoch:hover {
+  background: linear-gradient(135deg, rgba(98, 126, 234, 0.08) 0%, rgba(140, 141, 252, 0.08) 100%);
+  border-color: rgba(98, 126, 234, 0.2);
+}
+
+.timeline-epoch.current-epoch {
+  border-color: var(--primary-color);
+  border-width: 2px;
+  background: linear-gradient(135deg, rgba(98, 126, 234, 0.12) 0%, rgba(140, 141, 252, 0.12) 100%);
+}
+
+/* Epoch Label */
+.epoch-label {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 60px;
+  gap: 2px;
+}
+
+.epoch-number {
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.epoch-range {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  font-family: var(--font-family-mono);
+}
+
+/* Slots Container */
+.epoch-slots {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+}
+
+/* Individual Slot Box */
+.slot-box {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--border-radius-sm);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  transition: all 0.2s;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.slot-box:hover {
+  transform: scale(1.1);
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  z-index: 1;
+}
+
+.slot-box.past {
+  filter: grayscale(0.3);
+}
+
+.slot-box.current {
+  border: 2px solid var(--text-color);
+  box-shadow: 0 0 0 2px rgba(98, 126, 234, 0.3);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Current Slot Marker */
+.current-marker {
+  color: var(--text-color);
+  font-size: 14px;
+  font-weight: bold;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Pulse Animation for Current Slot */
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 2px rgba(98, 126, 234, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(98, 126, 234, 0.5);
+  }
+}
+
+/* Empty State */
+.timeline-empty {
+  text-align: center;
+  padding: var(--spacing-lg);
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .timeline-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+  
+  .slot-box {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .epoch-label {
+    min-width: 50px;
+  }
+}

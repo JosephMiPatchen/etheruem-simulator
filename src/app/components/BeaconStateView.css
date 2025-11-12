@@ -81,7 +81,6 @@
   margin: 0 0 var(--spacing-md) 0;
   color: var(--primary-color);
   font-size: var(--font-size-lg);
-  text-shadow: 0 0 10px rgba(98, 126, 234, 0.3);
 }
 
 /* Info Grid */
