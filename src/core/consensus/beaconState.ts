@@ -75,10 +75,9 @@ export class BeaconState {
     this.processedAttestations = new Set();
     this.lmdGhost = new LmdGhost();
     
-    // Initialize RANDAO mix for epoch -1 with all zeros (32 bytes)
+    // Initialize RANDAO mix for epoch -1 (genesis)
     // This allows epoch 0 to compute its proposer schedule
-    // Must be even-length hex string for hexToBytes conversion
-    this.randaoMixes.set(-1, '0x0000000000000000000000000000000000000000000000000000000000000000');
+    this.randaoMixes.set(-1, SimulatorConfig.GENESIS_RANDAO_MIX);
   }
   
   /**
