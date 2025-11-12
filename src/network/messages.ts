@@ -2,13 +2,14 @@ import { Block, Attestation } from '../types/types';
 
 /**
  * Types of messages that can be sent between nodes
- * PoS uses attestations and LMD-GHOST head synchronization
+ * PoS uses attestations, LMD-GHOST head synchronization, and proposer block broadcasts
  */
 export enum MessageType {
   ATTESTATION = 'ATTESTATION',
   LMD_GHOST_BROADCAST = 'LMD_GHOST_BROADCAST',
   CHAIN_REQUEST = 'CHAIN_REQUEST',
   CHAIN_RESPONSE = 'CHAIN_RESPONSE',
+  PROPOSER_BLOCK_BROADCAST = 'PROPOSER_BLOCK_BROADCAST',
 }
 
 /**
@@ -59,10 +60,21 @@ export interface ChainResponseMessage extends NetworkMessage {
 }
 
 /**
+ * Message for broadcasting a proposed block from the slot proposer
+ * Sent to all validators (not all peers) for attestation
+ */
+export interface ProposerBlockBroadcastMessage extends NetworkMessage {
+  type: MessageType.PROPOSER_BLOCK_BROADCAST;
+  block: Block; // The proposed block with slot number
+  slot: number; // The slot this block was proposed in
+}
+
+/**
  * Union type for all network messages (PoS only)
  */
 export type Message = 
   | AttestationMessage
   | LmdGhostBroadcastMessage
   | ChainRequestMessage
-  | ChainResponseMessage;
+  | ChainResponseMessage
+  | ProposerBlockBroadcastMessage;

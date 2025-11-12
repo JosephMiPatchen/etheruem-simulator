@@ -25,6 +25,13 @@ export class BeaconState {
   // Current epoch schedule - maps slot to validator node ID
   public currentEpochSchedule: Map<number, string>; // slot -> nodeId
   
+  // Proposer schedules - maps epoch to (slot -> validator address)
+  // For debugging: shows which validator proposes at each slot in each epoch
+  public proposerSchedules: Map<number, Map<number, string>>; // epoch -> (slot -> validator address)
+  
+  // Current proposer for the current slot
+  public currentProposer: string | null;
+  
   // List of validators with their staked ETH
   public validators: Validator[];
   
@@ -61,6 +68,8 @@ export class BeaconState {
     this.validators = validators;
     this.randaoMixes = new Map();
     this.currentEpochSchedule = new Map();
+    this.proposerSchedules = new Map();
+    this.currentProposer = null;
     this.beaconPool = [];
     this.processedAttestations = new Set();
     this.lmdGhost = new LmdGhost();

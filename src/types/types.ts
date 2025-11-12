@@ -45,8 +45,9 @@ export interface BlockHeader { // note: we dont have a field for headers hash, w
   timestamp: number;        // Local machine time
   previousHeaderHash: string; // Previous block's header hash
   ceiling: number;          // Target threshold value
-  nonce: number;            // Value miners adjust to find valid hash
+  nonce: number;            // Value miners adjust to find valid hash (0x0 for PoS)
   height: number;           // Block height in the chain
+  slot: number;             // PoS slot number when block was proposed
 }
 
 export interface Block {
