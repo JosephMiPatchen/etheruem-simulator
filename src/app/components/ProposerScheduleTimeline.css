@@ -110,10 +110,10 @@
   background: var(--text-secondary);
 }
 
-/* Epochs Grid - Multi-column layout (40% smaller: 85px instead of 140px) */
+/* Epochs Grid - Multi-column layout (wider to fit horizontal slots) */
 .epochs-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 6px;
 }
 
@@ -144,21 +144,22 @@
   text-align: center;
 }
 
-/* Slots Grid within each epoch */
+/* Slots in single horizontal row (not grid) */
 .epoch-slots-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
   gap: 4px;
+  justify-content: center;
 }
 
 /* Individual Slot Cell */
 .slot-cell {
-  width: 100%;
-  aspect-ratio: 1;
+  width: 32px;
+  height: 32px;
   border-radius: var(--border-radius-sm);
   border: 1px solid rgba(0, 0, 0, 0.3);
   transition: all 0.2s;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .slot-cell:hover {
@@ -194,6 +195,6 @@
   }
   
   .epochs-grid {
-    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   }
 }
