@@ -44,9 +44,6 @@ export class BeaconState {
   // Latest attestations from each validator (for LMD GHOST fork choice)
   public latestAttestations: Map<string, Attestation>;
   
-  // GHOST-HEAD: The canonical chain head according to LMD-GHOST fork choice
-  public ghostHead: string | null;
-  
   // Reference to blockchain for triggering tree updates (set after construction)
   private blockchain?: any;
   
@@ -60,7 +57,6 @@ export class BeaconState {
     
     // Initialize LMD-GHOST fork choice state
     this.latestAttestations = new Map();
-    this.ghostHead = null;
     
     // Initialize RANDAO mix for epoch -1 (genesis)
     // This allows epoch 0 to compute its proposer schedule

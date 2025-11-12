@@ -16,9 +16,9 @@ export class LmdGhost {
    * Set the initial GHOST-HEAD to the genesis block
    * Called once at startup after genesis block is created
    */
-  public static setInitialGenesisHead(beaconState: any, genesisHash: string): void {
-    if (beaconState.ghostHead === null) {
-      beaconState.ghostHead = genesisHash;
+  public static setInitialGenesisHead(tree: BlockchainTree, genesisHash: string): void {
+    if (tree.getGhostHead() === null) {
+      tree.setGhostHead(genesisHash);
       console.log(`[LmdGhost] Initialized ghostHead to genesis block: ${genesisHash.slice(0, 16)}...`);
     }
   }
@@ -130,7 +130,7 @@ export class LmdGhost {
    * Consolidates all logic that needs to happen when attestations change:
    * 1. Update latest attestations from all sources
    * 2. Decorate tree with attestedEth
-   * 3. Compute and update GHOST-HEAD
+   * 3. Compute and update GHOST-HEAD (stored in tree)
    */
   public static onAttestationSetChanged(
     beaconState: any,
@@ -145,8 +145,9 @@ export class LmdGhost {
     // 2. Decorate tree with attestedEth
     LmdGhost.decorateTree(beaconState, tree);
     
-    // 3. Compute and update GHOST-HEAD
-    beaconState.ghostHead = LmdGhost.computeGhostHead(tree);
+    // 3. Compute and update GHOST-HEAD (store in tree)
+    const ghostHead = LmdGhost.computeGhostHead(tree);
+    tree.setGhostHead(ghostHead);
   }
   
   /**

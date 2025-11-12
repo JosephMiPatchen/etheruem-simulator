@@ -32,16 +32,19 @@ export interface BlockTreeNode {
 /**
  * Blockchain Tree class with Genesis Root
  * Maintains a tree of all blocks starting from a shared genesis block
+ * Stores the LMD-GHOST HEAD for fork choice
  */
 export class BlockchainTree {
   private root: BlockTreeNode | null;              // Genesis block (root of tree)
   private nodesByHash: Map<string, BlockTreeNode>; // Fast lookup by hash
   private leaves: Set<BlockTreeNode>;              // All leaf nodes (chain tips)
+  private ghostHead: string | null;                // LMD-GHOST HEAD (canonical chain tip)
   
   constructor() {
     this.root = null;  // Will be set when genesis block is added
     this.nodesByHash = new Map();
     this.leaves = new Set();
+    this.ghostHead = null;  // Will be set to genesis hash after genesis is added
   }
   
   /**
@@ -254,5 +257,20 @@ export class BlockchainTree {
     
     traverse(this.root);
     return blocks;
+  }
+  
+  /**
+   * Get the LMD-GHOST HEAD (canonical chain tip)
+   */
+  getGhostHead(): string | null {
+    return this.ghostHead;
+  }
+  
+  /**
+   * Set the LMD-GHOST HEAD (canonical chain tip)
+   * Called by LMD-GHOST fork choice algorithm
+   */
+  setGhostHead(ghostHead: string | null): void {
+    this.ghostHead = ghostHead;
   }
 }

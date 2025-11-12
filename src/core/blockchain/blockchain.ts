@@ -32,11 +32,7 @@ export class Blockchain {
     
     // Apply genesis block to world state
     this.applyBlockToState(genesisBlock);
-    
-    // Initialize LMD-GHOST with genesis as GHOST-HEAD
-    if (this.beaconState) {
-      this.updateLatestAttestationsAndTree();
-    }
+  
     this.worldState = WorldState.fromBlocks([genesisBlock]);
   }
   
@@ -54,7 +50,7 @@ export class Blockchain {
       // Initialize ghostHead to genesis block (all nodes have same genesis)
       const genesisBlock = this.blockTree.getAllBlocks().find(b => b.header.height === 0);
       if (genesisBlock && genesisBlock.hash) {
-        LmdGhost.setInitialGenesisHead(beaconState, genesisBlock.hash);
+        LmdGhost.setInitialGenesisHead(this.blockTree, genesisBlock.hash);
       }
     }
   }
@@ -62,9 +58,16 @@ export class Blockchain {
   /**
    * Gets all blocks in the canonical blockchain (computed from GHOST-HEAD)
    */
-  getBlocks(): Block[] {
-    const ghostHead = this.beaconState?.ghostHead;
+  getCanonicalChain(): Block[] {
+    const ghostHead = this.blockTree.getGhostHead();
     return this.blockTree.getCanonicalChain(ghostHead);
+  }
+  
+  /**
+   * Gets all blocks in the canonical blockchain (alias for getCanonicalChain)
+   */
+  getBlocks(): Block[] {
+    return this.getCanonicalChain();
   }
   
   /**
@@ -100,9 +103,9 @@ export class Blockchain {
    * ghostHead is initialized to genesis block and updated by LMD-GHOST fork choice
    */
   getLatestBlock(): Block | null {
-    const ghostHead = this.beaconState?.ghostHead;
+    const ghostHead = this.blockTree.getGhostHead();
     const head = this.blockTree.getCanonicalHead(ghostHead);
-    return head.block;
+    return head ? head.block : null;
   }
   
   /**
@@ -132,13 +135,13 @@ export class Blockchain {
     }
     
     // Check if this block extends the current canonical chain (GHOST-HEAD)
-    const ghostHead = this.beaconState?.ghostHead;
+    const ghostHead = this.blockTree.getGhostHead();
     const currentHead = this.blockTree.getCanonicalHead(ghostHead);
-    const extendsCanonical = block.header.previousHeaderHash === (currentHead.block?.hash || '');
+    const extendsCanonical = block.header.previousHeaderHash === (currentHead!.block?.hash || '');
     
     if (extendsCanonical) {
       // Validate the block against the current world state
-      const previousHash = currentHead.block?.hash || '';
+      const previousHash = currentHead!.block?.hash || '';
       const isValid = await validateBlock(block, this.worldState, previousHash);
       
       if (!isValid) {
@@ -174,7 +177,7 @@ export class Blockchain {
     }
     
     // Check if the new chain is longer than current canonical chain (GHOST-HEAD)
-    const ghostHead = this.beaconState?.ghostHead;
+    const ghostHead = this.blockTree.getGhostHead();
     const currentCanonicalChain = this.blockTree.getCanonicalChain(ghostHead);
     if (newBlocks.length <= currentCanonicalChain.length) {
       return false;
@@ -299,7 +302,7 @@ export class Blockchain {
    * Gets a block by its height (from canonical chain determined by GHOST-HEAD)
    */
   getBlockByHeight(height: number): Block | undefined {
-    const ghostHead = this.beaconState?.ghostHead;
+    const ghostHead = this.blockTree.getGhostHead();
     const canonicalChain = this.blockTree.getCanonicalChain(ghostHead);
     return height >= 0 && height < canonicalChain.length ? canonicalChain[height] : undefined;
   }
