@@ -165,9 +165,10 @@ export class Blockchain {
   }
   
   /**
-   * Replaces the current chain with a new one if it's valid and longer
-   * Adds all new blocks to tree and updates HEAD pointer
-   * Returns true if the chain was replaced, false otherwise
+   * Replaces the current chain with a new one if it's valid
+   * Used during initial sync when receiving a full chain from peers
+   * Adds all new blocks to tree and lets LMD-GHOST determine canonical chain
+   * Returns true if the chain was accepted, false otherwise
    */
   async replaceChain(newBlocks: Block[]): Promise<boolean> {
     // Validate the new chain
@@ -176,14 +177,8 @@ export class Blockchain {
       return false;
     }
     
-    // Check if the new chain is longer than current canonical chain (GHOST-HEAD)
-    const ghostHead = this.blockTree.getGhostHead();
-    const currentCanonicalChain = this.blockTree.getCanonicalChain(ghostHead);
-    if (newBlocks.length <= currentCanonicalChain.length) {
-      return false;
-    }
-    
     // Add all blocks from new chain to tree (preserves forks)
+    // LMD-GHOST will determine which chain is canonical based on attestations
     for (const block of newBlocks) {
       const existingNode = this.blockTree.getNode(block.hash || '');
       if (!existingNode) {

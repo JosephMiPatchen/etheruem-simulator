@@ -178,7 +178,7 @@ export class Node {
         this.onChainUpdated();
       }
     } else {
-      console.error(`Node ${this.nodeId}: Rejected chain of length ${blocks.length} (invalid or not longer than current chain)`);
+      console.error(`Node ${this.nodeId}: Rejected chain of length ${blocks.length} (invalid chain)`);
     }
   }
   
