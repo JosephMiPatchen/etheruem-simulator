@@ -25,8 +25,8 @@ export class Blockchain {
     // Initialize tree with null root
     this.blockTree = new BlockchainTree();
     
-    // Create and add this node's genesis block
-    const genesisBlock = createGenesisBlock(this.nodeId, this.minerAddress);
+    // Create and add shared genesis block (same for all nodes)
+    const genesisBlock = createGenesisBlock();
     this.blockTree.addBlock(genesisBlock);
     
     // Apply genesis block to world state
