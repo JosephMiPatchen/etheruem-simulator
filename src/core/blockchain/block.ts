@@ -63,6 +63,9 @@ export const createGenesisBlock = (): Block => {
   
   const block = createBlockTemplate(null, transactions);
   
+  // Override timestamp to 0 for deterministic genesis hash
+  block.header.timestamp = 0;
+  
   // Add slot 0 to genesis block header
   block.header.slot = 0;
   
