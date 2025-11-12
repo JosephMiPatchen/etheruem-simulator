@@ -337,16 +337,6 @@ export class Blockchain {
   }
   
   /**
-   * Full rebuild of latest attestations and attestedEth
-   * Delegates to BeaconState (consensus layer logic)
-   */
-  rebuildLatestAttestationsAndTree(): void {
-    if (this.beaconState) {
-      this.beaconState.rebuildLatestAttestationsAndTree();
-    }
-  }
-  
-  /**
    * Gets a block by its hash (searches tree)
    */
   getBlockByHash(hash: string): Block | undefined {

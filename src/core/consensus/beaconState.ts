@@ -269,86 +269,20 @@ export class BeaconState {
   }
   
   /**
-   * Clear all latest attestations (used during chain replacement)
-   */
-  clearLatestAttestations(): void {
-    LmdGhost.clearAttestations(this);
-  }
-  
-  /**
-   * Get all attestations from beacon pool + blockchain
-   * This is the union set used for computing latest attestations
-   */
-  getAllAttestations(blockchain: any[]): Attestation[] {
-    const allAttestations: Attestation[] = [];
-    
-    // Add attestations from beacon pool
-    allAttestations.push(...this.beaconPool);
-    
-    // Add attestations from all blocks in blockchain
-    for (const block of blockchain) {
-      if (block.attestations && block.attestations.length > 0) {
-        allAttestations.push(...block.attestations);
-      }
-    }
-    
-    return allAttestations;
-  }
-  
-  /**
-   * Clear all attestedEth values in the tree (set to 0)
-   * Used during chain replacement before rebuilding
-   */
-  private clearAllAttestedEth(): void {
-    if (!this.blockchain) return;
-    
-    const blockTree = this.blockchain.getTree();
-    const allNodes = blockTree.getAllNodes();
-    for (const node of allNodes) {
-      node.metadata.attestedEth = 0;
-    }
-  }
-  
-  /**
-   * Update latest attestations and tree decoration
-   * This is the main entry point for updating LMD GHOST state
-   * Called when new attestations arrive or blocks are added
+   * Update tree decoration with current latest attestations
+   * Called when new attestations arrive
    * 
-   * Consolidates all attestation set change logic:
-   * - Updates latest attestations
-   * - Decorates tree with attestedEth
+   * Simplified: Only uses current latestAttestations map (never scans blocks)
+   * - Decorates tree with attestedEth based on current latest attestations
    * - Computes GHOST-HEAD
    */
   updateLatestAttestationsAndTree(): void {
     if (!this.blockchain) return;
     
-    // Get all attestations (beacon pool + blockchain)
-    const allBlocks = this.blockchain.getTree().getAllBlocks();
-    const allAttestations = this.getAllAttestations(allBlocks);
+    // Get all attestations from current latest attestations map
+    const allAttestations = Array.from(this.latestAttestations.values());
     
-    // Use LMD-GHOST to handle all attestation set changes
-    const tree = this.blockchain.getTree();
-    LmdGhost.onAttestationSetChanged(this, tree, allAttestations);
-  }
-  
-  /**
-   * Full rebuild of latest attestations and attestedEth
-   * Used during chain replacement - clears everything and rebuilds from scratch
-   */
-  rebuildLatestAttestationsAndTree(): void {
-    if (!this.blockchain) return;
-    
-    // Clear all attestedEth values
-    this.clearAllAttestedEth();
-    
-    // Clear latest attestations
-    this.clearLatestAttestations();
-    
-    // Rebuild from beacon pool + blockchain
-    const allBlocks = this.blockchain.getTree().getAllBlocks();
-    const allAttestations = this.getAllAttestations(allBlocks);
-    
-    // Use LMD-GHOST to handle all attestation set changes
+    // Use LMD-GHOST to decorate tree and compute GHOST-HEAD
     const tree = this.blockchain.getTree();
     LmdGhost.onAttestationSetChanged(this, tree, allAttestations);
   }
