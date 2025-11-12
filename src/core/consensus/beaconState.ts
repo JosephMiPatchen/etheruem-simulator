@@ -40,20 +40,12 @@ export class BeaconState {
   // Tracks attestations that have been included in blocks to prevent duplicates
   public processedAttestations: Set<string>;
   
-  // LMD-GHOST fork choice handler
-  private lmdGhost: LmdGhost;
-  
+  // LMD-GHOST fork choice state
   // Latest attestations from each validator (for LMD GHOST fork choice)
-  // Exposed as getter for backward compatibility with UI
-  public get latestAttestations(): Map<string, Attestation> {
-    return this.lmdGhost.getLatestAttestations();
-  }
+  public latestAttestations: Map<string, Attestation>;
   
-  // GHOST-HEAD: Canonical chain head according to LMD-GHOST fork choice
-  // Exposed as getter
-  public get ghostHead(): string | null {
-    return this.lmdGhost.getGhostHead();
-  }
+  // GHOST-HEAD: The canonical chain head according to LMD-GHOST fork choice
+  public ghostHead: string | null;
   
   // Reference to blockchain for triggering tree updates (set after construction)
   private blockchain?: any;
@@ -65,7 +57,10 @@ export class BeaconState {
     this.proposerSchedules = new Map();
     this.beaconPool = [];
     this.processedAttestations = new Set();
-    this.lmdGhost = new LmdGhost();
+    
+    // Initialize LMD-GHOST fork choice state
+    this.latestAttestations = new Map();
+    this.ghostHead = null;
     
     // Initialize RANDAO mix for epoch -1 (genesis)
     // This allows epoch 0 to compute its proposer schedule
