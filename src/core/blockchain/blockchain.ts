@@ -3,7 +3,7 @@ import { BlockCreator } from './blockCreator';
 import { WorldState } from './worldState';
 import { validateBlock, calculateBlockHeaderHash } from '../validation/blockValidator';
 import { validateChain } from '../validation/chainValidator';
-import { BlockchainTree } from './blockchainTree';
+import { BlockchainTree, BlockTreeNode } from './blockchainTree';
 import { LmdGhost } from '../consensus/LmdGhost';
 
 /**
@@ -168,7 +168,11 @@ export class Blockchain {
    * Adds a chain of blocks to the blockchain
    * Used during sync when receiving multiple blocks from peers
    * Delegates to addBlock for each block to ensure proper validation and state updates
-   * If GHOST-HEAD changes to a different fork, rebuilds world state from new canonical chain
+   * 
+   * State Update Rules:
+   * - Forward Progress: New GHOST-HEAD is descendant of old → state already updated incrementally by addBlock
+   * - Reorganization: New GHOST-HEAD is on different fork → rebuild entire state from scratch
+   * 
    * Returns true if all blocks were added successfully, false otherwise
    */
   async addChain(newBlocks: Block[]): Promise<boolean> {
@@ -197,19 +201,28 @@ export class Blockchain {
     // Check if GHOST-HEAD changed after adding all blocks
     const newGhostHead = this.blockTree.getGhostHead();
     
-    // If GHOST-HEAD changed, we need to rebuild world state from the new canonical chain
-    // This handles the case where we added fork blocks that became the new canonical chain
     if (oldGhostHead !== newGhostHead) {
-      console.log(`[Blockchain] GHOST-HEAD changed during addChain: ${oldGhostHead?.slice(0, 8) || 'null'} → ${newGhostHead?.slice(0, 8) || 'null'} - rebuilding state`);
+      // GHOST-HEAD changed - determine if forward progress or reorganization
+      const isForward = this.isForwardProgress(oldGhostHead, newGhostHead);
       
-      // Rebuild world state and beacon state from the new canonical chain
-      this.worldState = new WorldState();
-      this.beaconState.clearProcessedAttestations();
-      
-      // Apply each block in the new canonical chain to rebuild state
-      const canonicalChain = this.blockTree.getCanonicalChain(newGhostHead);
-      for (const block of canonicalChain) {
-        this.applyBlockToElAndClState(block);
+      if (isForward) {
+        // ✅ Forward Progress: New GHOST-HEAD is descendant of old GHOST-HEAD
+        // State was already updated incrementally by addBlock() calls above
+        console.log(`[Blockchain] Forward progress: ${oldGhostHead?.slice(0, 8)} → ${newGhostHead?.slice(0, 8)} (state already updated)`);
+      } else {
+        // ❌ Reorganization: New GHOST-HEAD is on a different fork
+        // Must rebuild entire state from scratch
+        console.log(`[Blockchain] Reorganization detected: ${oldGhostHead?.slice(0, 8)} → ${newGhostHead?.slice(0, 8)} (rebuilding state)`);
+        
+        // Rebuild world state and beacon state from the new canonical chain
+        this.worldState = new WorldState();
+        this.beaconState.clearProcessedAttestations();
+        
+        // Apply each block in the new canonical chain to rebuild state
+        const canonicalChain = this.blockTree.getCanonicalChain(newGhostHead);
+        for (const block of canonicalChain) {
+          this.applyBlockToElAndClState(block);
+        }
       }
     }
     
@@ -265,6 +278,47 @@ export class Blockchain {
     // - Validator balances (apply rewards/penalties)
     // - Slashing records (if any slashings in block)
     // - Finality checkpoints (update justified/finalized epochs)
+  }
+  
+  /**
+   * Determines if GHOST-HEAD change is forward progress or a reorganization
+   * 
+   * Forward Progress: New GHOST-HEAD is a descendant of old GHOST-HEAD
+   *   - Example: Block 2 → Block 3 (same chain, moving forward)
+   *   - Action: Apply new blocks incrementally to current state
+   * 
+   * Reorganization: New GHOST-HEAD is on a different fork (requires going backward)
+   *   - Example: Block 2 → Block 2' (different fork, need to reverse)
+   *   - Action: Rebuild entire state from scratch
+   * 
+   * @param oldGhostHead - Previous GHOST-HEAD hash
+   * @param newGhostHead - New GHOST-HEAD hash
+   * @returns true if forward progress, false if reorganization
+   */
+  private isForwardProgress(oldGhostHead: string | null, newGhostHead: string | null): boolean {
+    // If either is null, not forward progress
+    if (!oldGhostHead || !newGhostHead) {
+      return false;
+    }
+    
+    // If they're the same, no change (technically forward progress)
+    if (oldGhostHead === newGhostHead) {
+      return true;
+    }
+    
+    // Check if new GHOST-HEAD is a descendant of old GHOST-HEAD
+    // Walk up from new head to see if we reach old head
+    let current: BlockTreeNode | null | undefined = this.blockTree.getNode(newGhostHead);
+    while (current) {
+      if (current.hash === oldGhostHead) {
+        // New head is descendant of old head - forward progress!
+        return true;
+      }
+      current = current.parent;
+    }
+    
+    // New head is not a descendant of old head - reorganization!
+    return false;
   }
   
   /**
