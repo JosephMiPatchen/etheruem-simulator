@@ -29,6 +29,17 @@ export class LmdGhost {
   }
   
   /**
+   * Set the initial GHOST-HEAD to the genesis block
+   * Called once at startup after genesis block is created
+   */
+  public setInitialGenesisHead(genesisHash: string): void {
+    if (this.ghostHead === null) {
+      this.ghostHead = genesisHash;
+      console.log(`[LmdGhost] Initialized ghostHead to genesis block: ${genesisHash.slice(0, 16)}...`);
+    }
+  }
+  
+  /**
    * Record a new attestation from a validator
    * Updates the latest attestation for this validator
    */

@@ -42,12 +42,19 @@ export class Blockchain {
   /**
    * Sets the BeaconState reference for rebuilding processed attestations
    * Also sets blockchain reference in BeaconState for eager tree updates
+   * Initializes ghostHead to genesis block
    */
   setBeaconState(beaconState: any): void {
     this.beaconState = beaconState;
     // Set bidirectional reference so BeaconState can trigger tree updates
     if (beaconState) {
       beaconState.setBlockchain(this);
+      
+      // Initialize ghostHead to genesis block (all nodes have same genesis)
+      const genesisBlock = this.blockTree.getAllBlocks().find(b => b.header.height === 0);
+      if (genesisBlock && genesisBlock.hash) {
+        beaconState.lmdGhost.setInitialGenesisHead(genesisBlock.hash);
+      }
     }
   }
   
@@ -89,19 +96,11 @@ export class Blockchain {
   
   /**
    * Gets the latest block in the canonical chain (GHOST-HEAD)
-   * If no ghostHead (no attestations yet), returns genesis block
+   * ghostHead is initialized to genesis block and updated by LMD-GHOST fork choice
    */
   getLatestBlock(): Block | null {
     const ghostHead = this.beaconState?.ghostHead;
     const head = this.blockTree.getCanonicalHead(ghostHead);
-    
-    // If no ghostHead yet (no attestations), return genesis block (height 0)
-    if (!head.block) {
-      const blocks = this.blockTree.getAllBlocks();
-      const genesisBlock = blocks.find(b => b.header.height === 0);
-      return genesisBlock || null;
-    }
-    
     return head.block;
   }
   
