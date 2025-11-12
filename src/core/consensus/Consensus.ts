@@ -1,18 +1,9 @@
-import { Block, EthereumTransaction, PeerInfoMap } from '../../types/types';
-import { SimulatorConfig } from '../../config/config';
-import { 
-  createCoinbaseTransaction, 
-  createPeerPaymentTransactions,
-  createSignatureInput
-} from '../blockchain/transaction';
+import { Block, EthereumTransaction } from '../../types/types';
 import { calculateBlockHeaderHash, calculateTransactionHash, validateBlock } from '../validation/blockValidator';
-import { generateSignature as cryptoGenerateSignature } from '../../utils/cryptoUtils';
 import { Node } from '../node';
-import { sha256 } from '@noble/hashes/sha256';
-import { bytesToHex } from '@noble/hashes/utils';
-import { getNodePaintColor } from '../../utils/nodeColorUtils';
 import { BeaconState } from './beaconState';
 import { Blockchain } from '../blockchain/blockchain';
+import { BlockCreator } from '../blockchain/blockCreator';
 import { RANDAO } from './randao';
 import { MessageType } from '../../network/messages';
 import { Mempool } from '../mempool/mempool';
@@ -22,6 +13,7 @@ import { Mempool } from '../mempool/mempool';
  * Runs every slot to determine proposer and handle block proposals
  * 
  * State lives in BeaconState, this class contains logic only
+ * Uses BlockCreator for block transaction creation
  */
 export class Consensus {
   private beaconState: BeaconState;
@@ -29,7 +21,6 @@ export class Consensus {
   private node: Node;
   private nodeAddress: string;
   private mempool: Mempool;
-  private paintingComplete: boolean = false; // Flag to stop creating paint transactions
   
   // Constants
   private readonly SECONDS_PER_SLOT = 12;
@@ -53,17 +44,18 @@ export class Consensus {
   
   /**
    * Mark painting as complete - stops creating paint transactions
+   * Delegates to BlockCreator
    */
   public markPaintingComplete(): void {
-    this.paintingComplete = true;
-    console.log(`${this.node.getNodeId()}: Painting complete - no more paint transactions will be created`);
+    BlockCreator.markPaintingComplete(this.node.getNodeId());
   }
   
   /**
    * Check if painting is complete
+   * Delegates to BlockCreator
    */
   public isPaintingComplete(): boolean {
-    return this.paintingComplete;
+    return BlockCreator.isPaintingComplete();
   }
   
   /**
@@ -169,160 +161,11 @@ export class Consensus {
   }
   
   /**
-   * Gets peers with valid addresses
-   * @returns PeerInfoMap containing only peers with valid addresses
-   */
-  private getValidPeers(): PeerInfoMap {
-    const peers = this.node.getPeerInfos();
-    return Object.entries(peers).reduce((validPeers, [peerId, info]) => {
-      // Only include peers that have a defined non-empty address
-      if (info?.address !== undefined && info.address !== '') {
-        validPeers[peerId] = { 
-          address: info.address
-        };
-      }
-      return validPeers;
-    }, {} as PeerInfoMap);
-  }
-  
-  /**
-   * Creates transactions for a new block
-   * Includes: coinbase, mempool transactions, peer payments, and paint transaction
-   * @param height Block height
-   * @returns Promise resolving to array of transactions for the block
-   */
-  private async createBlockTransactions(height: number): Promise<EthereumTransaction[]> {
-    // Create coinbase transaction (proposer receives block reward)
-    const coinbaseTransaction = createCoinbaseTransaction(this.nodeAddress);
-    
-    const transactions: EthereumTransaction[] = [coinbaseTransaction];
-    
-    // Get peers with valid addresses
-    const validPeers = this.getValidPeers();
-    
-    if (Object.keys(validPeers).length === 0) {
-      console.warn('[Consensus] No peers with valid addresses available for peer payments');
-      return transactions;
-    }
-    
-    // Get proposer's current nonce from world state
-    // Coinbase transactions don't increment nonce, so we use the proposer's current nonce
-    const worldState = this.blockchain.getWorldState();
-    const proposerAccount = worldState[this.nodeAddress];
-    const baseNonce = proposerAccount ? proposerAccount.nonce : 0;
-    
-    // IMPORTANT: Add mempool transactions FIRST
-    // This ensures peer payments and paint transactions use nonces that come after mempool transactions
-    const maxMempoolSlots = SimulatorConfig.MAX_BLOCK_TRANSACTIONS - 1 - Object.keys(validPeers).length; // Reserve slots for coinbase, peer payments, and paint tx
-    const mempoolTransactions = this.mempool.getTransactions(Math.max(0, maxMempoolSlots));
-    transactions.push(...mempoolTransactions);
-    
-    // Calculate starting nonce for peer payments (after mempool transactions)
-    const peerPaymentStartNonce = baseNonce + mempoolTransactions.length;
-    
-    // Create peer payment transactions (one per peer)
-    const peerPayments = await createPeerPaymentTransactions(
-      this.nodeAddress,
-      peerPaymentStartNonce,
-      this.node.getPrivateKey(),
-      this.node.getPublicKey(),
-      validPeers
-    );
-    
-    // Add all peer payment transactions to the block
-    transactions.push(...peerPayments);
-    
-    // After peer payments, create a paint transaction with remaining ETH (truncated to integer)
-    const paintNonce = peerPaymentStartNonce + peerPayments.length;
-    const paintTransaction = await this.createPaintTransaction(paintNonce);
-    if (paintTransaction) {
-      transactions.push(paintTransaction);
-    }
-    
-    return transactions;
-  }
-  
-  /**
-   * Creates a paint transaction to send remaining ETH (truncated to integer) to EPM contract
-   * @param nonce The nonce to use for this transaction
-   * @returns Paint transaction or null if insufficient balance
-   */
-  private async createPaintTransaction(nonce: number): Promise<EthereumTransaction | null> {
-    // Don't create paint transactions if painting is complete
-    if (this.paintingComplete) {
-      return null;
-    }
-    
-    // Get proposer's current account state
-    const worldState = this.blockchain.getWorldState();
-    const proposerAccount = worldState[this.nodeAddress];
-    
-    if (!proposerAccount) return null;
-    
-    // Calculate how much ETH will be spent on peer payments
-    const validPeers = this.getValidPeers();
-    const peerCount = Object.keys(validPeers).length;
-    const redistributionAmount = SimulatorConfig.BLOCK_REWARD * SimulatorConfig.REDISTRIBUTION_RATIO;
-    const totalPeerPayments = peerCount > 0 ? redistributionAmount : 0;
-    
-    // Calculate remaining balance after peer payments
-    const balanceAfterPeerPayments = proposerAccount.balance - totalPeerPayments;
-    
-    // Calculate ETH to send (truncate to integer)
-    const ethToSend = Math.floor(balanceAfterPeerPayments);
-    
-    // Only send if we have at least 1 ETH after peer payments
-    if (ethToSend < 1) return null;
-    
-    const timestamp = Date.now();
-    
-    // Calculate txid (hash of transaction data)
-    // NOTE: Must match validator's calculateTxid - does NOT include data field
-    const txString = JSON.stringify({ 
-      from: this.nodeAddress, 
-      to: '0xEPM_PAINT_CONTRACT', 
-      value: ethToSend, 
-      nonce, 
-      timestamp
-    });
-    const txid = bytesToHex(sha256(new TextEncoder().encode(txString)));
-    
-    // Create signature input (just the txid)
-    const signatureInput = createSignatureInput({ txid });
-    
-    // Generate signature
-    let signature;
-    try {
-      signature = await cryptoGenerateSignature(signatureInput, this.node.getPrivateKey());
-    } catch (error) {
-      console.error('[Consensus] Error generating signature for paint transaction:', error);
-      signature = `error-${timestamp}`;
-    }
-    
-    // Choose a deterministic color for this node based on its ID
-    // This ensures each node consistently paints the same color
-    const nodeId = this.node.getNodeId();
-    const nodeColor = getNodePaintColor(nodeId);
-    
-    // Build complete paint transaction with color data
-    return {
-      from: this.nodeAddress,
-      to: '0xEPM_PAINT_CONTRACT',
-      value: ethToSend,
-      nonce,
-      data: JSON.stringify({ color: nodeColor }),
-      publicKey: this.node.getPublicKey(),
-      signature,
-      timestamp,
-      txid
-    };
-  }
-  
-  /**
    * Proposes a block for the current slot
    * Creates block with coinbase, mempool txs, peer payments, paint tx
    * Sets slot number and nonce 0x0 (no PoW mining)
    * Broadcasts to all validators
+   * Uses BlockCreator for transaction creation
    */
   private async proposeBlock(slot: number): Promise<void> {
     console.log(`[Consensus] Node ${this.nodeAddress.slice(0, 8)} proposing block for slot ${slot}`);
@@ -334,8 +177,13 @@ export class Consensus {
       return;
     }
     
-    // Create all transactions for the block (coinbase, mempool, peer payments, paint)
-    const transactions = await this.createBlockTransactions(latestBlock.header.height + 1);
+    // Create all transactions for the block using BlockCreator
+    const transactions = await BlockCreator.createBlockTransactions(
+      this.node,
+      this.blockchain,
+      this.mempool,
+      latestBlock.header.height + 1
+    );
     
     // Create block header with slot and nonce 0x0 (no PoW)
     const header = {
