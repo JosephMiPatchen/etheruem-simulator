@@ -7,7 +7,8 @@ import {
   AttestationMessage,
   LmdGhostBroadcastMessage,
   ChainRequestMessage,
-  ChainResponseMessage
+  ChainResponseMessage,
+  ProposerBlockBroadcastMessage
 } from './messages';
 import { createSignedTransaction } from '../core/blockchain/transaction';
 
@@ -40,6 +41,13 @@ export class NodeWorker {
         this.onOutgoingMessageCallback(message as Message);
       }
     });
+    
+    // Set up callback for Consensus to send messages
+    this._node.getConsensus().setMessageCallback((message: any) => {
+      if (this.onOutgoingMessageCallback) {
+        this.onOutgoingMessageCallback(message as Message);
+      }
+    });
   }
   
   /**
@@ -66,6 +74,9 @@ export class NodeWorker {
         break;
       case MessageType.CHAIN_RESPONSE:
         this.handleChainResponse(message as ChainResponseMessage);
+        break;
+      case MessageType.PROPOSER_BLOCK_BROADCAST:
+        this.handleProposerBlockBroadcast(message as ProposerBlockBroadcastMessage);
         break;
       default:
         console.error(`Unknown message type: ${(message as any).type}`);
@@ -194,12 +205,30 @@ export class NodeWorker {
   }
   
   /**
+   * Handles proposer block broadcast message
+   * Thin wrapper - delegates to Consensus class
+   */
+  private handleProposerBlockBroadcast(message: ProposerBlockBroadcastMessage): void {
+    const consensus = this._node.getConsensus();
+    consensus.handleProposedBlock(message.block, message.slot, message.fromNodeId);
+  }
+  
+  /**
    * Broadcasts LMD-GHOST head
    * Called periodically to sync with other nodes
    */
   broadcastGhostHead(): void {
     const sync = this._node.getSync();
     sync.broadcastGhostHead();
+  }
+  
+  /**
+   * Processes a consensus slot
+   * Called periodically (every 12 seconds) to run PoS consensus
+   */
+  async processSlot(): Promise<void> {
+    const consensus = this._node.getConsensus();
+    await consensus.processSlot();
   }
   
   /**
