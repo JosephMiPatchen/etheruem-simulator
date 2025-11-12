@@ -4,73 +4,50 @@ import { BlockchainTree, BlockTreeNode } from '../blockchain/blockchainTree';
 /**
  * LMD-GHOST (Latest Message Driven Greedy Heaviest Observed SubTree)
  * 
- * This class handles all fork choice logic for the Ethereum-style blockchain:
- * - Maintains latest attestations from validators
+ * Static utility class for fork choice logic in Ethereum-style blockchain:
+ * - Manages latest attestations from validators (stored in BeaconState)
  * - Decorates blockchain tree with attestedEth (cumulative attested weight)
- * - Provides fork choice state for UI and consensus
+ * - Computes GHOST-HEAD for fork choice
+ * 
+ * All state is stored in BeaconState, methods are pure/static
  */
 export class LmdGhost {
-  // Map of validator address to their latest attestation
-  private latestAttestations: Map<string, Attestation>;
-  
-  // GHOST-HEAD: The canonical chain head according to LMD-GHOST fork choice
-  private ghostHead: string | null;
-  
-  constructor() {
-    this.latestAttestations = new Map();
-    this.ghostHead = null;
-  }
-  
-  /**
-   * Get the current GHOST-HEAD (canonical chain head)
-   */
-  public getGhostHead(): string | null {
-    return this.ghostHead;
-  }
-  
   /**
    * Set the initial GHOST-HEAD to the genesis block
    * Called once at startup after genesis block is created
    */
-  public setInitialGenesisHead(genesisHash: string): void {
-    if (this.ghostHead === null) {
-      this.ghostHead = genesisHash;
+  public static setInitialGenesisHead(beaconState: any, genesisHash: string): void {
+    if (beaconState.ghostHead === null) {
+      beaconState.ghostHead = genesisHash;
       console.log(`[LmdGhost] Initialized ghostHead to genesis block: ${genesisHash.slice(0, 16)}...`);
     }
   }
   
   /**
    * Record a new attestation from a validator
-   * Updates the latest attestation for this validator
+   * Updates the latest attestation for this validator in BeaconState
    */
-  public recordAttestation(attestation: Attestation): void {
-    const existing = this.latestAttestations.get(attestation.validatorAddress);
+  public static recordAttestation(beaconState: any, attestation: Attestation): void {
+    const existing = beaconState.latestAttestations.get(attestation.validatorAddress);
     
     // Only update if this attestation is newer
     if (!existing || attestation.timestamp > existing.timestamp) {
-      this.latestAttestations.set(attestation.validatorAddress, attestation);
+      beaconState.latestAttestations.set(attestation.validatorAddress, attestation);
     }
-  }
-  
-  /**
-   * Get all latest attestations
-   */
-  public getLatestAttestations(): Map<string, Attestation> {
-    return new Map(this.latestAttestations);
   }
   
   /**
    * Clear all attestations (e.g., on chain replacement)
    */
-  public clearAttestations(): void {
-    this.latestAttestations.clear();
+  public static clearAttestations(beaconState: any): void {
+    beaconState.latestAttestations.clear();
   }
   
   /**
    * Decorate a blockchain tree with attestedEth metadata
    * Computes cumulative attested weight for each block in the tree
    */
-  public decorateTree(tree: BlockchainTree): void {
+  public static decorateTree(beaconState: any, tree: BlockchainTree): void {
     // Get all blocks from the tree
     const allBlocks = tree.getAllBlocks();
     
@@ -78,19 +55,19 @@ export class LmdGhost {
     const blockAttestationCounts = new Map<string, number>();
     
     // Count attestations for each block
-    for (const attestation of this.latestAttestations.values()) {
+    for (const attestation of beaconState.latestAttestations.values()) {
       const count = blockAttestationCounts.get(attestation.blockHash) || 0;
       blockAttestationCounts.set(attestation.blockHash, count + 1);
     }
     
     // Decorate each node in the tree with attestedEth
-    this.decorateNode(tree.getRoot(), blockAttestationCounts, allBlocks);
+    LmdGhost.decorateNode(tree.getRoot(), blockAttestationCounts, allBlocks);
   }
   
   /**
    * Recursively decorate a tree node and its descendants with attestedEth
    */
-  private decorateNode(
+  private static decorateNode(
     node: BlockTreeNode | null,
     blockAttestationCounts: Map<string, number>,
     allBlocks: Block[]
@@ -104,7 +81,7 @@ export class LmdGhost {
     // Recursively compute attestedEth for all children
     let childrenAttestedEth = 0;
     for (const child of node.children) {
-      childrenAttestedEth += this.decorateNode(child, blockAttestationCounts, allBlocks);
+      childrenAttestedEth += LmdGhost.decorateNode(child, blockAttestationCounts, allBlocks);
     }
     
     // Total attestedEth is direct + all descendants
@@ -122,10 +99,10 @@ export class LmdGhost {
   /**
    * Get attestations pointing to a specific block
    */
-  public getAttestationsForBlock(blockHash: string): Attestation[] {
+  public static getAttestationsForBlock(beaconState: any, blockHash: string): Attestation[] {
     const attestations: Attestation[] = [];
     
-    for (const attestation of this.latestAttestations.values()) {
+    for (const attestation of beaconState.latestAttestations.values()) {
       if (attestation.blockHash === blockHash) {
         attestations.push(attestation);
       }
@@ -138,8 +115,8 @@ export class LmdGhost {
    * Get the total attested ETH for a specific block
    * (direct attestations only, not including descendants)
    */
-  public getDirectAttestedEth(blockHash: string): number {
-    const attestations = this.getAttestationsForBlock(blockHash);
+  public static getDirectAttestedEth(beaconState: any, blockHash: string): number {
+    const attestations = LmdGhost.getAttestationsForBlock(beaconState, blockHash);
     return attestations.length * 32; // 32 ETH per attestation
   }
   
@@ -155,20 +132,21 @@ export class LmdGhost {
    * 2. Decorate tree with attestedEth
    * 3. Compute and update GHOST-HEAD
    */
-  public onAttestationSetChanged(
+  public static onAttestationSetChanged(
+    beaconState: any,
     tree: BlockchainTree,
     allAttestations: Attestation[]
   ): void {
     // 1. Update latest attestations for each validator
     for (const attestation of allAttestations) {
-      this.recordAttestation(attestation);
+      LmdGhost.recordAttestation(beaconState, attestation);
     }
     
     // 2. Decorate tree with attestedEth
-    this.decorateTree(tree);
+    LmdGhost.decorateTree(beaconState, tree);
     
     // 3. Compute and update GHOST-HEAD
-    this.ghostHead = this.computeGhostHead(tree);
+    beaconState.ghostHead = LmdGhost.computeGhostHead(tree);
   }
   
   /**
@@ -180,7 +158,7 @@ export class LmdGhost {
    * 2. At each fork, choose the child with highest attestedEth
    * 3. Continue until reaching a leaf (chain tip)
    */
-  private computeGhostHead(tree: BlockchainTree): string | null {
+  private static computeGhostHead(tree: BlockchainTree): string | null {
     const root = tree.getRoot();
     if (!root) return null;
     

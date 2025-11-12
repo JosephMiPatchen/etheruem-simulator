@@ -1,4 +1,4 @@
-import { LmdGhost } from './lmdGhost';
+import { LmdGhost } from './LmdGhost';
 import { SimulatorConfig } from '../../config/config';
 
 /**
@@ -261,11 +261,11 @@ export class BeaconState {
    * Returns true if updated, false if existing attestation was newer
    */
   updateLatestAttestation(attestation: Attestation): boolean {
-    const existing = this.lmdGhost.getLatestAttestations().get(attestation.validatorAddress);
+    const existing = this.latestAttestations.get(attestation.validatorAddress);
     
     // If no existing attestation or new one is more recent, update
     if (!existing || attestation.timestamp > existing.timestamp) {
-      this.lmdGhost.recordAttestation(attestation);
+      LmdGhost.recordAttestation(this, attestation);
       return true;
     }
     
@@ -276,7 +276,7 @@ export class BeaconState {
    * Clear all latest attestations (used during chain replacement)
    */
   clearLatestAttestations(): void {
-    this.lmdGhost.clearAttestations();
+    LmdGhost.clearAttestations(this);
   }
   
   /**
@@ -332,7 +332,7 @@ export class BeaconState {
     
     // Use LMD-GHOST to handle all attestation set changes
     const tree = this.blockchain.getTree();
-    this.lmdGhost.onAttestationSetChanged(tree, allAttestations);
+    LmdGhost.onAttestationSetChanged(this, tree, allAttestations);
   }
   
   /**
@@ -354,7 +354,7 @@ export class BeaconState {
     
     // Use LMD-GHOST to handle all attestation set changes
     const tree = this.blockchain.getTree();
-    this.lmdGhost.onAttestationSetChanged(tree, allAttestations);
+    LmdGhost.onAttestationSetChanged(this, tree, allAttestations);
   }
   
   /**

@@ -4,6 +4,7 @@ import { WorldState } from './worldState';
 import { validateBlock, calculateBlockHeaderHash } from '../validation/blockValidator';
 import { validateChain } from '../validation/chainValidator';
 import { BlockchainTree } from './blockchainTree';
+import { LmdGhost } from '../consensus/LmdGhost';
 
 /**
  * Blockchain class with tree structure for fork management
@@ -53,7 +54,7 @@ export class Blockchain {
       // Initialize ghostHead to genesis block (all nodes have same genesis)
       const genesisBlock = this.blockTree.getAllBlocks().find(b => b.header.height === 0);
       if (genesisBlock && genesisBlock.hash) {
-        beaconState.lmdGhost.setInitialGenesisHead(genesisBlock.hash);
+        LmdGhost.setInitialGenesisHead(beaconState, genesisBlock.hash);
       }
     }
   }
