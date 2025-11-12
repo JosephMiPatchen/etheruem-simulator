@@ -21,6 +21,7 @@ export class Consensus {
   private node: Node;
   private nodeAddress: string;
   private mempool: Mempool;
+  private paintingComplete: boolean = false; // Flag to stop creating paint transactions
   
   // Constants
   private readonly SECONDS_PER_SLOT = 12;
@@ -44,18 +45,17 @@ export class Consensus {
   
   /**
    * Mark painting as complete - stops creating paint transactions
-   * Delegates to BlockCreator
    */
   public markPaintingComplete(): void {
-    BlockCreator.markPaintingComplete(this.node.getNodeId());
+    this.paintingComplete = true;
+    console.log(`${this.node.getNodeId()}: Painting complete - no more paint transactions will be created`);
   }
   
   /**
    * Check if painting is complete
-   * Delegates to BlockCreator
    */
   public isPaintingComplete(): boolean {
-    return BlockCreator.isPaintingComplete();
+    return this.paintingComplete;
   }
   
   /**
@@ -182,7 +182,8 @@ export class Consensus {
       this.node,
       this.blockchain,
       this.mempool,
-      latestBlock.header.height + 1
+      latestBlock.header.height + 1,
+      this.paintingComplete
     );
     
     // Create block header with slot and nonce 0x0 (no PoW)

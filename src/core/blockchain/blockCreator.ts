@@ -21,25 +21,11 @@ import { Blockchain } from './blockchain';
  * - Creating block transactions (coinbase, mempool, peer payments, paint)
  * - Creating paint transactions
  * - Getting valid peers
+ * 
+ * Note: Painting complete flag is stored per-node in Node class,
+ * not in BlockCreator (to avoid shared state across nodes)
  */
 export class BlockCreator {
-  // Painting complete flag - shared across all instances
-  private static paintingComplete: boolean = false;
-  
-  /**
-   * Mark painting as complete - stops creating paint transactions
-   */
-  public static markPaintingComplete(nodeId: string): void {
-    BlockCreator.paintingComplete = true;
-    console.log(`${nodeId}: Painting complete - no more paint transactions will be created`);
-  }
-  
-  /**
-   * Check if painting is complete
-   */
-  public static isPaintingComplete(): boolean {
-    return BlockCreator.paintingComplete;
-  }
   
   /**
    * Gets peers with valid addresses
@@ -66,13 +52,15 @@ export class BlockCreator {
    * @param blockchain The blockchain instance
    * @param mempool The mempool instance
    * @param height Block height
+   * @param paintingComplete Whether painting is complete for this node
    * @returns Promise resolving to array of transactions for the block
    */
   public static async createBlockTransactions(
     node: Node,
     blockchain: Blockchain,
     mempool: Mempool,
-    height: number
+    height: number,
+    paintingComplete: boolean
   ): Promise<EthereumTransaction[]> {
     const nodeAddress = node.getAddress();
     
@@ -118,7 +106,7 @@ export class BlockCreator {
     
     // After peer payments, create a paint transaction with remaining ETH (truncated to integer)
     const paintNonce = peerPaymentStartNonce + peerPayments.length;
-    const paintTransaction = await BlockCreator.createPaintTransaction(node, blockchain, paintNonce);
+    const paintTransaction = await BlockCreator.createPaintTransaction(node, blockchain, paintNonce, paintingComplete);
     if (paintTransaction) {
       transactions.push(paintTransaction);
     }
@@ -131,15 +119,17 @@ export class BlockCreator {
    * @param node The node creating the transaction
    * @param blockchain The blockchain instance
    * @param nonce The nonce to use for this transaction
+   * @param paintingComplete Whether painting is complete for this node
    * @returns Paint transaction or null if insufficient balance
    */
   public static async createPaintTransaction(
     node: Node,
     blockchain: Blockchain,
-    nonce: number
+    nonce: number,
+    paintingComplete: boolean
   ): Promise<EthereumTransaction | null> {
     // Don't create paint transactions if painting is complete
-    if (BlockCreator.paintingComplete) {
+    if (paintingComplete) {
       return null;
     }
     

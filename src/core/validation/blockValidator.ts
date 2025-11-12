@@ -100,15 +100,8 @@ export const validateBlock = async (
     return false;
   }
   
-  // 8. Validate block hash is below ceiling
-  // Skip this check for genesis blocks - they can have any hash
-  if (header.height > 0) {
-    const blockHash = calculateBlockHeaderHash(header);
-    if (!isHashBelowCeiling(blockHash, SimulatorConfig.CEILING)) {
-      console.error(`Block hash is not below ceiling: ${blockHash}`);
-      return false;
-    }
-  }
+  // 8. PoW nonce/hash validation removed - using PoS consensus now
+  // Blocks are validated by validator signatures and attestations, not hash difficulty
   
   return true;
 };
