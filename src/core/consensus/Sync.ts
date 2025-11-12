@@ -1,6 +1,7 @@
 import { Block } from '../../types/types';
 import { Blockchain } from '../blockchain/blockchain';
 import { BeaconState } from './beaconState';
+import { MessageType } from '../../network/messages';
 
 /**
  * Sync class handles LMD-GHOST head synchronization for PoS
@@ -59,7 +60,7 @@ export class Sync {
     const ghostHeadHash = this.getGhostHeadHash();
     
     const message = {
-      type: 'LMD_GHOST_BROADCAST',
+      type: MessageType.LMD_GHOST_BROADCAST,
       fromNodeId: this.nodeId,
       ghostHeadHash
     };
@@ -97,7 +98,7 @@ export class Sync {
     if (!this.onSendMessage) return;
     
     const message = {
-      type: 'CHAIN_REQUEST',
+      type: MessageType.CHAIN_REQUEST,
       fromNodeId: this.nodeId,
       toNodeId,
       requestedHeadHash
@@ -130,7 +131,7 @@ export class Sync {
     }
     
     const message = {
-      type: 'CHAIN_RESPONSE',
+      type: MessageType.CHAIN_RESPONSE,
       fromNodeId: this.nodeId,
       toNodeId: fromNodeId,
       requestedHeadHash,
