@@ -158,13 +158,16 @@ export class BlockCreator {
     const redistributionAmount = SimulatorConfig.BLOCK_REWARD * SimulatorConfig.REDISTRIBUTION_RATIO;
     const totalPeerPayments = peerCount > 0 ? redistributionAmount : 0;
     
+    // Calculate balance AFTER coinbase is applied (coinbase will be added in this block)
+    const balanceAfterCoinbase = nodeAccount.balance + SimulatorConfig.BLOCK_REWARD;
+    
     // Calculate remaining balance after peer payments
-    const balanceAfterPeerPayments = nodeAccount.balance - totalPeerPayments;
+    const balanceAfterPeerPayments = balanceAfterCoinbase - totalPeerPayments;
     
     // Calculate ETH to send (truncate to integer)
     const ethToSend = Math.floor(balanceAfterPeerPayments);
     
-    console.log(`[BlockCreator] Paint tx check for ${nodeAddress.slice(0, 8)}: balance=${nodeAccount.balance}, peerPayments=${totalPeerPayments}, remaining=${balanceAfterPeerPayments}, ethToSend=${ethToSend}`);
+    console.log(`[BlockCreator] Paint tx check for ${nodeAddress.slice(0, 8)}: currentBalance=${nodeAccount.balance}, +coinbase=${SimulatorConfig.BLOCK_REWARD}, afterCoinbase=${balanceAfterCoinbase}, -peerPayments=${totalPeerPayments}, remaining=${balanceAfterPeerPayments}, ethToSend=${ethToSend}`);
     
     // Only send if we have at least 1 ETH after peer payments
     if (ethToSend < 1) {
