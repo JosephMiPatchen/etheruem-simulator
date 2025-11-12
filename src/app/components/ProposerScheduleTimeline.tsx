@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { BeaconState } from '../../core/consensus/beaconState';
 import { getNodeColorCSS } from '../../utils/nodeColorUtils';
 import './ProposerScheduleTimeline.css';
@@ -11,6 +11,7 @@ interface ProposerScheduleTimelineProps {
 /**
  * ProposerScheduleTimeline - Compact grid visualization of proposer schedules
  * Shows epochs 0-24+ in a space-efficient grid with colored cells
+ * Auto-scrolls to show latest epochs while allowing manual scroll to view history
  */
 const ProposerScheduleTimeline: React.FC<ProposerScheduleTimelineProps> = ({ 
   beaconState, 
@@ -18,6 +19,7 @@ const ProposerScheduleTimeline: React.FC<ProposerScheduleTimelineProps> = ({
 }) => {
   const currentSlot = beaconState.getCurrentSlot();
   const currentEpoch = beaconState.getCurrentEpoch();
+  const gridContainerRef = useRef<HTMLDivElement>(null);
   
   // Get all proposer schedules sorted by epoch
   const proposerSchedules = Array.from(beaconState.proposerSchedules.entries())
@@ -35,6 +37,13 @@ const ProposerScheduleTimeline: React.FC<ProposerScheduleTimelineProps> = ({
     nodeId,
     color: getNodeColorCSS(nodeId)
   }));
+  
+  // Auto-scroll to bottom when new epochs are added
+  useEffect(() => {
+    if (gridContainerRef.current) {
+      gridContainerRef.current.scrollTop = gridContainerRef.current.scrollHeight;
+    }
+  }, [proposerSchedules.length]); // Scroll when number of epochs changes
   
   return (
     <div className="schedule-timeline-panel">
@@ -66,8 +75,9 @@ const ProposerScheduleTimeline: React.FC<ProposerScheduleTimelineProps> = ({
         </div>
       </div>
       
-      {/* Epoch Grid */}
-      <div className="epochs-grid">
+      {/* Epoch Grid - Scrollable Container */}
+      <div className="epochs-grid-container" ref={gridContainerRef}>
+        <div className="epochs-grid">
         {proposerSchedules.map(([epoch, schedule]) => {
           const slots = Array.from(schedule.entries()).sort(([slotA], [slotB]) => slotA - slotB);
           const isCurrentEpoch = epoch === currentEpoch;
@@ -98,6 +108,7 @@ const ProposerScheduleTimeline: React.FC<ProposerScheduleTimelineProps> = ({
             </div>
           );
         })}
+        </div>
       </div>
       
       {proposerSchedules.length === 0 && (

@@ -82,11 +82,39 @@
   color: var(--text-secondary);
 }
 
-/* Epochs Grid - Multi-column layout */
+/* Epochs Grid Container - Scrollable with fixed height */
+.epochs-grid-container {
+  max-height: 400px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+  margin-bottom: var(--spacing-sm);
+}
+
+/* Custom scrollbar styling */
+.epochs-grid-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.epochs-grid-container::-webkit-scrollbar-track {
+  background: var(--overlay-background);
+  border-radius: 4px;
+}
+
+.epochs-grid-container::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+.epochs-grid-container::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Epochs Grid - Multi-column layout (40% smaller: 85px instead of 140px) */
 .epochs-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: var(--spacing-sm);
+  grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+  gap: 6px;
 }
 
 /* Individual Epoch Cell */
@@ -166,6 +194,6 @@
   }
   
   .epochs-grid {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
   }
 }
