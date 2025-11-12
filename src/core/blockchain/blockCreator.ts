@@ -14,10 +14,11 @@ import { Mempool } from '../mempool/mempool';
 import { Blockchain } from './blockchain';
 
 /**
- * BlockCreator - Utility class for creating block transactions
+ * BlockCreator - Utility class for creating block transactions and blocks
  * Used by both Miner (PoW) and Consensus (PoS) classes
  * 
  * Provides static methods for:
+ * - Creating genesis block
  * - Creating block transactions (coinbase, mempool, peer payments, paint)
  * - Creating paint transactions
  * - Getting valid peers
@@ -26,6 +27,53 @@ import { Blockchain } from './blockchain';
  * not in BlockCreator (to avoid shared state across nodes)
  */
 export class BlockCreator {
+  
+  /**
+   * Creates the shared genesis block for PoS
+   * All nodes have the same genesis block (no coinbase, only EPM contract deployment)
+   * This ensures all nodes start with identical state and same genesis hash
+   */
+  public static createGenesisBlock(): any {
+    const { calculateTransactionHash, calculateBlockHeaderHash } = require('../validation/blockValidator');
+    
+    // Create a special transaction to deploy the EPM contract
+    // This is a genesis-only transaction that creates the contract account
+    // In Ethereum, sending to 0x0 creates a new contract
+    const epmDeployTransaction: EthereumTransaction = {
+      from: SimulatorConfig.REWARDER_NODE_ID, // System deploys the contract
+      to: '0x0', // Contract creation address
+      value: 0, // No ETH transferred
+      nonce: 0,
+      data: 'bulbasaur.png', // Image filename for the EPM contract
+      publicKey: 'genesis',
+      signature: 'genesis',
+      timestamp: 0, // Fixed timestamp for deterministic hash
+      txid: 'genesis-epm-deploy'
+    };
+    
+    const transactions = [epmDeployTransaction];
+    
+    // Create block header
+    const header = {
+      transactionHash: calculateTransactionHash(transactions),
+      timestamp: 0, // Fixed timestamp for deterministic genesis hash
+      previousHeaderHash: SimulatorConfig.GENESIS_PREV_HASH,
+      ceiling: parseInt(SimulatorConfig.CEILING, 16),
+      nonce: 0,
+      height: 0,
+      slot: 0 // Genesis is at slot 0
+    };
+    
+    // Create genesis block
+    const block = {
+      header,
+      transactions,
+      attestations: [],
+      hash: calculateBlockHeaderHash(header)
+    };
+    
+    return block;
+  }
   
   /**
    * Gets peers with valid addresses

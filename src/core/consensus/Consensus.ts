@@ -145,7 +145,7 @@ export class Consensus {
     
     console.log(`[Consensus ${this.nodeAddress.slice(0, 8)}] Processing slot ${currentSlot}, epoch ${currentEpoch}`);
     
-    // 2. Ensure proposer schedule exists for current epoch
+    // 2. Ensure proposer schedule exists for current epoch (lazy calculation)
     this.ensureScheduleForEpoch(currentEpoch);
     
     // 3. Determine current proposer for this slot

@@ -1,5 +1,5 @@
 import { Block, Account } from '../../types/types';
-import { createGenesisBlock } from './block';
+import { BlockCreator } from './blockCreator';
 import { WorldState } from './worldState';
 import { validateBlock, calculateBlockHeaderHash } from '../validation/blockValidator';
 import { validateChain } from '../validation/chainValidator';
@@ -27,7 +27,7 @@ export class Blockchain {
     this.blockTree = new BlockchainTree();
     
     // Create and add shared genesis block (same for all nodes)
-    const genesisBlock = createGenesisBlock();
+    const genesisBlock = BlockCreator.createGenesisBlock();
     this.blockTree.addBlock(genesisBlock);
     
     // Apply genesis block to world state
