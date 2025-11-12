@@ -4,6 +4,7 @@ import { Blockchain } from '../blockchain/blockchain';
 import { RANDAO } from './randao';
 import { MessageType } from '../../network/messages';
 import { Mempool } from '../mempool/mempool';
+import { calculateBlockHeaderHash, calculateTransactionHash, validateBlock } from '../validation/blockValidator';
 
 /**
  * Consensus class handles PoS consensus logic
@@ -14,9 +15,12 @@ import { Mempool } from '../mempool/mempool';
 export class Consensus {
   private beaconState: BeaconState;
   private blockchain: Blockchain;
-  private randao: RANDAO;
   private nodeAddress: string;
   private mempool: Mempool;
+  
+  // Constants
+  private readonly SECONDS_PER_SLOT = 12;
+  private readonly SLOTS_PER_EPOCH = 32;
   
   // Callback for sending messages to network
   private onSendMessage?: (message: any) => void;
@@ -34,7 +38,6 @@ export class Consensus {
     this.blockchain = blockchain;
     this.nodeAddress = nodeAddress;
     this.mempool = mempool;
-    this.randao = new RANDAO(beaconState);
   }
   
   /**
@@ -52,6 +55,34 @@ export class Consensus {
   }
   
   /**
+   * Helper: Get current slot based on genesis time
+   */
+  private getCurrentSlot(): number {
+    return this.beaconState.getCurrentSlot();
+  }
+  
+  /**
+   * Helper: Calculate epoch from slot
+   */
+  private getEpoch(slot: number): number {
+    return Math.floor(slot / this.SLOTS_PER_EPOCH);
+  }
+  
+  /**
+   * Helper: Check if slot is first slot of epoch
+   */
+  private isFirstSlotOfEpoch(slot: number): boolean {
+    return slot % this.SLOTS_PER_EPOCH === 0;
+  }
+  
+  /**
+   * Helper: Get slots per epoch constant
+   */
+  private getSlotsPerEpoch(): number {
+    return this.SLOTS_PER_EPOCH;
+  }
+  
+  /**
    * Main consensus logic - called every slot
    * 1. Calculate current slot and epoch
    * 2. If first slot of epoch, compute proposer schedule
@@ -61,11 +92,11 @@ export class Consensus {
    */
   async processSlot(): Promise<void> {
     // 1. Calculate current slot and epoch
-    const currentSlot = this.beaconState.getCurrentSlot();
-    const currentEpoch = this.beaconState.getEpoch(currentSlot);
+    const currentSlot = this.getCurrentSlot();
+    const currentEpoch = this.getEpoch(currentSlot);
     
     // 2. If first slot of epoch, compute proposer schedule
-    if (this.beaconState.isFirstSlotOfEpoch(currentSlot)) {
+    if (this.isFirstSlotOfEpoch(currentSlot)) {
       this.computeProposerSchedule(currentEpoch);
     }
     
@@ -85,17 +116,18 @@ export class Consensus {
    * Updates BeaconState.proposerSchedules with epoch -> (slot -> validator address)
    */
   private computeProposerSchedule(epoch: number): void {
-    const slotsPerEpoch = this.beaconState.getSlotsPerEpoch();
+    const slotsPerEpoch = this.getSlotsPerEpoch();
     const firstSlot = epoch * slotsPerEpoch;
     
-    // Create schedule for this epoch
-    const schedule = new Map<number, string>();
+    // Get proposer schedule for entire epoch from RANDAO
+    // Returns array of 32 validator addresses (one per slot)
+    const proposerArray = RANDAO.getProposerSchedule(this.beaconState, epoch);
     
-    // For each slot in the epoch, assign a proposer using RANDAO
+    // Create schedule map: slot -> validator address
+    const schedule = new Map<number, string>();
     for (let i = 0; i < slotsPerEpoch; i++) {
       const slot = firstSlot + i;
-      const proposer = this.randao.selectProposer(epoch, slot);
-      schedule.set(slot, proposer);
+      schedule.set(slot, proposerArray[i]);
     }
     
     // Store schedule in BeaconState
@@ -144,7 +176,7 @@ export class Consensus {
     
     // Create block header with slot and nonce 0x0 (no PoW)
     const header = {
-      transactionHash: this.blockchain.hashTransactions(transactions),
+      transactionHash: calculateTransactionHash(transactions),
       timestamp: Date.now(),
       previousHeaderHash: latestBlock.hash || '',
       ceiling: 0, // No ceiling for PoS
@@ -161,7 +193,7 @@ export class Consensus {
     };
     
     // Compute block hash (includes slot in hash)
-    block.hash = this.blockchain.hashBlockHeader(header);
+    block.hash = calculateBlockHeaderHash(header);
     
     // Add block to our own blockchain
     const added = await this.blockchain.addBlock(block);
@@ -203,7 +235,10 @@ export class Consensus {
     console.log(`[Consensus] Received proposed block for slot ${slot} from ${fromAddress.slice(0, 8)}`);
     
     // 1. Validate the block
-    const isValid = await this.blockchain.validateBlock(block);
+    const latestBlock = this.blockchain.getLatestBlock();
+    const previousHash = latestBlock?.hash || '';
+    const worldState = this.blockchain.getWorldState();
+    const isValid = await validateBlock(block, worldState, previousHash);
     if (!isValid) {
       console.warn(`[Consensus] Invalid block received for slot ${slot}`);
       return;
