@@ -130,6 +130,7 @@ export class BlockCreator {
   ): Promise<EthereumTransaction | null> {
     // Don't create paint transactions if painting is complete
     if (paintingComplete) {
+      console.log('[BlockCreator] Painting complete, skipping paint transaction');
       return null;
     }
     
@@ -139,7 +140,10 @@ export class BlockCreator {
     const worldState = blockchain.getWorldState();
     const nodeAccount = worldState[nodeAddress];
     
-    if (!nodeAccount) return null;
+    if (!nodeAccount) {
+      console.log(`[BlockCreator] No account found for ${nodeAddress.slice(0, 8)}, skipping paint transaction`);
+      return null;
+    }
     
     // Calculate how much ETH will be spent on peer payments
     const validPeers = BlockCreator.getValidPeers(node);
@@ -153,8 +157,13 @@ export class BlockCreator {
     // Calculate ETH to send (truncate to integer)
     const ethToSend = Math.floor(balanceAfterPeerPayments);
     
+    console.log(`[BlockCreator] Paint tx check for ${nodeAddress.slice(0, 8)}: balance=${nodeAccount.balance}, peerPayments=${totalPeerPayments}, remaining=${balanceAfterPeerPayments}, ethToSend=${ethToSend}`);
+    
     // Only send if we have at least 1 ETH after peer payments
-    if (ethToSend < 1) return null;
+    if (ethToSend < 1) {
+      console.log(`[BlockCreator] Insufficient balance for paint transaction (need at least 1 ETH, have ${ethToSend})`);
+      return null;
+    }
     
     const timestamp = Date.now();
     
