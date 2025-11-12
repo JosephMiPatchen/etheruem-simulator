@@ -45,10 +45,9 @@ export class NetworkManager {
     // Update the validator's address now that we have the node
     this.beaconValidators[validatorIndex].nodeAddress = nodeWorker.getNodeAddress();
     
-    // IMPORTANT: Recompute Epoch 0 schedule now that validator has real address
-    // The Consensus constructor computed it with placeholder address ('')
-    // We need to recompute so the schedule has the correct validator addresses
-    nodeWorker.recomputeEpoch0Schedule();
+    // NOTE: Don't recompute Epoch 0 schedule here!
+    // We need to wait until ALL nodes are created so all validators are in the array
+    // The schedule will be recomputed in createFullyConnectedNetwork() after all nodes exist
     
     // Set up message handling
     nodeWorker.setOnOutgoingMessage(this.routeMessageFromNode.bind(this));
@@ -103,6 +102,13 @@ export class NetworkManager {
     // Create the nodes with the phonetic IDs
     for (const nodeId of nodeIds) {
       this.createNode(nodeId);
+    }
+    
+    // IMPORTANT: Now that ALL nodes are created and ALL validators have real addresses,
+    // recompute Epoch 0 schedule for all nodes so they all see the complete validator set
+    console.log(`[NetworkManager] All ${nodeCount} nodes created. Recomputing Epoch 0 schedules with complete validator set.`);
+    for (const nodeWorker of this.nodesMap.values()) {
+      nodeWorker.recomputeEpoch0Schedule();
     }
     
     // Set up the network topology (mesh)
