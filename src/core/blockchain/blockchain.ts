@@ -177,8 +177,12 @@ export class Blockchain {
       return false;
     }
     
+    // Save old GHOST-HEAD to detect if canonical chain changes
+    const oldGhostHead = this.blockTree.getGhostHead();
+    
     // Add all blocks from new chain to tree (preserves forks)
     // LMD-GHOST will determine which chain is canonical based on attestations
+    // This method assumes blocks are in order and their root is the common genesis block
     for (const block of newBlocks) {
       const existingNode = this.blockTree.getNode(block.hash || '');
       if (!existingNode) {
@@ -187,10 +191,19 @@ export class Blockchain {
       }
     }
     
-    // Rebuild both world state and beacon state from scratch by applying each block
-    // Reset to initial state first
-    this.worldState = new WorldState();
-    if (this.beaconState) {
+    // Rebuild LMD GHOST tree decoration from scratch (latest attestations + attestedEth)
+    // This computes the new GHOST-HEAD based on attestations
+    this.rebuildLatestAttestationsAndTree();
+    
+    // Get new GHOST-HEAD after adding blocks and recomputing attestations
+    const newGhostHead = this.blockTree.getGhostHead();
+    
+    // Only rebuild world state if GHOST-HEAD changed (optimization)
+    if (oldGhostHead !== newGhostHead) {
+      console.log(`[Blockchain] GHOST-HEAD changed: ${oldGhostHead?.slice(0, 8) || 'null'} → ${newGhostHead?.slice(0, 8) || 'null'} - rebuilding state`);
+      
+      // Rebuild both world state and beacon state from scratch
+      this.worldState = new WorldState();
       this.beaconState.clearProcessedAttestations();
       
       // TODO: When implementing full PoS, also reset:
@@ -199,15 +212,15 @@ export class Blockchain {
       // - Slashing records (clear all)
       // - Finality checkpoints (back to genesis)
       // - Epoch schedule (regenerate from genesis)
+      
+      // Apply each block in the new canonical chain to rebuild state
+      const canonicalChain = this.blockTree.getCanonicalChain(newGhostHead);
+      for (const block of canonicalChain) {
+        this.applyBlockToState(block);
+      }
+    } else {
+      console.log(`[Blockchain] GHOST-HEAD unchanged: ${oldGhostHead?.slice(0, 8) || 'null'} - no state rebuild needed`);
     }
-    
-    // Apply each block in the new canonical chain to rebuild state
-    for (const block of newBlocks) {
-      this.applyBlockToState(block);
-    }
-    
-    // Rebuild LMD GHOST tree decoration from scratch (latest attestations + attestedEth)
-    this.rebuildLatestAttestationsAndTree();
     
     return true;
   }
