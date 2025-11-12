@@ -17,6 +17,7 @@ const SimulatorContentInner: React.FC = () => {
   // Reference to the network manager instance
   const networkManagerRef = useRef<NetworkManager | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const ghostHeadIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   // Initialize the network on component mount
   useEffect(() => {
@@ -39,10 +40,18 @@ const SimulatorContentInner: React.FC = () => {
       updateNodeStates();
     }, 500);
     
+    // Set up interval to broadcast LMD-GHOST heads every second
+    ghostHeadIntervalRef.current = setInterval(() => {
+      networkManager.broadcastAllGhostHeads();
+    }, 1000);
+    
     // Cleanup on unmount
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
+      }
+      if (ghostHeadIntervalRef.current) {
+        clearInterval(ghostHeadIntervalRef.current);
       }
       networkManager.stopAllNodes();
     };

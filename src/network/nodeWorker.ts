@@ -4,7 +4,10 @@ import { Validator } from '../core/consensus/beaconState';
 import { 
   Message, 
   MessageType, 
-  AttestationMessage
+  AttestationMessage,
+  LmdGhostBroadcastMessage,
+  ChainRequestMessage,
+  ChainResponseMessage
 } from './messages';
 import { createSignedTransaction } from '../core/blockchain/transaction';
 
@@ -30,6 +33,13 @@ export class NodeWorker {
     
     // Set up callback for block broadcast events
     this._node.setOnBlockBroadcast(this.handleBlockBroadcast.bind(this));
+    
+    // Set up callback for Sync to send messages
+    this._node.getSync().setMessageCallback((message: any) => {
+      if (this.onOutgoingMessageCallback) {
+        this.onOutgoingMessageCallback(message as Message);
+      }
+    });
   }
   
   /**
@@ -47,6 +57,15 @@ export class NodeWorker {
     switch (message.type) {
       case MessageType.ATTESTATION:
         this.handleAttestation(message as AttestationMessage);
+        break;
+      case MessageType.LMD_GHOST_BROADCAST:
+        this.handleLmdGhostBroadcast(message as LmdGhostBroadcastMessage);
+        break;
+      case MessageType.CHAIN_REQUEST:
+        this.handleChainRequest(message as ChainRequestMessage);
+        break;
+      case MessageType.CHAIN_RESPONSE:
+        this.handleChainResponse(message as ChainResponseMessage);
         break;
       default:
         console.error(`Unknown message type: ${(message as any).type}`);
@@ -145,6 +164,42 @@ export class NodeWorker {
     if (beaconState) {
       beaconState.addAttestation(message.attestation);
     }
+  }
+  
+  /**
+   * Handles LMD-GHOST broadcast message
+   * Thin wrapper - delegates to Sync class
+   */
+  private handleLmdGhostBroadcast(message: LmdGhostBroadcastMessage): void {
+    const sync = this._node.getSync();
+    sync.handleGhostBroadcast(message.fromNodeId, message.ghostHeadHash);
+  }
+  
+  /**
+   * Handles chain request message
+   * Thin wrapper - delegates to Sync class
+   */
+  private handleChainRequest(message: ChainRequestMessage): void {
+    const sync = this._node.getSync();
+    sync.handleChainRequest(message.fromNodeId, message.requestedHeadHash);
+  }
+  
+  /**
+   * Handles chain response message
+   * Thin wrapper - delegates to Sync class
+   */
+  private handleChainResponse(message: ChainResponseMessage): void {
+    const sync = this._node.getSync();
+    sync.handleChainResponse(message.requestedHeadHash, message.blocks);
+  }
+  
+  /**
+   * Broadcasts LMD-GHOST head
+   * Called periodically to sync with other nodes
+   */
+  broadcastGhostHead(): void {
+    const sync = this._node.getSync();
+    sync.broadcastGhostHead();
   }
   
   /**

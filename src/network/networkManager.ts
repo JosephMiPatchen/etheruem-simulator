@@ -144,6 +144,16 @@ export class NetworkManager {
   }
   
   /**
+   * Broadcasts LMD-GHOST heads from all nodes
+   * Called periodically (every second) for PoS synchronization
+   */
+  broadcastAllGhostHeads(): void {
+    for (const node of this.nodesMap.values()) {
+      node.broadcastGhostHead();
+    }
+  }
+  
+  /**
    * Stops all nodes and cleans up resources
    * Used for test cleanup and when shutting down the network
    */
