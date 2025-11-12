@@ -1,9 +1,8 @@
 import { Block, NodeState, PeerInfoMap, Account, EthereumTransaction } from '../types/types';
 import { Blockchain } from './blockchain/blockchain';
-import { Miner } from './mining/miner';
 import { Mempool } from './mempool/mempool';
 import { BeaconState, Validator } from './consensus/beaconState';
-import { Sync } from './consensus/Sync';
+import { Sync } from './consensus/sync';
 import { Consensus } from './consensus/Consensus';
 import { generatePrivateKey, derivePublicKey, generateAddress } from '../utils/cryptoUtils';
 
@@ -58,15 +57,6 @@ export class Node {
     
     // Initialize Consensus for PoS block proposal and validation
     this.consensus = new Consensus(this.beaconState, this.blockchain, this, this.mempool);
-    
-    // Initialize miner with callback for when a block is mined
-    // Using .bind(this) ensures the handleMinedBlock method maintains the Node instance context
-    // when called by the Miner. Without binding, 'this' would be undefined or refer to the wrong object
-    // when the callback is executed, causing errors when accessing Node properties or methods.
-    this.miner = new Miner(
-      this.handleMinedBlock.bind(this),
-      this
-    );
   }
   
   /**
@@ -128,31 +118,6 @@ export class Node {
    */
   addTransactionToMempool(transaction: EthereumTransaction): boolean {
     return this.mempool.addTransaction(transaction);
-  }
-  
-  /**
-   * Handles a block that was mined by this node
-   */
-  private async handleMinedBlock(block: Block): Promise<void> {
-    // Add the block to our chain
-    const added = await this.blockchain.addBlock(block);
-    
-    if (added === true) {
-      // Check if painting is complete based on transaction receipts
-      this.checkPaintingComplete(block);
-      
-      // Broadcast the block to peers
-      if (this.onBlockBroadcast) {
-        this.onBlockBroadcast(block);
-      }
-      
-      // Notify that the chain was updated
-      if (this.onChainUpdated) {
-        this.onChainUpdated();
-      }
-    } else {
-      console.error(`Node ${this.nodeId}: Failed to add self-mined block to chain - this should never happen!`);
-    }
   }
   
   /**

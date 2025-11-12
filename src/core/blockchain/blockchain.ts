@@ -31,7 +31,7 @@ export class Blockchain {
     this.blockTree.addBlock(genesisBlock);
     
     // Apply genesis block to world state
-    this.applyBlockToState(genesisBlock);
+    this.applyBlockToElAndClState(genesisBlock);
   
     this.worldState = WorldState.fromBlocks([genesisBlock]);
   }
@@ -150,7 +150,7 @@ export class Blockchain {
       }
       
       // Apply this block's state changes (world state + beacon state)
-      this.applyBlockToState(block);
+      this.applyBlockToElAndClState(block);
       
       // Update LMD GHOST tree decoration (latest attestations + attestedEth)
       // This also computes GHOST-HEAD, which determines the canonical chain
@@ -165,64 +165,55 @@ export class Blockchain {
   }
   
   /**
-   * Replaces the current chain with a new one if it's valid
-   * Used during initial sync when receiving a full chain from peers
-   * Adds all new blocks to tree and lets LMD-GHOST determine canonical chain
-   * Returns true if the chain was accepted, false otherwise
+   * Adds a chain of blocks to the blockchain
+   * Used during sync when receiving multiple blocks from peers
+   * Delegates to addBlock for each block to ensure proper validation and state updates
+   * If GHOST-HEAD changes to a different fork, rebuilds world state from new canonical chain
+   * Returns true if all blocks were added successfully, false otherwise
    */
-  async replaceChain(newBlocks: Block[]): Promise<boolean> {
-    // Validate the new chain
+  async addChain(newBlocks: Block[]): Promise<boolean> {
+    // Validate the chain structure first
     const isValid = await this.isValidChain(newBlocks);
     if (!isValid) {
+      console.error('[Blockchain] Invalid chain structure');
       return false;
     }
     
     // Save old GHOST-HEAD to detect if canonical chain changes
     const oldGhostHead = this.blockTree.getGhostHead();
     
-    // Add all blocks from new chain to tree (preserves forks)
-    // LMD-GHOST will determine which chain is canonical based on attestations
-    // This method assumes blocks are in order and their root is the common genesis block
+    // Add each block using addBlock to ensure proper validation and state updates
+    // This method assumes blocks are in order (genesis → block 1 → block 2 → ...)
+    let allAdded = true;
     for (const block of newBlocks) {
-      const existingNode = this.blockTree.getNode(block.hash || '');
-      if (!existingNode) {
-        // New block - add to tree
-        this.blockTree.addBlock(block);
+      const added = await this.addBlock(block);
+      if (!added) {
+        console.warn(`[Blockchain] Failed to add block ${block.hash?.slice(0, 8)} at height ${block.header.height}`);
+        allAdded = false;
+        // Continue adding remaining blocks - they might succeed if they're on a different fork
       }
     }
     
-    // Rebuild LMD GHOST tree decoration from scratch (latest attestations + attestedEth)
-    // This computes the new GHOST-HEAD based on attestations
-    this.rebuildLatestAttestationsAndTree();
-    
-    // Get new GHOST-HEAD after adding blocks and recomputing attestations
+    // Check if GHOST-HEAD changed after adding all blocks
     const newGhostHead = this.blockTree.getGhostHead();
     
-    // Only rebuild world state if GHOST-HEAD changed (optimization)
+    // If GHOST-HEAD changed, we need to rebuild world state from the new canonical chain
+    // This handles the case where we added fork blocks that became the new canonical chain
     if (oldGhostHead !== newGhostHead) {
-      console.log(`[Blockchain] GHOST-HEAD changed: ${oldGhostHead?.slice(0, 8) || 'null'} → ${newGhostHead?.slice(0, 8) || 'null'} - rebuilding state`);
+      console.log(`[Blockchain] GHOST-HEAD changed during addChain: ${oldGhostHead?.slice(0, 8) || 'null'} → ${newGhostHead?.slice(0, 8) || 'null'} - rebuilding state`);
       
-      // Rebuild both world state and beacon state from scratch
+      // Rebuild world state and beacon state from the new canonical chain
       this.worldState = new WorldState();
       this.beaconState.clearProcessedAttestations();
-      
-      // TODO: When implementing full PoS, also reset:
-      // - RANDAO mixes (back to genesis)
-      // - Validator balances (back to initial stakes)
-      // - Slashing records (clear all)
-      // - Finality checkpoints (back to genesis)
-      // - Epoch schedule (regenerate from genesis)
       
       // Apply each block in the new canonical chain to rebuild state
       const canonicalChain = this.blockTree.getCanonicalChain(newGhostHead);
       for (const block of canonicalChain) {
-        this.applyBlockToState(block);
+        this.applyBlockToElAndClState(block);
       }
-    } else {
-      console.log(`[Blockchain] GHOST-HEAD unchanged: ${oldGhostHead?.slice(0, 8) || 'null'} - no state rebuild needed`);
     }
     
-    return true;
+    return allAdded;
   }
   
   /**
@@ -236,7 +227,7 @@ export class Blockchain {
    * Applies a block's state changes to both world state and beacon state
    * This is the single source of truth for how blocks modify state
    */
-  private applyBlockToState(block: Block): void {
+  private applyBlockToElAndClState(block: Block): void {
     // ========== World State Updates (Execution Layer) ==========
     // Apply all transactions in the block to world state
     for (let i = 0; i < block.transactions.length; i++) {
@@ -249,33 +240,31 @@ export class Blockchain {
     }
     
     // ========== Beacon State Updates (Consensus Layer) ==========
-    if (this.beaconState) {
-      // Mark all attestations in this block as processed and remove from beacon pool
-      if (block.attestations && block.attestations.length > 0) {
-        const poolSizeBefore = this.beaconState.beaconPool.length;
-        for (const attestation of block.attestations) {
-          // Mark as processed to prevent duplicate inclusion
-          this.beaconState.markAttestationAsProcessed(attestation.blockHash, attestation.validatorAddress);
-          
-          // Remove from beacon pool (cleanup)
-          const poolSizeBeforeFilter = this.beaconState.beaconPool.length;
-          this.beaconState.beaconPool = this.beaconState.beaconPool.filter(
-            (att: any) => !(att.validatorAddress === attestation.validatorAddress && att.blockHash === attestation.blockHash)
-          );
-          const removed = poolSizeBeforeFilter - this.beaconState.beaconPool.length;
-          if (removed === 0) {
-            console.warn(`[Blockchain] Attestation not found in beacon pool: ${attestation.blockHash.slice(0, 8)}-${attestation.validatorAddress.slice(-4)}`);
-          }
+    // Mark all attestations in this block as processed and remove from beacon pool
+    if (block.attestations && block.attestations.length > 0) {
+      const poolSizeBefore = this.beaconState.beaconPool.length;
+      for (const attestation of block.attestations) {
+        // Mark as processed to prevent duplicate inclusion
+        this.beaconState.markAttestationAsProcessed(attestation.blockHash, attestation.validatorAddress);
+        
+        // Remove from beacon pool (cleanup)
+        const poolSizeBeforeFilter = this.beaconState.beaconPool.length;
+        this.beaconState.beaconPool = this.beaconState.beaconPool.filter(
+          (att: any) => !(att.validatorAddress === attestation.validatorAddress && att.blockHash === attestation.blockHash)
+        );
+        const removed = poolSizeBeforeFilter - this.beaconState.beaconPool.length;
+        if (removed === 0) {
+          console.warn(`[Blockchain] Attestation not found in beacon pool: ${attestation.blockHash.slice(0, 8)}-${attestation.validatorAddress.slice(-4)}`);
         }
-        console.log(`[Blockchain] Beacon pool cleanup: ${poolSizeBefore} -> ${this.beaconState.beaconPool.length} (removed ${poolSizeBefore - this.beaconState.beaconPool.length})`);
       }
-      
-      // TODO: When implementing full PoS, also update:
-      // - RANDAO mixes (XOR with new block's RANDAO reveal)
-      // - Validator balances (apply rewards/penalties)
-      // - Slashing records (if any slashings in block)
-      // - Finality checkpoints (update justified/finalized epochs)
+      console.log(`[Blockchain] Beacon pool cleanup: ${poolSizeBefore} -> ${this.beaconState.beaconPool.length} (removed ${poolSizeBefore - this.beaconState.beaconPool.length})`);
     }
+    
+    // TODO: When implementing full PoS, also update:
+    // - RANDAO mixes (XOR with new block's RANDAO reveal)
+    // - Validator balances (apply rewards/penalties)
+    // - Slashing records (if any slashings in block)
+    // - Finality checkpoints (update justified/finalized epochs)
   }
   
   /**

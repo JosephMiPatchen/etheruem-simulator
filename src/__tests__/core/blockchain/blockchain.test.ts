@@ -196,7 +196,7 @@ describe('Blockchain Module', () => {
       jest.spyOn(chainValidator, 'validateChain').mockResolvedValue(true);
       
       // Replace the chain
-      const result = await blockchain.replaceChain(longerChain.getBlocks());
+      const result = await blockchain.addChain(longerChain.getBlocks());
       
       expect(result).toBe(true);
       expect(blockchain.getBlocks().length).toBe(2);
@@ -216,7 +216,7 @@ describe('Blockchain Module', () => {
       const shorterChain = new Blockchain('test-node-3');
       
       // Replace the chain
-      const result = await blockchain.replaceChain(shorterChain.getBlocks());
+      const result = await blockchain.addChain(shorterChain.getBlocks());
       
       expect(result).toBe(false);
       expect(blockchain.getBlocks().length).toBe(2); // Original chain unchanged
@@ -238,7 +238,7 @@ describe('Blockchain Module', () => {
       jest.spyOn(chainValidator, 'validateChain').mockResolvedValue(false);
       
       // Replace the chain
-      const result = await blockchain.replaceChain(invalidChain.getBlocks());
+      const result = await blockchain.addChain(invalidChain.getBlocks());
       
       expect(result).toBe(false);
       expect(blockchain.getBlocks().length).toBe(1); // Original chain unchanged
@@ -263,7 +263,7 @@ describe('Blockchain Module', () => {
       jest.spyOn(blockchain as any, 'isValidChain').mockResolvedValue(true);
       
       // Replace the chain
-      await blockchain.replaceChain(longerChain.getBlocks());
+      await blockchain.addChain(longerChain.getBlocks());
       
       // The world state should be updated to match the longer chain
       expect(blockchain.getWorldState()).toEqual(longerChainUtxo);

@@ -160,18 +160,7 @@ export class Sync {
       console.log(`[Sync] Received chain with ${blocks.length} blocks for head: ${requestedHeadHash.slice(0, 8)}`);
     }
     
-    // Try to add the received chain to our blockchain
-    // This will trigger chain replacement if the new chain is valid
-    const replaced = await this.blockchain.replaceChain(blocks);
-    
-    if (replaced) {
-      if (SimulatorConfig.DEBUG_SYNC) {
-        console.log(`[Sync] Successfully synced chain for head: ${requestedHeadHash.slice(0, 8)}`);
-      }
-    } else {
-      if (SimulatorConfig.DEBUG_SYNC) {
-        console.log(`[Sync] Chain not replaced (may be shorter or invalid): ${requestedHeadHash.slice(0, 8)}`);
-      }
-    }
+    // Try to add the received chain to our blocktree
+    await this.blockchain.addChain(blocks);
   }
 }

@@ -70,7 +70,7 @@ describe('World State Consistency - Incremental vs Rebuild', () => {
       
       // Path 2: Replace chain
       const genesis = blockchain2.getLatestBlock();
-      const replaced = await blockchain2.replaceChain([genesis, block1]);
+      const replaced = await blockchain2.addChain([genesis, block1]);
       const worldState2 = blockchain2.getWorldState();
       
       // The key test: Both paths should produce IDENTICAL world states
