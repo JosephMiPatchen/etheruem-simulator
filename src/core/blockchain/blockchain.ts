@@ -89,10 +89,19 @@ export class Blockchain {
   
   /**
    * Gets the latest block in the canonical chain (GHOST-HEAD)
+   * If no ghostHead (no attestations yet), returns genesis block
    */
   getLatestBlock(): Block | null {
     const ghostHead = this.beaconState?.ghostHead;
     const head = this.blockTree.getCanonicalHead(ghostHead);
+    
+    // If no ghostHead yet (no attestations), return genesis block (height 0)
+    if (!head.block) {
+      const blocks = this.blockTree.getAllBlocks();
+      const genesisBlock = blocks.find(b => b.header.height === 0);
+      return genesisBlock || null;
+    }
+    
     return head.block;
   }
   
