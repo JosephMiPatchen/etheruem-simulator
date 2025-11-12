@@ -150,7 +150,6 @@ export class Consensus {
     
     // 3. Determine current proposer for this slot
     const proposer = this.getCurrentProposer(currentEpoch, currentSlot);
-    this.beaconState.currentProposer = proposer;
     
     console.log(`[Consensus ${this.nodeAddress.slice(0, 8)}] Proposer for slot ${currentSlot}: ${proposer?.slice(0, 8) || 'null'}`);
     

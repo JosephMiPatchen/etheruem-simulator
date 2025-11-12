@@ -27,9 +27,6 @@ export class BeaconState {
   // Shows which validator proposes at each slot in each epoch
   public proposerSchedules: Map<number, Map<number, string>>; // epoch -> (slot -> validator address)
   
-  // Current proposer for the current slot
-  public currentProposer: string | null;
-  
   // List of validators with their staked ETH
   public validators: Validator[];
   
@@ -66,7 +63,6 @@ export class BeaconState {
     this.validators = validators;
     this.randaoMixes = new Map();
     this.proposerSchedules = new Map();
-    this.currentProposer = null;
     this.beaconPool = [];
     this.processedAttestations = new Set();
     this.lmdGhost = new LmdGhost();
@@ -123,6 +119,15 @@ export class BeaconState {
       return this.generateInitialRandao();
     }
     return mix;
+  }
+  
+  /**
+   * Get the current proposer for the current slot
+   * Fetches from the proposer schedule based on current time
+   */
+  getCurrentProposer(): string | null {
+    const currentSlot = this.getCurrentSlot();
+    return this.getValidatorForSlot(currentSlot) || null;
   }
   
   /**
