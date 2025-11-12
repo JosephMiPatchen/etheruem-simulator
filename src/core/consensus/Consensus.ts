@@ -266,10 +266,16 @@ export class Consensus {
     block.hash = calculateBlockHeaderHash(header);
     
     // Process our own block through the same flow as received blocks
-    // This ensures RANDAO mix is updated in one place
-    await this.handleProposedBlock(block, slot, this.nodeAddress);
+    // This ensures RANDAO mix is updated in one place and validates before broadcasting
+    const success = await this.handleProposedBlock(block, slot, this.nodeAddress);
     
-    // Broadcast block to all validators (not all peers)
+    if (!success) {
+      console.error(`[Consensus] Failed to validate own proposed block for slot ${slot}`);
+      return;
+    }
+    
+    // Only broadcast if our own validation succeeded
+    console.log(`[Consensus] Own block validated successfully, broadcasting to validators`);
     this.broadcastBlockToValidators(block, slot);
   }
   
@@ -297,8 +303,9 @@ export class Consensus {
    * 2. If valid, add to blockchain
    * 3. Create and broadcast attestation
    * 4. Update own beacon pool (triggers LMD-GHOST update)
+   * @returns true if block was successfully processed, false otherwise
    */
-  async handleProposedBlock(block: Block, slot: number, fromAddress: string): Promise<void> {
+  async handleProposedBlock(block: Block, slot: number, fromAddress: string): Promise<boolean> {
     console.log(`[Consensus] Received proposed block for slot ${slot} from ${fromAddress.slice(0, 8)}`);
     
     // 1. Validate the block
@@ -308,7 +315,7 @@ export class Consensus {
     const isValid = await validateBlock(block, worldState, previousHash);
     if (!isValid) {
       console.warn(`[Consensus] Invalid block received for slot ${slot}`);
-      return;
+      return false;
     }
     
     // 2. Process RANDAO reveal if present
@@ -323,13 +330,13 @@ export class Consensus {
     const added = await this.blockchain.addBlock(block);
     if (!added) {
       console.warn(`[Consensus] Failed to add received block for slot ${slot}`);
-      return;
+      return false;
     }
     
-    // 3. Create attestation for this block
+    // 4. Create attestation for this block
     if (!block.hash) {
       console.error('[Consensus] Cannot attest to block without hash');
-      return;
+      return false;
     }
     
     const attestation = {
@@ -338,13 +345,14 @@ export class Consensus {
       timestamp: Date.now()
     };
     
-    // 4. Update own beacon pool FIRST (triggers LMD-GHOST update)
+    // 5. Update own beacon pool FIRST (triggers LMD-GHOST update)
     this.beaconState.addAttestation(attestation);
     
-    // 5. Broadcast attestation to peers
+    // 6. Broadcast attestation to peers
     this.broadcastAttestation(attestation);
     
     console.log(`[Consensus] Attested to block ${block.hash.slice(0, 8)} for slot ${slot}`);
+    return true;
   }
   
   /**
