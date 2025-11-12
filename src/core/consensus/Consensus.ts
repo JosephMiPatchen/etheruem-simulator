@@ -1,4 +1,5 @@
 import { Block, EthereumTransaction } from '../../types/types';
+import { SimulatorConfig } from '../../config/config';
 import { calculateBlockHeaderHash, calculateTransactionHash, validateBlock } from '../validation/blockValidator';
 import { Node } from '../node';
 import { BeaconState } from './beaconState';
@@ -22,10 +23,6 @@ export class Consensus {
   private nodeAddress: string;
   private mempool: Mempool;
   private paintingComplete: boolean = false; // Flag to stop creating paint transactions
-  
-  // Constants
-  private readonly SECONDS_PER_SLOT = 12;
-  private readonly SLOTS_PER_EPOCH = 32;
   
   // Callback for sending messages to network
   private onSendMessage?: (message: any) => void;
@@ -83,21 +80,21 @@ export class Consensus {
    * Helper: Calculate epoch from slot
    */
   private getEpoch(slot: number): number {
-    return Math.floor(slot / this.SLOTS_PER_EPOCH);
+    return Math.floor(slot / SimulatorConfig.SLOTS_PER_EPOCH);
   }
   
   /**
    * Helper: Check if slot is first slot of epoch
    */
   private isFirstSlotOfEpoch(slot: number): boolean {
-    return slot % this.SLOTS_PER_EPOCH === 0;
+    return slot % SimulatorConfig.SLOTS_PER_EPOCH === 0;
   }
   
   /**
    * Helper: Get slots per epoch constant
    */
   private getSlotsPerEpoch(): number {
-    return this.SLOTS_PER_EPOCH;
+    return SimulatorConfig.SLOTS_PER_EPOCH;
   }
   
   /**

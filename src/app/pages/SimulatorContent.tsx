@@ -3,6 +3,7 @@ import { NetworkManager } from '../../network/networkManager';
 import { NodeState } from '../../types/types';
 import NodePanel from '../components/NodePanel';
 import { SimulatorProvider, useSimulatorContext } from '../contexts/SimulatorContext';
+import { SimulatorConfig } from '../../config/config';
 
 /**
  * Inner simulator component that uses the simulator context
@@ -46,10 +47,10 @@ const SimulatorContentInner: React.FC = () => {
       networkManager.broadcastAllGhostHeads();
     }, 1000);
     
-    // Set up interval to process consensus slots every 12 seconds (PoS slot time)
+    // Set up interval to process consensus slots (configurable PoS slot time)
     slotIntervalRef.current = setInterval(() => {
       networkManager.processAllSlots();
-    }, 12000);
+    }, SimulatorConfig.SECONDS_PER_SLOT * 1000);
     
     // Cleanup on unmount
     return () => {

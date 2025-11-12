@@ -1,4 +1,5 @@
 import { LmdGhost } from '../LmdGhost';
+import { SimulatorConfig } from '../../config/config';
 
 /**
  * BeaconState - Consensus Layer (CL) state for Ethereum PoS
@@ -97,7 +98,7 @@ export class BeaconState {
   getCurrentSlot(): number {
     const currentTime = Math.floor(Date.now() / 1000); // Current UTC in seconds
     const timeSinceGenesis = currentTime - this.genesisTime;
-    return Math.floor(timeSinceGenesis / 12);
+    return Math.floor(timeSinceGenesis / SimulatorConfig.SECONDS_PER_SLOT);
   }
   
   /**

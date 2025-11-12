@@ -19,7 +19,8 @@ export const SimulatorConfig = {
   MAX_BLOCK_TRANSACTIONS: 10, // Maximum number of transactions per block
   
   // Proof of Stake (PoS) parameters
-  SLOTS_PER_EPOCH: 4,       // Number of slots per epoch (Ethereum mainnet standard)
+  SECONDS_PER_SLOT: 12,      // Duration of each slot in seconds
+  SLOTS_PER_EPOCH: 4,        // Number of slots per epoch (Ethereum mainnet: 32)
   MAX_EFFECTIVE_BALANCE: 64, // Maximum effective balance in ETH for validators
   
   // Constants
