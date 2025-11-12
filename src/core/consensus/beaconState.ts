@@ -1,4 +1,4 @@
-import { LmdGhost } from '../LmdGhost';
+import { LmdGhost } from './lmdGhost';
 import { SimulatorConfig } from '../../config/config';
 
 /**
@@ -75,12 +75,10 @@ export class BeaconState {
     this.processedAttestations = new Set();
     this.lmdGhost = new LmdGhost();
     
-    // Initialize RANDAO mix for epoch -1 with 0x0
+    // Initialize RANDAO mix for epoch -1 with all zeros (32 bytes)
     // This allows epoch 0 to compute its proposer schedule
-    this.randaoMixes.set(-1, '0x0');
-    
-    // Initialize first RANDAO mix for epoch 0
-    this.randaoMixes.set(0, this.generateInitialRandao());
+    // Must be even-length hex string for hexToBytes conversion
+    this.randaoMixes.set(-1, '0x0000000000000000000000000000000000000000000000000000000000000000');
   }
   
   /**

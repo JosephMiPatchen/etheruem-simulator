@@ -1,5 +1,5 @@
-import { Block } from '../types/types';
-import { BlockchainTree, BlockTreeNode } from './blockchain/blockchainTree';
+import { Block } from '../../types/types';
+import { BlockchainTree, BlockTreeNode } from '../blockchain/blockchainTree';
 
 /**
  * LMD-GHOST (Latest Message Driven Greedy Heaviest Observed SubTree)
