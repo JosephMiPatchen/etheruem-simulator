@@ -105,9 +105,13 @@ export class Consensus {
     // 1. Calculate current slot and epoch
     const currentSlot = this.getCurrentSlot();
     const currentEpoch = this.getEpoch(currentSlot);
+    const isFirstSlot = this.isFirstSlotOfEpoch(currentSlot);
+    
+    console.log(`[Consensus ${this.nodeAddress.slice(0, 8)}] Processing slot ${currentSlot}, epoch ${currentEpoch}, isFirstSlot: ${isFirstSlot}`);
     
     // 2. If first slot of epoch, compute proposer schedule
-    if (this.isFirstSlotOfEpoch(currentSlot)) {
+    if (isFirstSlot) {
+      console.log(`[Consensus ${this.nodeAddress.slice(0, 8)}] First slot of epoch ${currentEpoch}, computing schedule`);
       this.computeProposerSchedule(currentEpoch);
     }
     
@@ -115,8 +119,11 @@ export class Consensus {
     const proposer = this.getCurrentProposer(currentEpoch, currentSlot);
     this.beaconState.currentProposer = proposer;
     
+    console.log(`[Consensus ${this.nodeAddress.slice(0, 8)}] Proposer for slot ${currentSlot}: ${proposer?.slice(0, 8) || 'null'}`);
+    
     // 4. If we are the proposer, create and broadcast block
     if (proposer === this.nodeAddress) {
+      console.log(`[Consensus ${this.nodeAddress.slice(0, 8)}] I am the proposer for slot ${currentSlot}!`);
       await this.proposeBlock(currentSlot);
     }
     // 5. If not proposer, do nothing (wait for block from proposer)
@@ -127,24 +134,37 @@ export class Consensus {
    * Updates BeaconState.proposerSchedules with epoch -> (slot -> validator address)
    */
   private computeProposerSchedule(epoch: number): void {
-    const slotsPerEpoch = this.getSlotsPerEpoch();
-    const firstSlot = epoch * slotsPerEpoch;
-    
-    // Get proposer schedule for entire epoch from RANDAO
-    // Returns array of 32 validator addresses (one per slot)
-    const proposerArray = RANDAO.getProposerSchedule(this.beaconState, epoch);
-    
-    // Create schedule map: slot -> validator address
-    const schedule = new Map<number, string>();
-    for (let i = 0; i < slotsPerEpoch; i++) {
-      const slot = firstSlot + i;
-      schedule.set(slot, proposerArray[i]);
+    try {
+      const slotsPerEpoch = this.getSlotsPerEpoch();
+      const firstSlot = epoch * slotsPerEpoch;
+      
+      console.log(`[Consensus] Computing proposer schedule for epoch ${epoch}, first slot: ${firstSlot}`);
+      
+      // Get proposer schedule for entire epoch from RANDAO
+      // Returns array of 32 validator addresses (one per slot)
+      const proposerArray = RANDAO.getProposerSchedule(this.beaconState, epoch);
+      
+      if (!proposerArray || proposerArray.length === 0) {
+        console.error(`[Consensus] RANDAO returned empty proposer array for epoch ${epoch}`);
+        return;
+      }
+      
+      console.log(`[Consensus] RANDAO returned ${proposerArray.length} proposers for epoch ${epoch}`);
+      
+      // Create schedule map: slot -> validator address
+      const schedule = new Map<number, string>();
+      for (let i = 0; i < slotsPerEpoch; i++) {
+        const slot = firstSlot + i;
+        schedule.set(slot, proposerArray[i]);
+      }
+      
+      // Store schedule in BeaconState
+      this.beaconState.proposerSchedules.set(epoch, schedule);
+      
+      console.log(`[Consensus] Successfully stored proposer schedule for epoch ${epoch}, schedule size: ${schedule.size}`);
+    } catch (error) {
+      console.error(`[Consensus] Error computing proposer schedule for epoch ${epoch}:`, error);
     }
-    
-    // Store schedule in BeaconState
-    this.beaconState.proposerSchedules.set(epoch, schedule);
-    
-    console.log(`[Consensus] Computed proposer schedule for epoch ${epoch}`);
   }
   
   /**
