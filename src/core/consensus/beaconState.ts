@@ -96,11 +96,11 @@ export class BeaconState {
   
   /**
    * Get current epoch based on time
-   * Epoch = ((current_utc_secs - genesis_utc_secs) / 12) / 32
+   * Epoch = currentSlot / SLOTS_PER_EPOCH
    */
   getCurrentEpoch(): number {
     const currentSlot = this.getCurrentSlot();
-    return Math.floor(currentSlot / 32);
+    return Math.floor(currentSlot / SimulatorConfig.SLOTS_PER_EPOCH);
   }
   
   /**
