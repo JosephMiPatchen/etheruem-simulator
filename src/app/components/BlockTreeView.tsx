@@ -384,6 +384,10 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
                   <span className="info-value">{selectedBlock.header.height}</span>
                 </div>
                 <div className="info-row">
+                  <span className="info-label">Slot:</span>
+                  <span className="info-value">{selectedBlock.header.slot}</span>
+                </div>
+                <div className="info-row">
                   <span className="info-label">Hash:</span>
                   <span className="info-value hash-value">0x{calculateBlockHeaderHash(selectedBlock.header)}</span>
                 </div>
