@@ -41,6 +41,13 @@ export class Consensus {
     this.node = node;
     this.nodeAddress = node.getAddress();
     this.mempool = mempool;
+    
+    // Initialize proposer schedule for the current epoch
+    // This ensures the schedule is ready when the first slot timer fires
+    const currentSlot = this.getCurrentSlot();
+    const currentEpoch = this.getEpoch(currentSlot);
+    console.log(`[Consensus ${this.nodeAddress.slice(0, 8)}] Initializing with slot ${currentSlot}, epoch ${currentEpoch}`);
+    this.ensureScheduleForEpoch(currentEpoch);
   }
   
   /**
@@ -94,9 +101,29 @@ export class Consensus {
   }
   
   /**
+   * Ensures proposer schedule exists for the given epoch
+   * Computes schedule if it doesn't exist yet
+   * This is the single method for schedule computation, used by both:
+   * - Constructor (initialization)
+   * - processSlot (first slot of new epoch)
+   */
+  private ensureScheduleForEpoch(epoch: number): void {
+    // Check if schedule already exists for this epoch
+    const existingSchedule = this.beaconState.proposerSchedules.get(epoch);
+    if (existingSchedule) {
+      console.log(`[Consensus ${this.nodeAddress.slice(0, 8)}] Schedule already exists for epoch ${epoch}`);
+      return;
+    }
+    
+    // Schedule doesn't exist, compute it
+    console.log(`[Consensus ${this.nodeAddress.slice(0, 8)}] Computing new schedule for epoch ${epoch}`);
+    this.computeProposerSchedule(epoch);
+  }
+  
+  /**
    * Main consensus logic - called every slot
    * 1. Calculate current slot and epoch
-   * 2. If first slot of epoch, compute proposer schedule
+   * 2. Ensure proposer schedule exists for current epoch
    * 3. Determine current proposer for this slot
    * 4. If we are proposer, create and broadcast block
    * 5. If not proposer, wait for block from proposer
@@ -105,15 +132,11 @@ export class Consensus {
     // 1. Calculate current slot and epoch
     const currentSlot = this.getCurrentSlot();
     const currentEpoch = this.getEpoch(currentSlot);
-    const isFirstSlot = this.isFirstSlotOfEpoch(currentSlot);
     
-    console.log(`[Consensus ${this.nodeAddress.slice(0, 8)}] Processing slot ${currentSlot}, epoch ${currentEpoch}, isFirstSlot: ${isFirstSlot}`);
+    console.log(`[Consensus ${this.nodeAddress.slice(0, 8)}] Processing slot ${currentSlot}, epoch ${currentEpoch}`);
     
-    // 2. If first slot of epoch, compute proposer schedule
-    if (isFirstSlot) {
-      console.log(`[Consensus ${this.nodeAddress.slice(0, 8)}] First slot of epoch ${currentEpoch}, computing schedule`);
-      this.computeProposerSchedule(currentEpoch);
-    }
+    // 2. Ensure proposer schedule exists for current epoch
+    this.ensureScheduleForEpoch(currentEpoch);
     
     // 3. Determine current proposer for this slot
     const proposer = this.getCurrentProposer(currentEpoch, currentSlot);
