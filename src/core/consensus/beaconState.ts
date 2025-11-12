@@ -117,7 +117,12 @@ export class BeaconState {
    * Get RANDAO mix for a specific epoch
    */
   getRandaoMix(epoch: number): string {
-    return this.randaoMixes.get(epoch) || this.generateInitialRandao();
+    const mix = this.randaoMixes.get(epoch);
+    if (!mix) {
+      console.warn(`[BeaconState] ⚠️  No RANDAO mix found for epoch ${epoch}, falling back to default (all zeros). RANDAO reveals are not being processed!`);
+      return this.generateInitialRandao();
+    }
+    return mix;
   }
   
   /**
