@@ -158,16 +158,14 @@ export class NetworkManager {
   }
   
   /**
-   * Processes consensus slot for all nodes
-   * Called periodically (every 12 seconds) for PoS block proposal
+   * Processes a slot for all nodes in the network
    * Each node will:
-   * - Calculate current slot and epoch
    * - Determine if it's the proposer for this slot
    * - If proposer: create and broadcast block
    * - If not proposer: wait for block from proposer
    */
   async processAllSlots(): Promise<void> {
-    // Process slots for all nodes in parallel
+    // Process slots for all nodes in parallel (each calculates slot based on time)
     const promises = Array.from(this.nodesMap.values()).map(node => 
       node.processSlot()
     );

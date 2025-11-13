@@ -5,6 +5,7 @@ import {
   createPeerPaymentTransactions,
   createSignatureInput
 } from './transaction';
+import { calculateTransactionHash, calculateBlockHeaderHash } from '../validation/blockValidator';
 import { generateSignature as cryptoGenerateSignature } from '../../utils/cryptoUtils';
 import { Node } from '../node';
 import { sha256 } from '@noble/hashes/sha256';
@@ -15,7 +16,7 @@ import { Blockchain } from './blockchain';
 
 /**
  * BlockCreator - Utility class for creating block transactions and blocks
- * Used by both Miner (PoW) and Consensus (PoS) classes
+*Consensus (PoS) classes
  * 
  * Provides static methods for:
  * - Creating genesis block
@@ -34,8 +35,6 @@ export class BlockCreator {
    * This ensures all nodes start with identical state and same genesis hash
    */
   public static createGenesisBlock(): any {
-    const { calculateTransactionHash, calculateBlockHeaderHash } = require('../validation/blockValidator');
-    
     // Create a special transaction to deploy the EPM contract
     // This is a genesis-only transaction that creates the contract account
     // In Ethereum, sending to 0x0 creates a new contract
@@ -53,22 +52,21 @@ export class BlockCreator {
     
     const transactions = [epmDeployTransaction];
     
-    // Create block header
+    // Create block header (PoS - no ceiling or nonce)
     const header = {
       transactionHash: calculateTransactionHash(transactions),
       timestamp: 0, // Fixed timestamp for deterministic genesis hash
       previousHeaderHash: SimulatorConfig.GENESIS_PREV_HASH,
-      ceiling: parseInt(SimulatorConfig.CEILING, 16),
-      nonce: 0,
       height: 0,
-      slot: 0 // Genesis is at slot 0
+      slot: -1 // Genesis is at slot -1 (before slot 0)
     };
     
-    // Create genesis block
+    // Create genesis block with RANDAO reveal
     const block = {
       header,
       transactions,
       attestations: [],
+      randaoReveal: SimulatorConfig.GENESIS_RANDAO_REVEAL,
       hash: calculateBlockHeaderHash(header)
     };
     
@@ -111,8 +109,6 @@ export class BlockCreator {
     randaoReveal: string,
     paintingComplete: boolean
   ): Promise<Block> {
-    const { calculateTransactionHash, calculateBlockHeaderHash } = require('../validation/blockValidator');
-    
     // Get latest block to build on top of
     const latestBlock = blockchain.getLatestBlock();
     if (!latestBlock) {
@@ -128,13 +124,11 @@ export class BlockCreator {
       paintingComplete
     );
     
-    // Create block header with slot and nonce 0x0 (no PoW)
+    // Create block header (PoS - no ceiling or nonce)
     const header = {
       transactionHash: calculateTransactionHash(transactions),
       timestamp: Date.now(),
       previousHeaderHash: latestBlock.hash || '',
-      ceiling: 0, // No ceiling for PoS
-      nonce: 0, // 0x0 for PoS (no mining)
       height: latestBlock.header.height + 1,
       slot: slot
     };

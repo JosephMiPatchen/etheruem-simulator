@@ -56,7 +56,15 @@ export class Sync {
   broadcastGhostHead(): void {
     if (!this.onSendMessage) return;
     
-    const ghostHeadHash = this.getGhostHeadHash();
+    const tree = this.blockchain.getTree();
+    const ghostHeadNode = tree.getGhostHead();
+    
+    // Don't broadcast if we only have genesis (slot -1)
+    if (!ghostHeadNode || ghostHeadNode.block.header.slot === -1) {
+      return;
+    }
+    
+    const ghostHeadHash = ghostHeadNode.hash;
     
     const message = {
       type: MessageType.LMD_GHOST_BROADCAST,

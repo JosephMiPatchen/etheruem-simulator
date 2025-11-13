@@ -137,7 +137,7 @@ export class Consensus {
    * 5. If not proposer, wait for block from proposer
    */
   async processSlot(): Promise<void> {
-    // 1. Calculate current slot and epoch
+    // 1. Get current slot and epoch (time-based calculation)
     const currentSlot = this.getCurrentSlot();
     const currentEpoch = this.getEpoch(currentSlot);
     

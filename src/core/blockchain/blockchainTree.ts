@@ -315,8 +315,6 @@ export class BlockchainTree {
    * 3. Continue until reaching a leaf (chain tip)
    */
   getGhostHead(): BlockTreeNode | null {
-    // Import LmdGhost at runtime to avoid circular dependency
-    const { LmdGhost } = require('../consensus/LmdGhost');
     const ghostHeadHash = LmdGhost.computeGhostHead(this);
     return ghostHeadHash ? this.getNode(ghostHeadHash) || null : null;
   }

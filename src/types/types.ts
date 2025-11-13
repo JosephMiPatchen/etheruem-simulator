@@ -44,8 +44,8 @@ export interface BlockHeader { // note: we dont have a field for headers hash, w
   transactionHash: string;  // SHA256 hash of all transactions
   timestamp: number;        // Local machine time
   previousHeaderHash: string; // Previous block's header hash
-  ceiling: number;          // Target threshold value
-  nonce: number;            // Value miners adjust to find valid hash (0x0 for PoS)
+  ceiling?: number;         // Target threshold value (PoW only, not used in PoS)
+  nonce?: number;           // Value miners adjust to find valid hash (PoW only, not used in PoS)
   height: number;           // Block height in the chain
   slot: number;             // PoS slot number when block was proposed
 }

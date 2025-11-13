@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import { Block, Account } from '../../types/types';
 import { ReceiptsDatabase } from '../../types/receipt';
 import { calculateBlockHeaderHash } from '../../core/validation/blockValidator';
-import { isHashBelowCeiling } from '../../utils/cryptoUtils';
-import { SimulatorConfig } from '../../config/config';
 import TransactionView from './TransactionView';
 import AttestationCircle from './AttestationCircle';
 import { useSimulatorContext } from '../contexts/SimulatorContext';
@@ -46,10 +44,11 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, rec
   // Sort blocks by height
   const sortedBlocks = [...blocks].sort((a, b) => a.header.height - b.header.height);
   
-  // Calculate the hash and check if it's valid
+  // PoS block validation - all blocks are valid by default
+  // TODO: Implement BLS signature verification for RANDAO reveals and proposer signatures
   const validateBlockHash = (block: Block) => {
     const hash = calculateBlockHeaderHash(block.header);
-    const isValid = isHashBelowCeiling(hash, SimulatorConfig.CEILING);
+    const isValid = true; // PoS blocks don't use PoW hash validation
     const isGenesis = block.header.height === 0;
     return { hash, isValid, isGenesis };
   };
@@ -145,10 +144,6 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, rec
                 <div className="info-row">
                   <span className="info-label">Timestamp:</span>
                   <span className="info-value">{new Date(selectedBlock.header.timestamp).toLocaleString()}</span>
-                </div>
-                <div className="info-row">
-                  <span className="info-label">Ceiling:</span>
-                  <span className="info-value hash-value">0x{SimulatorConfig.CEILING}</span>
                 </div>
                 {selectedBlock.randaoReveal && (
                   <div className="info-row">

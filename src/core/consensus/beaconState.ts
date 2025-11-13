@@ -72,8 +72,8 @@ export class BeaconState {
   }
   
   /**
-   * Get current slot based on time
-   * Slot = (current_utc_secs - genesis_utc_secs) / 12
+   * Get current slot based on time since genesis
+   * Slot = (current_time - genesis_time) / SECONDS_PER_SLOT
    */
   getCurrentSlot(): number {
     const currentTime = Math.floor(Date.now() / 1000); // Current UTC in seconds
@@ -237,8 +237,7 @@ export class BeaconState {
     this.proposerSchedules.clear();
     
     // Re-initialize genesis RANDAO mix (epoch -1)
-    const { RANDAO } = require('./RANDAO');
-    this.randaoMixes.set(-1, RANDAO.computeGenesisRandaoMix());
+    this.randaoMixes.set(-1, SimulatorConfig.GENESIS_RANDAO_MIX);
   }
   
   /**

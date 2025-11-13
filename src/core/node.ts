@@ -38,20 +38,17 @@ export class Node {
     this.publicKey = derivePublicKey(this.privateKey);
     this.address = generateAddress(this.publicKey);
     
-    // Pass the node's actual address to the blockchain
-    this.blockchain = new Blockchain(nodeId, this.address);
-    
-    // Initialize mempool for pending transactions
-    this.mempool = new Mempool();
-    
-    // Initialize Beacon State (Consensus Layer)
+    // Initialize Beacon State (Consensus Layer) BEFORE Blockchain
     // All nodes will be initialized with the same genesis time and validator set
     const defaultGenesisTime = genesisTime || Math.floor(Date.now() / 1000);
     const defaultValidators = validators || [];
     this.beaconState = new BeaconState(defaultGenesisTime, defaultValidators);
     
-    // Set BeaconState reference on Blockchain so it can rebuild processed attestations when HEAD changes
-    this.blockchain.setBeaconState(this.beaconState);
+    // Create blockchain with BeaconState so genesis block can be processed correctly
+    this.blockchain = new Blockchain(nodeId, this.address, this.beaconState);
+    
+    // Initialize mempool for pending transactions
+    this.mempool = new Mempool();
     
     // Initialize Sync for LMD-GHOST head synchronization
     this.sync = new Sync(this.blockchain, this.nodeId);

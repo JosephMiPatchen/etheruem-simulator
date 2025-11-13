@@ -4,6 +4,7 @@ import { NodeState } from '../../types/types';
 import NodePanel from '../components/NodePanel';
 import { SimulatorProvider, useSimulatorContext } from '../contexts/SimulatorContext';
 import { SimulatorConfig } from '../../config/config';
+import { FaPlay, FaPause, FaSync } from 'react-icons/fa';
 
 /**
  * Inner simulator component that uses the simulator context
@@ -14,6 +15,9 @@ const SimulatorContentInner: React.FC = () => {
   
   // State for network running status
   const [isNetworkRunning, setIsNetworkRunning] = useState(true);
+  
+  // State for sync enabled status
+  const [isSyncEnabled, setIsSyncEnabled] = useState(true);
   
   // Get context functions
   const { detectForks, setAddressToNodeId } = useSimulatorContext();
@@ -128,16 +132,50 @@ const SimulatorContentInner: React.FC = () => {
     }
   };
   
+  // Toggle sync (LMD-GHOST head broadcasting)
+  const toggleSync = () => {
+    if (!networkManagerRef.current) return;
+    
+    if (isSyncEnabled) {
+      // Stop syncing
+      if (ghostHeadIntervalRef.current) {
+        clearInterval(ghostHeadIntervalRef.current);
+        ghostHeadIntervalRef.current = null;
+      }
+      setIsSyncEnabled(false);
+      console.log('[Sync] Disabled');
+    } else {
+      // Start syncing
+      ghostHeadIntervalRef.current = setInterval(() => {
+        networkManagerRef.current?.broadcastAllGhostHeads();
+      }, 1000);
+      setIsSyncEnabled(true);
+      console.log('[Sync] Enabled');
+    }
+  };
+  
   return (
     <div className="app-container">
       <header className="app-header">
         <h1>Ethereum Simulator</h1>
-        <button 
-          className={`network-toggle-button ${isNetworkRunning ? 'running' : 'stopped'}`}
-          onClick={toggleNetwork}
-        >
-          {isNetworkRunning ? '⏸ Stop Network' : '▶ Start Network'}
-        </button>
+        <div className="controls-container">
+          <button 
+            className={`control-button ${isNetworkRunning ? 'active' : 'inactive'}`}
+            onClick={toggleNetwork}
+            title={isNetworkRunning ? 'Stop block production' : 'Start block production'}
+          >
+            {isNetworkRunning ? <FaPause /> : <FaPlay />}
+            <span>{isNetworkRunning ? 'Network Running' : 'Network Stopped'}</span>
+          </button>
+          <button 
+            className={`control-button ${isSyncEnabled ? 'active' : 'inactive'}`}
+            onClick={toggleSync}
+            title={isSyncEnabled ? 'Disable sync broadcasting' : 'Enable sync broadcasting'}
+          >
+            <FaSync className={isSyncEnabled ? 'spinning' : ''} />
+            <span>{isSyncEnabled ? 'Sync Enabled' : 'Sync Disabled'}</span>
+          </button>
+        </div>
       </header>
       
       <main className="nodes-container">

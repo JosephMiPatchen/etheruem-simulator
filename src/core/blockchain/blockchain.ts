@@ -18,11 +18,12 @@ export class Blockchain {
   private worldState: WorldState;
   private nodeId: string;
   private minerAddress: string;
-  private beaconState?: any;  // Optional reference to BeaconState for rebuilding processed attestations
+  private beaconState: any;  // Reference to BeaconState for RANDAO and attestation processing
   
-  constructor(nodeId: string, minerAddress: string) {
+  constructor(nodeId: string, minerAddress: string, beaconState: any) {
     this.nodeId = nodeId;
     this.minerAddress = minerAddress;
+    this.beaconState = beaconState;
     this.worldState = new WorldState();
     
     // Initialize tree with null root
@@ -32,26 +33,18 @@ export class Blockchain {
     const genesisBlock = BlockCreator.createGenesisBlock();
     this.blockTree.addBlock(genesisBlock);
     
-    // Apply genesis block to world state
+    // Apply genesis block to both execution and consensus layers
     this.applyBlockToElAndClState(genesisBlock);
-  
-    this.worldState = WorldState.fromBlocks([genesisBlock]);
+    
+    // Set blockchain reference in BeaconState for eager tree updates
+    this.beaconState.setBlockchain(this);
   }
   
   /**
-   * Sets the BeaconState reference for rebuilding processed attestations
-   * Also sets blockchain reference in BeaconState for eager tree updates
-   * Initializes ghostHead to genesis block
+   * Gets the BeaconState reference
    */
-  setBeaconState(beaconState: any): void {
-    this.beaconState = beaconState;
-    // Set bidirectional reference so BeaconState can trigger tree updates
-    if (beaconState) {
-      beaconState.setBlockchain(this);
-      
-      // Note: GHOST-HEAD is computed on-demand via blockTree.getGhostHead()
-      // No need to initialize it - it will be computed when first accessed
-    }
+  getBeaconState(): any {
+    return this.beaconState;
   }
   
   /**
@@ -228,6 +221,7 @@ export class Blockchain {
     const epoch = Math.floor(block.header.slot / SimulatorConfig.SLOTS_PER_EPOCH);
     
     // Update RANDAO mix: new_mix = current_mix XOR reveal
+    // All blocks including genesis have RANDAO reveal
     RANDAO.updateRandaoMix(this.beaconState, epoch, block.randaoReveal!);
     
     // Mark all attestations in this block as processed and remove from beacon pool
