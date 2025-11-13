@@ -152,15 +152,19 @@ export class BlockchainTree {
   }
   
   /**
-   * Gets the GHOST-HEAD node (canonical chain tip from LMD-GHOST)
-   * @param ghostHeadHash - Hash of the GHOST-HEAD
+   * Gets the canonical head node (current GHOST-HEAD)
+   * @param ghostHeadHash - Optional hash to get specific head node
+   *                        If not provided, uses current GHOST-HEAD
    */
   getCanonicalHead(ghostHeadHash?: string | null): BlockTreeNode | null {
-    if (!ghostHeadHash) {
+    // Use current GHOST-HEAD if no specific hash provided
+    const headHash = ghostHeadHash ?? this.ghostHead;
+    
+    if (!headHash) {
       return this.root;
     }
     
-    const headNode = this.nodesByHash.get(ghostHeadHash);
+    const headNode = this.nodesByHash.get(headHash);
     return headNode || this.root;
   }
   

@@ -101,12 +101,11 @@ export class Blockchain {
   }
   
   /**
-   * Gets the latest block in the canonical chain (GHOST-HEAD)
-   * ghostHead is initialized to genesis block and updated by LMD-GHOST fork choice
+   * Gets the latest block (canonical chain tip from GHOST-HEAD)
+   * Uses current GHOST-HEAD automatically
    */
   getLatestBlock(): Block | null {
-    const ghostHead = this.blockTree.getGhostHead();
-    const head = this.blockTree.getCanonicalHead(ghostHead);
+    const head = this.blockTree.getCanonicalHead();
     return head ? head.block : null;
   }
   
@@ -144,8 +143,7 @@ export class Blockchain {
     }
     
     // Check if this block extends the current canonical chain (GHOST-HEAD)
-    const ghostHead = this.blockTree.getGhostHead();
-    const currentHead = this.blockTree.getCanonicalHead(ghostHead);
+    const currentHead = this.blockTree.getCanonicalHead();
     const extendsCanonical = block.header.previousHeaderHash === (currentHead!.block?.hash || '');
     
     if (extendsCanonical) {
@@ -163,9 +161,10 @@ export class Blockchain {
       
       // GHOST-HEAD moves forward (forward progress)
       // Note: We don't need to check for reorg here because we're extending canonical
+      const oldHead = currentHead?.block?.hash;
       this.blockTree.setGhostHead(block.hash);
       
-      console.log(`[Blockchain] GHOST-HEAD moved forward: ${ghostHead?.slice(0, 8)} → ${block.hash?.slice(0, 8)}`);
+      console.log(`[Blockchain] GHOST-HEAD moved forward: ${oldHead?.slice(0, 8)} → ${block.hash?.slice(0, 8)}`);
       
       return true;
     } else {
