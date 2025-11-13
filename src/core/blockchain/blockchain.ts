@@ -2,7 +2,7 @@ import { Block, Account } from '../../types/types';
 import { BlockCreator } from './blockCreator';
 import { WorldState } from './worldState';
 import { validateBlock, calculateBlockHeaderHash } from '../validation/blockValidator';
-import { validateChain } from '../validation/chainValidator';
+import { lightValidateChain } from '../validation/chainValidator';
 import { BlockchainTree, BlockTreeNode } from './blockchainTree';
 import { LmdGhost } from '../consensus/LmdGhost';
 import { RANDAO } from '../consensus/randao';
@@ -204,7 +204,7 @@ export class Blockchain {
    * Validates a chain of blocks
    */
   private async isValidChain(chain: Block[]): Promise<boolean> {
-    return await validateChain(chain);
+    return await lightValidateChain(chain);
   }
   
   /**

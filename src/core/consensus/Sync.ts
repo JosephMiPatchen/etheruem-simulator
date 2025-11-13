@@ -1,6 +1,5 @@
 import { Block } from '../../types/types';
 import { Blockchain } from '../blockchain/blockchain';
-import { BeaconState } from './beaconState';
 import { MessageType } from '../../network/messages';
 import { SimulatorConfig } from '../../config/config';
 
@@ -15,15 +14,13 @@ import { SimulatorConfig } from '../../config/config';
  */
 export class Sync {
   private blockchain: Blockchain;
-  private beaconState: BeaconState;
   private nodeId: string;
   
   // Callback for sending messages to network
   private onSendMessage?: (message: any) => void;
   
-  constructor(blockchain: Blockchain, beaconState: BeaconState, nodeId: string) {
+  constructor(blockchain: Blockchain, nodeId: string) {
     this.blockchain = blockchain;
-    this.beaconState = beaconState;
     this.nodeId = nodeId;
   }
   
@@ -36,18 +33,19 @@ export class Sync {
   
   /**
    * Gets the current LMD-GHOST head hash
-   * Returns genesis block hash if no attestations (no GHOST-HEAD computed)
+   * Returns genesis hash if no GHOST-HEAD
    */
-  getGhostHeadHash(): string {
-    const ghostHead = this.beaconState.ghostHead;
+  private getGhostHeadHash(): string {
+    const tree = this.blockchain.getTree();
+    const ghostHeadNode = tree.getGhostHead();
     
-    // If no GHOST-HEAD (no attestations), default to genesis block
-    if (!ghostHead) {
+    // If no GHOST-HEAD, return genesis
+    if (!ghostHeadNode) {
       const genesisBlock = this.blockchain.getBlockByHeight(0);
       return genesisBlock?.hash || '';
     }
     
-    return ghostHead;
+    return ghostHeadNode.hash;
   }
   
   /**

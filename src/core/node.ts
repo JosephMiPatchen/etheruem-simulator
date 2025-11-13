@@ -53,7 +53,7 @@ export class Node {
     this.blockchain.setBeaconState(this.beaconState);
     
     // Initialize Sync for LMD-GHOST head synchronization
-    this.sync = new Sync(this.blockchain, this.beaconState, this.nodeId);
+    this.sync = new Sync(this.blockchain, this.nodeId);
     
     // Initialize Consensus for PoS block proposal and validation
     this.consensus = new Consensus(this.beaconState, this.blockchain, this, this.mempool);

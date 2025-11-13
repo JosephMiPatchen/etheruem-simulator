@@ -49,7 +49,7 @@ export class RANDAO {
 
     const proposerSchedule: string[] = [];
 
-    // Compute proposer for each of the 32 slots in the target epoch
+    // Compute proposer for each of the x slots in the target epoch
     for (let slotIndexInEpoch = 0; slotIndexInEpoch < SimulatorConfig.SLOTS_PER_EPOCH; slotIndexInEpoch++) {
       const absoluteSlotNumber = targetEpoch * SimulatorConfig.SLOTS_PER_EPOCH + slotIndexInEpoch;
 

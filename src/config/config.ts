@@ -4,9 +4,8 @@
  */
 
 export const SimulatorConfig = {
-  // Mining parameters
+  // Issuance parameters
   BLOCK_REWARD: 4,           // ETH rewarded to proposers
-  CEILING: "0x00050000000000000000000000000000000000000000000000000000000000000",  // Target difficulty 1/256
   
   // Network parameters
   NODE_COUNT: 4,             // Number of nodes in the network

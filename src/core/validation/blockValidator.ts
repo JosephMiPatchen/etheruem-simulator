@@ -29,7 +29,7 @@ export const validateBlock = async (
 ): Promise<boolean> => {
   const { header, transactions } = block;
   
-  // 1. Validate block has at least one transaction (the coinbase)
+  // 1. Validate block has at least one transaction
   if (transactions.length === 0) {
     console.error('Block has no transactions');
     return false;
@@ -37,9 +37,10 @@ export const validateBlock = async (
   
   // Create a temporary world state for sequential validation
   // This allows transactions within the same block to be validated in order
-  const tempWorldState = new WorldState(worldState.accounts);
+  const tempWorldState = new WorldState(worldState.accounts); // clone
+  // todo: also create temp beacon state when we have valdition rules specific to beacon state
   
-  // 2. First transaction must be a coinbase transaction
+  // 2. First transaction must be a coinbase(issuance) transaction
   const coinbaseValid = await validateTransaction(transactions[0], tempWorldState, true);
   if (!coinbaseValid) {
     console.error('Invalid coinbase transaction');
@@ -80,19 +81,9 @@ export const validateBlock = async (
       console.error(`Previous header hash mismatch: ${header.previousHeaderHash} !== ${previousHeaderHash}`);
       return false;
     }
-  } else {
-    // For genesis blocks, only validate that previous hash is the genesis prev hash
-    if (header.previousHeaderHash !== SimulatorConfig.GENESIS_PREV_HASH) {
-      console.error('Genesis block must have the correct previous hash');
-      return false;
-    }
   }
   
-  // 6. Validate block height is appropriate
-  // This would typically check that height is one more than previous block
-  // Since we only have the previous hash, we'll assume the caller has verified this
-  
-  // 7. Validate block timestamp is reasonable
+  // 6. Validate block timestamp is reasonable
   const now = Date.now();
   const fiveHoursInMs = 5 * 60 * 60 * 1000;
   if (header.timestamp > now + fiveHoursInMs || header.timestamp < now - fiveHoursInMs) {
@@ -100,8 +91,24 @@ export const validateBlock = async (
     return false;
   }
   
-  // 8. PoW nonce/hash validation removed - using PoS consensus now
-  // Blocks are validated by validator signatures and attestations, not hash difficulty
+  // 7. Validate attestations (if any)
+  if (block.attestations && block.attestations.length > 0) {
+    // TODO: Add more comprehensive attestation validation:
+    // - Verify attestations point to blocks in the tree
+    // - Verify attestations are from registered validators
+    // - Verify attestation signatures (when implemented)
+    
+    // For now, just check for duplicates within the block
+    const attestationKeys = new Set<string>();
+    for (const attestation of block.attestations) {
+      const key = `${attestation.blockHash}-${attestation.validatorAddress}`;
+      if (attestationKeys.has(key)) {
+        console.error(`Duplicate attestation in block: ${key}`);
+        return false;
+      }
+      attestationKeys.add(key);
+    }
+  }
   
   return true;
 };

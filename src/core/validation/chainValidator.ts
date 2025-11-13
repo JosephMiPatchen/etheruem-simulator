@@ -1,87 +1,49 @@
 import { Block } from '../../types/types';
-import { validateBlock } from './blockValidator';
-import { WorldState } from '../blockchain/worldState';
 import { SimulatorConfig } from '../../config/config';
 
 /**
- * Validates a chain of blocks
- * Returns true if the chain is valid, false otherwise
+ * Lightweight chain validation for PoS block tree
  * 
- * Note: In this simulator, each node creates its own genesis block.
- * When validating a chain from another node, we don't require that
- * the first block matches our own genesis block. Instead, we validate
- * that the chain is internally consistent and follows all other rules.
+ * Only validates structural integrity:
+ * - Hashes link together correctly
+ * - Slots are in correct order (gaps allowed for missed slots)
+ * - Genesis block has correct previous hash
+ * 
+ * Does NOT validate transactions or rebuild state.
+ * Full validation happens when blocks are applied to 
+ * our state via a LMD GHOST header being move to a chain in our block tree
+ * 
+ * This is suitable for validating chains received from peers before
+ * adding them to the block tree.
  */
-export const validateChain = async (chain: Block[]): Promise<boolean> => {
-  // Check if the chain is empty
+export const lightValidateChain = async (chain: Block[]): Promise<boolean> => {
+  // 1. Check if the chain is empty
   if (chain.length === 0) {
-    console.error('Chain is empty');
+    console.error('[lightValidateChain] Chain is empty');
     return false;
   }
   
-  // Verify the first block has height 0 (is a genesis block)
-  if (chain[0].header.height !== 0) {
-    console.error('First block is not a genesis block (height 0)');
-    return false;
-  }
-
-  // For genesis block, verify it has the correct previous hash
+  // 2. Verify genesis block has correct previous hash
   if (chain[0].header.previousHeaderHash !== SimulatorConfig.GENESIS_PREV_HASH) {
-    console.error('Genesis block must have the correct previous hash');
+    console.error('[lightValidateChain] Genesis block must have GENESIS_PREV_HASH');
     return false;
   }
-
-  // For genesis block, we don't validate against the ceiling
-  // Each node can have its own unique genesis block hash
   
-  // Validate each block in the chain
-  let tempWorldState = new WorldState();
-  
-  for (let i = 0; i < chain.length; i++) {
+  // 3. Validate each block's hash links to previous block
+  for (let i = 1; i < chain.length; i++) {
     const block = chain[i];
-    const previousBlock = i > 0 ? chain[i - 1] : null;
+    const previousBlock = chain[i - 1];
     
-    // Verify block height sequence
-    if (block.header.height !== i) {
-      console.error(`Invalid block height sequence: expected ${i}, got ${block.header.height}`);
-      return false;
-    }
-
-    // Special validation for genesis block
-    if (i === 0) {
-      // Genesis block validation is already done above
-      // Just update the world state with its transactions
-      for (const transaction of block.transactions) {
-        const success = tempWorldState.updateWithTransaction(transaction);
-        if (!success) {
-          console.error('Failed to process genesis block transaction');
-          return false;
-        }
-      }
-      continue;
-    }
-
-    // For non-genesis blocks, validate against the previous block
-    const previousHash = previousBlock!.hash || '';
-    const isValid = await validateBlock(block, tempWorldState, previousHash);
-    if (!isValid) {
-      console.error(`Block at height ${block.header.height} is invalid`);
+    // Check hash linkage
+    if (block.header.previousHeaderHash !== previousBlock.hash) {
+      console.error(`[lightValidateChain] Hash mismatch at height ${block.header.height}: ${block.header.previousHeaderHash} !== ${previousBlock.hash}`);
       return false;
     }
     
-    // Check for chronological timestamps
-    if (block.header.timestamp < previousBlock!.header.timestamp) {
-      console.error(`Block timestamp is not chronological: ${block.header.timestamp} < ${previousBlock!.header.timestamp}`);
+    // Check slot ordering (slots must increase, gaps allowed for missed slots)
+    if (block.header.slot <= previousBlock.header.slot) {
+      console.error(`[lightValidateChain] Slot not increasing at height ${block.header.height}: ${block.header.slot} <= ${previousBlock.header.slot}`);
       return false;
-    }
-    
-    // Incrementally update the world state with this block's transactions
-    for (const transaction of block.transactions) {
-      const success = tempWorldState.updateWithTransaction(transaction);
-      if (!success) {
-        console.error(`Failed to process transaction in block at height ${block.header.height}`);
-        return false;
-      }
     }
   }
   

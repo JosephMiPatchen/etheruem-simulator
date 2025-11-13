@@ -109,7 +109,7 @@ export class LmdGhost {
    */
   public static getDirectAttestedEth(beaconState: any, blockHash: string): number {
     const attestations = LmdGhost.getAttestationsForBlock(beaconState, blockHash);
-    return attestations.length * 32; // 32 ETH per attestation
+    return attestations.length * 32; // TODO: get this from the validtor set in beacon state
   }
   
   /**
