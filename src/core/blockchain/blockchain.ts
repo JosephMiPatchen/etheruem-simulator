@@ -262,13 +262,16 @@ export class Blockchain {
     // ========== Beacon State Updates (Consensus Layer) ==========
     
     // Update RANDAO mix with this block's reveal
-    if (block.randaoReveal) {
-      // Calculate epoch from slot: epoch = floor(slot / SLOTS_PER_EPOCH)
-      const epoch = Math.floor(block.header.slot / SimulatorConfig.SLOTS_PER_EPOCH);
-      
-      // Update RANDAO mix: new_mix = current_mix XOR reveal
-      RANDAO.updateRandaoMix(this.beaconState, epoch, block.randaoReveal);
+    // In PoS, every block must include a RANDAO reveal
+    if (!block.randaoReveal) {
+      throw new Error(`Block ${block.hash} is missing randaoReveal - required for PoS`);
     }
+    
+    // Calculate epoch from slot: epoch = floor(slot / SLOTS_PER_EPOCH)
+    const epoch = Math.floor(block.header.slot / SimulatorConfig.SLOTS_PER_EPOCH);
+    
+    // Update RANDAO mix: new_mix = current_mix XOR reveal
+    RANDAO.updateRandaoMix(this.beaconState, epoch, block.randaoReveal);
     
     // Mark all attestations in this block as processed and remove from beacon pool
     if (block.attestations && block.attestations.length > 0) {
