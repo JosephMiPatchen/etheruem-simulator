@@ -4,5 +4,4 @@
  */
 
 export * from './blockchain';
-export * from './mining';
 export * from './node';

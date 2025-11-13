@@ -66,7 +66,6 @@ export interface NodeState {
   worldState: Record<string, Account>;
   receipts?: any; // Optional receipts database
   mempool?: EthereumTransaction[]; // Optional mempool for pending transactions
-  isMining: boolean;
   consensusStatus?: 'idle' | 'validating' | 'proposing'; // PoS consensus activity status
   peerIds: string[];
   publicKey: string;

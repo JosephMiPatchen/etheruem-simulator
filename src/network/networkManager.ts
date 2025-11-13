@@ -30,24 +30,15 @@ export class NetworkManager {
    * Creates a new node in the network
    */
   createNode(nodeId: string): NodeWorker {
-    // IMPORTANT: Add validator BEFORE creating node
-    // The node's Consensus constructor needs the validator set to compute initial schedule
-    // We'll use a placeholder address that will be updated after node creation
-    const validatorIndex = this.beaconValidators.length;
-    this.beaconValidators.push({
-      nodeAddress: '', // Placeholder, will be updated below
-      stakedEth: 32
-    });
-    
     // Create a new node worker with shared beacon state initialization
     const nodeWorker = new NodeWorker(nodeId, this.beaconGenesisTime, this.beaconValidators);
     
-    // Update the validator's address now that we have the node
-    this.beaconValidators[validatorIndex].nodeAddress = nodeWorker.getNodeAddress();
-    
-    // NOTE: Don't recompute Epoch 0 schedule here!
-    // We need to wait until ALL nodes are created so all validators are in the array
-    // The schedule will be recomputed in createFullyConnectedNetwork() after all nodes exist
+    // Add this node as a validator
+    // Schedule will be computed lazily when first slot is processed
+    this.beaconValidators.push({
+      nodeAddress: nodeWorker.getNodeAddress(),
+      stakedEth: 32
+    });
     
     // Set up message handling
     nodeWorker.setOnOutgoingMessage(this.routeMessageFromNode.bind(this));
@@ -104,12 +95,8 @@ export class NetworkManager {
       this.createNode(nodeId);
     }
     
-    // IMPORTANT: Now that ALL nodes are created and ALL validators have real addresses,
-    // recompute Epoch 0 schedule for all nodes so they all see the complete validator set
-    console.log(`[NetworkManager] All ${nodeCount} nodes created. Recomputing Epoch 0 schedules with complete validator set.`);
-    for (const nodeWorker of this.nodesMap.values()) {
-      nodeWorker.recomputeEpoch0Schedule();
-    }
+    // All nodes created - schedules will be computed lazily when first slot is processed
+    console.log(`[NetworkManager] All ${nodeCount} nodes created with ${this.beaconValidators.length} validators.`);
     
     // Set up the network topology (mesh)
     const topology = new Map<string, string[]>();

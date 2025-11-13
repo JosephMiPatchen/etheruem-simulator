@@ -32,8 +32,7 @@ export class NodeWorker {
     // Create the node instance with beacon state initialization
     this._node = new Node(nodeId, genesisTime, validators);
     
-    // Set up callback for block broadcast events
-    this._node.setOnBlockBroadcast(this.handleBlockBroadcast.bind(this));
+    // Callbacks for node events are set up via Consensus (PROPOSER_BLOCK_BROADCAST)
     
     // Set up callback for Sync to send messages
     this._node.getSync().setMessageCallback((message: any) => {
@@ -99,77 +98,10 @@ export class NodeWorker {
   }
   
   /**
-   * Recomputes the Epoch 0 proposer schedule
-   * Called after validator addresses are updated during node initialization
-   * This ensures the schedule has the correct validator addresses instead of placeholders
-   */
-  recomputeEpoch0Schedule(): void {
-    this._node.getConsensus().recomputeScheduleForEpoch(0);
-  }
-  
-  /**
    * Gets the current state of the node
    */
   getState(): any {
     return this._node.getState();
-  }
-  
-  /**
-   * Handles a block broadcast event from the node
-   * Creates a network message and sends it to peers via the network layer
-   */
-  private handleBlockBroadcast(block: Block): void {
-    if (!this.onOutgoingMessageCallback) return;
-    
-    // Create a block announcement message
-    const message: BlockAnnouncementMessage = {
-      type: MessageType.BLOCK_ANNOUNCEMENT,
-      fromNodeId: this._node.getState().nodeId,
-      block
-    };
-    
-    // Send the message to the network for routing
-    this.onOutgoingMessageCallback(message);
-  }
-  
-
-  
-  /**
-   * Creates and broadcasts an attestation for a received block
-   * This is part of the PoS consensus mechanism
-   */
-  private createAndBroadcastAttestation(block: Block): void {
-    if (!this.onOutgoingMessageCallback) return;
-    
-    const nodeState = this._node.getState();
-    if (!nodeState.address) return; // Skip if no address
-    
-    // Skip if block doesn't have a hash
-    if (!block.hash) {
-      console.warn('Cannot create attestation for block without hash');
-      return;
-    }
-    
-    // Create attestation (address is guaranteed to exist after check above)
-    const attestation: Attestation = {
-      validatorAddress: nodeState.address!,
-      blockHash: block.hash,
-      timestamp: Date.now()
-    };
-    
-    // Add to our own beacon pool
-    if (nodeState.beaconState) {
-      nodeState.beaconState.addAttestation(attestation);
-    }
-    
-    // Broadcast attestation to network
-    const message: AttestationMessage = {
-      type: MessageType.ATTESTATION,
-      fromNodeId: nodeState.nodeId,
-      attestation
-    };
-    
-    this.onOutgoingMessageCallback(message);
   }
   
   /**

@@ -42,12 +42,10 @@ export class Consensus {
     this.nodeAddress = node.getAddress();
     this.mempool = mempool;
     
-    // Initialize proposer schedule for the current epoch
-    // This ensures the schedule is ready when the first slot timer fires
+    // Proposer schedule will be computed lazily when first slot is processed
     const currentSlot = this.getCurrentSlot();
     const currentEpoch = this.getEpoch(currentSlot);
     console.log(`[Consensus ${this.nodeAddress.slice(0, 8)}] Initializing with slot ${currentSlot}, epoch ${currentEpoch}`);
-    this.ensureScheduleForEpoch(currentEpoch);
   }
   
   /**

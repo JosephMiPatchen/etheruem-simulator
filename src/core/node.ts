@@ -13,7 +13,6 @@ import { generatePrivateKey, derivePublicKey, generateAddress } from '../utils/c
 export class Node {
   private nodeId: string;
   private blockchain: Blockchain;
-  private miner: Miner;
   private mempool: Mempool;
   private beaconState: BeaconState; // Consensus Layer state
   private sync: Sync; // PoS synchronization
@@ -25,8 +24,10 @@ export class Node {
   private publicKey: string;
   private address: string;
   
-  // Callbacks for network events
-  private onBlockBroadcast?: (block: Block) => void;
+  // Painting state (for EPM contract)
+  private paintingComplete: boolean = false;
+  
+  // Callbacks for network events (PoS uses Consensus for block broadcasting)
   private onChainUpdated?: () => void;
   
   constructor(nodeId: string, genesisTime?: number, validators?: Validator[]) {
@@ -71,9 +72,7 @@ export class Node {
   /**
    * Sets the callback for when a block is broadcast
    */
-  setOnBlockBroadcast(callback: (block: Block) => void): void {
-    this.onBlockBroadcast = callback;
-  }
+
   
   /**
    * Sets the callback for when the chain is updated
@@ -94,7 +93,7 @@ export class Node {
       worldState: this.blockchain.getWorldState(),
       receipts: this.blockchain.getReceipts(),
       mempool: this.mempool.getAllTransactions(),
-      isMining: this.miner.getIsMining(),
+
       consensusStatus: this.consensus.consensusStatus,
       peerIds: Object.keys(this.peers),
       publicKey: this.publicKey,
@@ -120,32 +119,12 @@ export class Node {
     return this.mempool.addTransaction(transaction);
   }
   
+  
   /**
-   * Check if any paint transactions were rejected and mark painting as complete
-   * Only checks if painting hasn't already been marked complete
+   * Check if painting is complete for this node
    */
-  private checkPaintingComplete(block: Block): void {
-    if (!block.hash || this.miner.isPaintingComplete()) {
-      return;
-    }
-    
-    const receipts = this.blockchain.getReceipts();
-    const blockReceipts = receipts[block.hash];
-    
-    if (!blockReceipts) {
-      return;
-    }
-    
-    for (const txid in blockReceipts) {
-      const receipt = blockReceipts[txid];
-      // If this node's paint transaction was rejected, stop creating more
-      if (receipt.to === '0xEPM_PAINT_CONTRACT' && 
-          receipt.from === this.address &&
-          receipt.status === 0) {
-        this.miner.markPaintingComplete();
-        break;
-      }
-    }
+  public isPaintingComplete(): boolean {
+    return this.paintingComplete;
   }
   
   /**
