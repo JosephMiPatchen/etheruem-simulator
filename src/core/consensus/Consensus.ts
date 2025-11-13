@@ -241,7 +241,7 @@ export class Consensus {
     
     console.log(`[Consensus] Created block with ${block.transactions.length} transactions for slot ${slot}`);
     console.log(`[Consensus] Transaction types: ${block.transactions.map(tx => {
-      if (tx.from === SimulatorConfig.REWARDER_NODE_ID) return 'coinbase';
+      if (tx.from === SimulatorConfig.PROTOCOL_NODE_ID) return 'coinbase';
       if (tx.to === '0xEPM_PAINT_CONTRACT') return 'paint';
       return 'peer-payment';
     }).join(', ')}`);

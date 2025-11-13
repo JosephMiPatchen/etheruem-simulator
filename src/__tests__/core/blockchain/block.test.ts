@@ -38,7 +38,7 @@ describe('Block Module', () => {
       
       // Check transactions
       expect(genesisBlock.transactions.length).toBeGreaterThan(0);
-      expect(genesisBlock.transactions[0].from).toBe(SimulatorConfig.REWARDER_NODE_ID);
+      expect(genesisBlock.transactions[0].from).toBe(SimulatorConfig.PROTOCOL_NODE_ID);
       expect(genesisBlock.transactions[0].value).toBe(SimulatorConfig.BLOCK_REWARD);
     });
   });
@@ -61,7 +61,7 @@ describe('Block Module', () => {
     const mockTransactions: EthereumTransaction[] = [
       {
         txid: 'mock-tx-1',
-        inputs: [{ sourceOutputId: SimulatorConfig.REWARDER_NODE_ID }],
+        inputs: [{ sourceOutputId: SimulatorConfig.PROTOCOL_NODE_ID }],
         outputs: [
           { idx: 0, nodeId: 'miner1', value: SimulatorConfig.BLOCK_REWARD, lock: 'test-address-1' }
         ],

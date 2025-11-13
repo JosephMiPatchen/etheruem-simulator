@@ -56,7 +56,7 @@ function createValidNextBlock(blockchain: Blockchain): Block {
   const latestBlock = blockchain.getLatestBlock();
   
   const coinbaseTx: EthereumTransaction = {
-    from: SimulatorConfig.REWARDER_NODE_ID,
+    from: SimulatorConfig.PROTOCOL_NODE_ID,
     to: 'test-miner-address',
     value: SimulatorConfig.BLOCK_REWARD,
     nonce: 0,

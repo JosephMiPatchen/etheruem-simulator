@@ -25,7 +25,7 @@ describe('WorldState', () => {
     to: string,
     value: number
   ): EthereumTransaction => ({
-    from: SimulatorConfig.REWARDER_NODE_ID,
+    from: SimulatorConfig.PROTOCOL_NODE_ID,
     to,
     value,
     nonce: 0,

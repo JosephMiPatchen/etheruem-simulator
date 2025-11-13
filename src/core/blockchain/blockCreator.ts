@@ -40,7 +40,7 @@ export class BlockCreator {
     // This is a genesis-only transaction that creates the contract account
     // In Ethereum, sending to 0x0 creates a new contract
     const epmDeployTransaction: EthereumTransaction = {
-      from: SimulatorConfig.REWARDER_NODE_ID, // System deploys the contract
+      from: SimulatorConfig.PROTOCOL_NODE_ID, // System deploys the contract
       to: '0x0', // Contract creation address
       value: 0, // No ETH transferred
       nonce: 0,

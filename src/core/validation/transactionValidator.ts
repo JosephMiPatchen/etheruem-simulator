@@ -15,7 +15,7 @@ export async function validateTransaction(
   try {
     // 1. For coinbase transactions, validate they come from REWARDER
     if (isCoinbase) {
-      if (transaction.from !== SimulatorConfig.REWARDER_NODE_ID ||
+      if (transaction.from !== SimulatorConfig.PROTOCOL_NODE_ID ||
           transaction.value !== SimulatorConfig.BLOCK_REWARD) {
         console.error('Invalid coinbase transaction');
         return false;

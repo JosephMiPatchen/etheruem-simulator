@@ -41,7 +41,7 @@ export const validateTransactionSecurity = async (
   transaction: EthereumTransaction
 ): Promise<boolean> => {
   // 1. Skip coinbase transactions (they don't need signatures)
-  if (transaction.from === SimulatorConfig.REWARDER_NODE_ID) {
+  if (transaction.from === SimulatorConfig.PROTOCOL_NODE_ID) {
     return true;
   }
   

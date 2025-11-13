@@ -77,7 +77,7 @@ export class WorldState {
     const { from, to, value, data } = transaction;
     
     // Check if this is a coinbase transaction (block reward)
-    const isCoinbase = from === SimulatorConfig.REWARDER_NODE_ID;
+    const isCoinbase = from === SimulatorConfig.PROTOCOL_NODE_ID;
     
     // Check if this is a paint transaction to EPM contract
     // Paint transactions have JSON data with a color field
@@ -266,7 +266,7 @@ export class WorldState {
     txIndex?: number
   ): boolean {
     // Validate that sender account exists (unless it's a coinbase transaction)
-    const isCoinbase = transaction.from === SimulatorConfig.REWARDER_NODE_ID;
+    const isCoinbase = transaction.from === SimulatorConfig.PROTOCOL_NODE_ID;
     
     if (!isCoinbase) {
       // Check if sender account exists

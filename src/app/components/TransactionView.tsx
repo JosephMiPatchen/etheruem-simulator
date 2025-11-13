@@ -31,7 +31,7 @@ const TransactionView: React.FC<TransactionViewProps> = ({ transaction, worldSta
   };
   
   // Check if this is a coinbase transaction
-  const isCoinbase = transaction.from === SimulatorConfig.REWARDER_NODE_ID;
+  const isCoinbase = transaction.from === SimulatorConfig.PROTOCOL_NODE_ID;
   
   // Check if this is a smart contract transaction
   const isSmartContract = transaction.to === '0xEPM_PAINT_CONTRACT';
@@ -42,7 +42,7 @@ const TransactionView: React.FC<TransactionViewProps> = ({ transaction, worldSta
     : null;
   
   // Get node IDs from addresses for the visualization
-  const fromNodeId = isCoinbase ? SimulatorConfig.REWARDER_NODE_ID : (addressToNodeId[transaction.from] || 'Unknown');
+  const fromNodeId = isCoinbase ? SimulatorConfig.PROTOCOL_NODE_ID : (addressToNodeId[transaction.from] || 'Unknown');
   const toNodeId = isSmartContract ? 'Smart Contract' : 
                    transaction.to === '0x0' ? 'PROTOCOL' :
                    (addressToNodeId[transaction.to] || 'Unknown');

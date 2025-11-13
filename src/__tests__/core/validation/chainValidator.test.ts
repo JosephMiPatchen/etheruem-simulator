@@ -78,7 +78,7 @@ describe('Chain Validator', () => {
     timestamp: number = Date.now()
   ): Block => {
     const coinbaseTx: EthereumTransaction = {
-      from: SimulatorConfig.REWARDER_NODE_ID,
+      from: SimulatorConfig.PROTOCOL_NODE_ID,
       to: 'test-miner-address',
       value: SimulatorConfig.BLOCK_REWARD,
       nonce: 0,

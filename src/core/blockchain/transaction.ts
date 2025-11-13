@@ -49,7 +49,7 @@ export const createCoinbaseTransaction = (
   
   // Calculate txid first (before signature)
   const txid = calculateTxid({
-    from: SimulatorConfig.REWARDER_NODE_ID,
+    from: SimulatorConfig.PROTOCOL_NODE_ID,
     to: minerAddress,
     value: SimulatorConfig.BLOCK_REWARD,
     nonce: 0,
@@ -57,7 +57,7 @@ export const createCoinbaseTransaction = (
   });
   
   return {
-    from: SimulatorConfig.REWARDER_NODE_ID,
+    from: SimulatorConfig.PROTOCOL_NODE_ID,
     to: minerAddress,
     value: SimulatorConfig.BLOCK_REWARD,
     nonce: 0,

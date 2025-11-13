@@ -76,7 +76,7 @@ describe('Miner Module', () => {
       
       // First transaction should be coinbase
       const coinbaseTx = transactions[0];
-      expect(coinbaseTx.from).toBe(SimulatorConfig.REWARDER_NODE_ID);
+      expect(coinbaseTx.from).toBe(SimulatorConfig.PROTOCOL_NODE_ID);
       expect(coinbaseTx.to).toBeDefined(); // Miner's address
       expect(coinbaseTx.value).toBe(SimulatorConfig.BLOCK_REWARD);
       

@@ -112,7 +112,7 @@ describe('Block Validator', () => {
   };
 
   // Create transactions with mock txids
-  const coinbaseInputs = [{ sourceOutputId: SimulatorConfig.REWARDER_NODE_ID, sourceNodeId: SimulatorConfig.REWARDER_NODE_ID }];
+  const coinbaseInputs = [{ sourceOutputId: SimulatorConfig.PROTOCOL_NODE_ID, sourceNodeId: SimulatorConfig.PROTOCOL_NODE_ID }];
   const coinbaseOutputs = [{ idx: 0, nodeId: 'node1', value: SimulatorConfig.BLOCK_REWARD, lock: 'test-address-1' }];
   const coinbaseTxid = 'coinbase-tx-1'; // Mock txid
   
