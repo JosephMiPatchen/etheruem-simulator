@@ -5,6 +5,8 @@ import { validateBlock, calculateBlockHeaderHash } from '../validation/blockVali
 import { validateChain } from '../validation/chainValidator';
 import { BlockchainTree, BlockTreeNode } from './blockchainTree';
 import { LmdGhost } from '../consensus/LmdGhost';
+import { RANDAO } from '../consensus/randao';
+import { SimulatorConfig } from '../../config/config';
 
 /**
  * Blockchain class with tree structure for fork management
@@ -258,6 +260,16 @@ export class Blockchain {
     }
     
     // ========== Beacon State Updates (Consensus Layer) ==========
+    
+    // Update RANDAO mix with this block's reveal
+    if (block.randaoReveal) {
+      // Calculate epoch from slot: epoch = floor(slot / SLOTS_PER_EPOCH)
+      const epoch = Math.floor(block.header.slot / SimulatorConfig.SLOTS_PER_EPOCH);
+      
+      // Update RANDAO mix: new_mix = current_mix XOR reveal
+      RANDAO.updateRandaoMix(this.beaconState, epoch, block.randaoReveal);
+    }
+    
     // Mark all attestations in this block as processed and remove from beacon pool
     if (block.attestations && block.attestations.length > 0) {
       const poolSizeBefore = this.beaconState.beaconPool.length;
@@ -279,7 +291,6 @@ export class Blockchain {
     }
     
     // TODO: When implementing full PoS, also update:
-    // - RANDAO mixes (XOR with new block's RANDAO reveal)
     // - Validator balances (apply rewards/penalties)
     // - Slashing records (if any slashings in block)
     // - Finality checkpoints (update justified/finalized epochs)
