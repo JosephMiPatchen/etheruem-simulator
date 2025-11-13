@@ -141,7 +141,12 @@ export class BeaconState {
   
   /**
    * Add an attestation to the beacon pool
-   * Eagerly updates tree decoration (LMD GHOST fork choice)
+   * Called when an attestation message is received from the network
+   * 
+   * Delegates to blockchain.onAttestationReceived which:
+   * - Updates latest attestations
+   * - Checks for reorg (GHOST-HEAD change)
+   * - Rebuilds state if needed
    */
   addAttestation(attestation: Attestation): void {
     // Check if this exact attestation already exists (same validator + block hash)
@@ -153,9 +158,11 @@ export class BeaconState {
     if (!exists) {
       this.beaconPool.push(attestation);
       
-      // Eagerly update tree decoration when new attestation arrives
-      // This matches Ethereum's behavior where fork choice updates immediately
-      this.updateLatestAttestationsAndTree();
+      // Delegate to blockchain to handle attestation and check for reorg
+      // This is the ONLY way reorgs can happen (not via block/chain addition)
+      if (this.blockchain) {
+        this.blockchain.onAttestationReceived(attestation);
+      }
     }
   }
   

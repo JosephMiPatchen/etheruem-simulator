@@ -119,9 +119,16 @@ export class Blockchain {
   }
   
   /**
-   * Adds a new block to the chain if valid
-   * Adds to tree and updates HEAD if it extends the canonical chain
-   * Returns true if the block was added, false otherwise
+   * Adds a single block to the blockchain
+   * 
+   * GHOST-HEAD Change Rule:
+   * - If block extends canonical chain → GHOST-HEAD moves forward (forward progress)
+   * - If block creates a fork → GHOST-HEAD stays the same
+   * - CANNOT cause reorg (attestations in block are not considered for fork choice)
+   * 
+   * Note: Reorgs only happen when new attestation messages arrive (see onAttestationReceived)
+   * 
+   * Returns true if block was added successfully, false otherwise
    */
   async addBlock(block: Block): Promise<boolean> {
     // Ensure block has a hash
@@ -154,14 +161,16 @@ export class Blockchain {
       // Apply this block's state changes (world state + beacon state)
       this.applyBlockToElAndClState(block);
       
-      // Update LMD GHOST tree decoration (latest attestations + attestedEth)
-      // This also computes GHOST-HEAD, which determines the canonical chain
-      this.updateLatestAttestationsAndTree();
+      // GHOST-HEAD moves forward (forward progress)
+      // Note: We don't need to check for reorg here because we're extending canonical
+      this.blockTree.setGhostHead(block.hash);
+      
+      console.log(`[Blockchain] GHOST-HEAD moved forward: ${ghostHead?.slice(0, 8)} → ${block.hash?.slice(0, 8)}`);
       
       return true;
     } else {
-      // Block creates a fork - added to tree but doesn't update HEAD or world state
-      console.log(`Block ${block.hash} added as fork at height ${block.header.height}`);
+      // Block creates a fork - added to tree but doesn't update GHOST-HEAD or world state
+      console.log(`[Blockchain] Block ${block.hash?.slice(0, 8)} added as fork at height ${block.header.height}`);
       return true;
     }
   }
@@ -169,11 +178,13 @@ export class Blockchain {
   /**
    * Adds a chain of blocks to the blockchain
    * Used during sync when receiving multiple blocks from peers
-   * Delegates to addBlock for each block to ensure proper validation and state updates
    * 
-   * State Update Rules:
-   * - Forward Progress: New GHOST-HEAD is descendant of old → state already updated incrementally by addBlock
-   * - Reorganization: New GHOST-HEAD is on different fork → rebuild entire state from scratch
+   * GHOST-HEAD Change Rule:
+   * - If chain extends canonical chain → GHOST-HEAD moves forward (forward progress)
+   * - If chain creates forks → GHOST-HEAD stays the same
+   * - CANNOT cause reorg (attestations in blocks are not considered for fork choice)
+   * 
+   * Note: Reorgs only happen when new attestation messages arrive (see onAttestationReceived)
    * 
    * Returns true if all blocks were added successfully, false otherwise
    */
@@ -185,11 +196,8 @@ export class Blockchain {
       return false;
     }
     
-    // Save old GHOST-HEAD to detect if canonical chain changes
-    const oldGhostHead = this.blockTree.getGhostHead();
-    
     // Add each block using addBlock to ensure proper validation and state updates
-    // This method assumes blocks are in order (genesis → block 1 → block 2 → ...)
+    // Each addBlock call will move GHOST-HEAD forward if block extends canonical
     let allAdded = true;
     for (const block of newBlocks) {
       const added = await this.addBlock(block);
@@ -197,39 +205,6 @@ export class Blockchain {
         console.warn(`[Blockchain] Failed to add block ${block.hash?.slice(0, 8)} at height ${block.header.height}`);
         allAdded = false;
         // Continue adding remaining blocks - they might succeed if they're on a different fork
-      }
-    }
-    
-    // Check if GHOST-HEAD changed after adding all blocks
-    const newGhostHead = this.blockTree.getGhostHead();
-    
-    if (oldGhostHead !== newGhostHead) {
-      // GHOST-HEAD changed - determine if forward progress or reorganization
-      const isForward = this.isForwardProgress(oldGhostHead, newGhostHead);
-      
-      if (isForward) {
-        // ✅ Forward Progress: New GHOST-HEAD is descendant of old GHOST-HEAD
-        // State was already updated incrementally by addBlock() calls above
-        console.log(`[Blockchain] Forward progress: ${oldGhostHead?.slice(0, 8)} → ${newGhostHead?.slice(0, 8)} (state already updated)`);
-      } else {
-        // ❌ Reorganization: New GHOST-HEAD is on a different fork
-        // Must rebuild entire state from scratch
-        console.log(`[Blockchain] Reorganization detected: ${oldGhostHead?.slice(0, 8)} → ${newGhostHead?.slice(0, 8)} (rebuilding state)`);
-        
-        // Rebuild world state and beacon state from the new canonical chain
-        // Clear blockchain built states
-        this.worldState = new WorldState();
-        this.beaconState.clearProcessedAttestations();
-        
-        // Apply each block in the new canonical chain to rebuild state
-        const canonicalChain = this.blockTree.getCanonicalChain(newGhostHead);
-        for (const block of canonicalChain) {
-          this.applyBlockToElAndClState(block);
-        }
-        
-        // Update attestations and attestedEth after reorganization
-        // This ensures attestedEth values are current with the new canonical chain
-        this.updateLatestAttestationsAndTree();
       }
     }
     
@@ -300,44 +275,74 @@ export class Blockchain {
   }
   
   /**
-   * Determines if GHOST-HEAD change is forward progress or a reorganization
+   * Called when a new attestation message is received
+   * Updates latest attestations and checks if GHOST-HEAD changed (potential reorg)
    * 
-   * Forward Progress: New GHOST-HEAD is a descendant of old GHOST-HEAD
-   *   - Example: Block 2 → Block 3 (same chain, moving forward)
-   *   - Action: Apply new blocks incrementally to current state
+   * GHOST-HEAD Change Rule:
+   * - Attestations change attestedEth values in tree
+   * - GHOST-HEAD may switch to a different fork (reorg)
+   * - This is the ONLY way reorgs can happen
    * 
-   * Reorganization: New GHOST-HEAD is on a different fork (requires going backward)
-   *   - Example: Block 2 → Block 2' (different fork, need to reverse)
-   *   - Action: Rebuild entire state from scratch
+   * If reorg detected:
+   * - Rebuild world state from new canonical chain
+   * - Rebuild beacon state from new canonical chain
    * 
-   * @param oldGhostHead - Previous GHOST-HEAD hash
-   * @param newGhostHead - New GHOST-HEAD hash
-   * @returns true if forward progress, false if reorganization
+   * @param attestation - The attestation to process
    */
-  private isForwardProgress(oldGhostHead: string | null, newGhostHead: string | null): boolean {
-    // If either is null, not forward progress
-    if (!oldGhostHead || !newGhostHead) {
-      return false;
-    }
+  onAttestationReceived(attestation: any): void {
+    // Save old GHOST-HEAD to detect reorg
+    const oldGhostHead = this.blockTree.getGhostHead();
     
-    // If they're the same, no change (technically forward progress)
-    if (oldGhostHead === newGhostHead) {
-      return true;
-    }
+    // Update latest attestations and tree decoration (attestedEth)
+    // This may change GHOST-HEAD based on new attestation weights
+    this.beaconState.updateLatestAttestation(attestation);
+    this.updateLatestAttestationsAndTree();
     
-    // Check if new GHOST-HEAD is a descendant of old GHOST-HEAD
+    // Check if GHOST-HEAD changed
+    const newGhostHead = this.blockTree.getGhostHead();
+    
+    if (oldGhostHead !== newGhostHead) {
+      // GHOST-HEAD changed - check if it's a reorg (different fork)
+      const isReorg = !this.isDescendant(newGhostHead, oldGhostHead);
+      
+      if (isReorg) {
+        // ❌ Reorganization: GHOST-HEAD switched to a different fork
+        console.log(`[Blockchain] REORG: ${oldGhostHead?.slice(0, 8)} → ${newGhostHead?.slice(0, 8)} (rebuilding state)`);
+        
+        // Rebuild world state and beacon state from the new canonical chain
+        this.worldState = new WorldState();
+        this.beaconState.clearProcessedAttestations();
+        
+        // Apply each block in the new canonical chain to rebuild state
+        const canonicalChain = this.blockTree.getCanonicalChain(newGhostHead);
+        for (const block of canonicalChain) {
+          this.applyBlockToElAndClState(block);
+        }
+      } else {
+        // ✅ Forward Progress: GHOST-HEAD moved down same chain
+        console.log(`[Blockchain] GHOST-HEAD moved forward via attestation: ${oldGhostHead?.slice(0, 8)} → ${newGhostHead?.slice(0, 8)}`);
+      }
+    }
+  }
+  
+  /**
+   * Check if newHead is a descendant of oldHead
+   * Used to determine if GHOST-HEAD change is forward progress or reorg
+   */
+  private isDescendant(newHead: string | null, oldHead: string | null): boolean {
+    if (!newHead || !oldHead) return false;
+    if (newHead === oldHead) return true;
+    
     // Walk up from new head to see if we reach old head
-    let current: BlockTreeNode | null | undefined = this.blockTree.getNode(newGhostHead);
+    let current: BlockTreeNode | null | undefined = this.blockTree.getNode(newHead);
     while (current) {
-      if (current.hash === oldGhostHead) {
-        // New head is descendant of old head - forward progress!
-        return true;
+      if (current.hash === oldHead) {
+        return true;  // newHead is descendant of oldHead
       }
       current = current.parent;
     }
     
-    // New head is not a descendant of old head - reorganization!
-    return false;
+    return false;  // newHead is NOT descendant of oldHead (reorg!)
   }
   
   /**
