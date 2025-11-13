@@ -331,17 +331,38 @@ export class Blockchain {
   }
   
   /**
+   * Clear all blockchain state (world state and beacon state)
+   * Called during reorg to reset to clean state before rebuilding
+   * 
+   * Clears:
+   * - World state (account balances, nonces, etc.)
+   * - Processed attestations
+   * - RANDAO mixes (re-initialized to genesis)
+   * - Proposer schedules
+   */
+  private clearAllState(): void {
+    this.worldState = new WorldState();
+    this.beaconState.clearProcessedAttestations();
+    this.beaconState.clearRandaoState();
+  }
+  
+  /**
    * Rebuild world state and beacon state from canonical chain
    * Clears current state and validates/applies all blocks in canonical chain
+   * 
+   * On reorg:
+   * - All state cleared via clearAllState()
+   * - RANDAO mixes rebuilt as blocks applied
+   * - Proposer schedules recomputed lazily by Consensus
    * 
    * @returns true if all blocks applied successfully, false if any block invalid
    */
   private async rebuildStateFromCanonicalChain(): Promise<boolean> {
-    // Clear state
-    this.worldState = new WorldState();
-    this.beaconState.clearProcessedAttestations();
+    // Clear all state
+    this.clearAllState();
     
     // Validate and apply each block in canonical chain
+    // This rebuilds RANDAO mixes (proposer schedules recomputed lazily)
     const canonicalChain = this.getCanonicalChain();
     for (let i = 0; i < canonicalChain.length; i++) {
       const block = canonicalChain[i];

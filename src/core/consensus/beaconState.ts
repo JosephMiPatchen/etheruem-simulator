@@ -226,6 +226,22 @@ export class BeaconState {
   }
   
   /**
+   * Clear RANDAO mixes and proposer schedules
+   * Called during reorg - they will be rebuilt as blocks are reapplied
+   * 
+   * RANDAO mixes: Rebuilt by applyBlockToElAndClState for each block
+   * Proposer schedules: Recomputed lazily by Consensus when needed
+   */
+  clearRandaoState(): void {
+    this.randaoMixes.clear();
+    this.proposerSchedules.clear();
+    
+    // Re-initialize genesis RANDAO mix (epoch -1)
+    const { RANDAO } = require('./RANDAO');
+    this.randaoMixes.set(-1, RANDAO.computeGenesisRandaoMix());
+  }
+  
+  /**
    * Rebuild processed attestations set from a chain of blocks
    * Called when world state is rebuilt (e.g., during chain replacement)
    */
