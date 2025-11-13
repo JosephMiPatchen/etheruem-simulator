@@ -1,4 +1,4 @@
-import { EthereumTransaction, PeerInfoMap } from '../../types/types';
+import { EthereumTransaction, PeerInfoMap, Block } from '../../types/types';
 import { SimulatorConfig } from '../../config/config';
 import { 
   createCoinbaseTransaction, 
@@ -91,6 +91,66 @@ export class BlockCreator {
       }
       return validPeers;
     }, {} as PeerInfoMap);
+  }
+  
+  /**
+   * Create a complete PoS block ready to broadcast
+   * @param node - The proposing node
+   * @param blockchain - Blockchain instance
+   * @param mempool - Mempool instance
+   * @param slot - Slot number for this block
+   * @param randaoReveal - RANDAO reveal for this block
+   * @param paintingComplete - Whether painting is complete
+   * @returns Complete block with header, transactions, and hash
+   */
+  public static async createBlock(
+    node: Node,
+    blockchain: Blockchain,
+    mempool: Mempool,
+    slot: number,
+    randaoReveal: string,
+    paintingComplete: boolean
+  ): Promise<Block> {
+    const { calculateTransactionHash, calculateBlockHeaderHash } = require('../validation/blockValidator');
+    
+    // Get latest block to build on top of
+    const latestBlock = blockchain.getLatestBlock();
+    if (!latestBlock) {
+      throw new Error('[BlockCreator] Cannot create block: no latest block');
+    }
+    
+    // Create all transactions for the block
+    const transactions = await BlockCreator.createBlockTransactions(
+      node,
+      blockchain,
+      mempool,
+      latestBlock.header.height + 1,
+      paintingComplete
+    );
+    
+    // Create block header with slot and nonce 0x0 (no PoW)
+    const header = {
+      transactionHash: calculateTransactionHash(transactions),
+      timestamp: Date.now(),
+      previousHeaderHash: latestBlock.hash || '',
+      ceiling: 0, // No ceiling for PoS
+      nonce: 0, // 0x0 for PoS (no mining)
+      height: latestBlock.header.height + 1,
+      slot: slot
+    };
+    
+    // Create block with RANDAO reveal
+    const block: Block = {
+      header,
+      transactions,
+      attestations: [],
+      randaoReveal: randaoReveal
+    };
+    
+    // Compute block hash (includes slot in hash)
+    block.hash = calculateBlockHeaderHash(header);
+    
+    return block;
   }
   
   /**

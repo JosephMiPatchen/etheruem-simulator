@@ -1,6 +1,6 @@
-import { Block, EthereumTransaction } from '../../types/types';
+import { Block } from '../../types/types';
 import { SimulatorConfig } from '../../config/config';
-import { calculateBlockHeaderHash, calculateTransactionHash, validateBlock } from '../validation/blockValidator';
+import { validateBlock } from '../validation/blockValidator';
 import { Node } from '../node';
 import { BeaconState } from './beaconState';
 import { Blockchain } from '../blockchain/blockchain';
@@ -158,8 +158,6 @@ export class Consensus {
       console.log(`[Consensus ${this.nodeAddress.slice(0, 8)}] I am the proposer for slot ${currentSlot}!`);
       this.consensusStatus = 'proposing';
       await this.proposeBlock(currentSlot);
-      // After proposing, go back to validating (not idle) to avoid flashing
-      this.consensusStatus = 'validating';
     } else {
       // 5. If not proposer, we are validating (waiting for block)
       this.consensusStatus = 'validating';
@@ -218,66 +216,35 @@ export class Consensus {
   }
   
   /**
-   * Proposes a block for the current slot
-   * Creates block with coinbase, mempool txs, peer payments, paint tx
-   * Sets slot number and nonce 0x0 (no PoW mining)
-   * Broadcasts to all validators
-   * Uses BlockCreator for transaction creation
+   * Proposes a new block for the given slot
+   * Called when this node is the proposer for the current slot
+   * 
+   * Creates complete block using BlockCreator and broadcasts to all validators
    */
   private async proposeBlock(slot: number): Promise<void> {
     console.log(`[Consensus] Node ${this.nodeAddress.slice(0, 8)} proposing block for slot ${slot}`);
     
-    // Get the latest block to build on top of
-    const latestBlock = this.blockchain.getLatestBlock();
-    if (!latestBlock) {
-      console.error('[Consensus] Cannot propose block: no latest block');
-      return;
-    }
-    
-    // Calculate current epoch
+    // Calculate current epoch and generate RANDAO reveal
     const currentEpoch = this.getEpoch(slot);
-    
-    // Generate RANDAO reveal for this epoch
     const randaoReveal = RANDAO.calculateRandaoReveal(currentEpoch, this.node);
     console.log(`[Consensus] Generated RANDAO reveal for epoch ${currentEpoch}: ${randaoReveal.slice(0, 16)}...`);
     
-    // Create all transactions for the block using BlockCreator
-    const transactions = await BlockCreator.createBlockTransactions(
+    // Create complete block using BlockCreator
+    const block = await BlockCreator.createBlock(
       this.node,
       this.blockchain,
       this.mempool,
-      latestBlock.header.height + 1,
+      slot,
+      randaoReveal,
       this.paintingComplete
     );
     
-    console.log(`[Consensus] Created ${transactions.length} transactions for block at slot ${slot}`);
-    console.log(`[Consensus] Transaction types: ${transactions.map(tx => {
+    console.log(`[Consensus] Created block with ${block.transactions.length} transactions for slot ${slot}`);
+    console.log(`[Consensus] Transaction types: ${block.transactions.map(tx => {
       if (tx.from === SimulatorConfig.REWARDER_NODE_ID) return 'coinbase';
       if (tx.to === '0xEPM_PAINT_CONTRACT') return 'paint';
       return 'peer-payment';
     }).join(', ')}`);
-    
-    // Create block header with slot and nonce 0x0 (no PoW)
-    const header = {
-      transactionHash: calculateTransactionHash(transactions),
-      timestamp: Date.now(),
-      previousHeaderHash: latestBlock.hash || '',
-      ceiling: 0, // No ceiling for PoS
-      nonce: 0, // 0x0 for PoS (no mining)
-      height: latestBlock.header.height + 1,
-      slot: slot
-    };
-    
-    // Create block with RANDAO reveal
-    const block: Block = {
-      header,
-      transactions,
-      attestations: [],
-      randaoReveal: randaoReveal // Include RANDAO reveal in block
-    };
-    
-    // Compute block hash (includes slot in hash)
-    block.hash = calculateBlockHeaderHash(header);
     
     // Process our own block through the same flow as received blocks
     // This ensures RANDAO mix is updated in one place and validates before broadcasting
@@ -285,7 +252,7 @@ export class Consensus {
     
     if (!success) {
       console.error(`[Consensus] Failed to validate own proposed block for slot ${slot}`);
-      return;
+      return; // slot would result in being skipped
     }
     
     // Only broadcast if our own validation succeeded
@@ -355,7 +322,6 @@ export class Consensus {
       console.error('[Consensus] Cannot attest to block without hash');
       return false;
     }
-    
     const attestation = {
       validatorAddress: this.nodeAddress,
       blockHash: block.hash,
