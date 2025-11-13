@@ -82,13 +82,6 @@ export interface Attestation {
   timestamp: number;         // When the attestation was created
 }
 
-export interface NetworkMessage {
-  type: 'BLOCK_ANNOUNCEMENT' | 'BLOCK_REQUEST' | 'CHAIN_LENGTH_REQUEST' | 'CHAIN_LENGTH_RESPONSE' | 'ATTESTATION';
-  payload: any;
-  sender: string;
-  recipient: string | 'broadcast';
-}
-
 /**
  * Information about a peer node
  */
