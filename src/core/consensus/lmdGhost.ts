@@ -13,17 +13,6 @@ import { BlockchainTree, BlockTreeNode } from '../blockchain/blockchainTree';
  */
 export class LmdGhost {
   /**
-   * Set the initial GHOST-HEAD to the genesis block
-   * Called once at startup after genesis block is created
-   */
-  public static setInitialGenesisHead(tree: BlockchainTree, genesisHash: string): void {
-    if (tree.getGhostHead() === null) {
-      tree.setGhostHead(genesisHash);
-      console.log(`[LmdGhost] Initialized ghostHead to genesis block: ${genesisHash.slice(0, 16)}...`);
-    }
-  }
-  
-  /**
    * Record a new attestation from a validator
    * Updates the latest attestation for this validator in BeaconState
    */
@@ -145,9 +134,8 @@ export class LmdGhost {
     // 2. Decorate tree with attestedEth
     LmdGhost.decorateTree(beaconState, tree);
     
-    // 3. Compute and update GHOST-HEAD (store in tree)
-    const ghostHead = LmdGhost.computeGhostHead(tree);
-    tree.setGhostHead(ghostHead);
+    // Note: GHOST-HEAD is computed on-demand via tree.getGhostHead()
+    // No need to set it here - it will be recomputed when needed
   }
   
   /**
@@ -159,20 +147,28 @@ export class LmdGhost {
    * 2. At each fork, choose the child with highest attestedEth
    * 3. Continue until reaching a leaf (chain tip)
    */
-  private static computeGhostHead(tree: BlockchainTree): string | null {
+  public static computeGhostHead(tree: BlockchainTree): string | null {
     const root = tree.getRoot();
     if (!root) return null;
     
-    // Start at root and follow the heaviest path
+    // Start at root and follow the heaviest valid path
     let current = root;
     
     while (current.children.length > 0) {
-      // Find child with highest attestedEth
-      let heaviestChild = current.children[0];
+      // Filter out invalid children (blocks that failed validation)
+      const validChildren = current.children.filter(child => !child.metadata?.isInvalid);
+      
+      if (validChildren.length === 0) {
+        // No valid children - current node is the GHOST-HEAD
+        break;
+      }
+      
+      // Find valid child with highest attestedEth
+      let heaviestChild = validChildren[0];
       let maxAttestedEth = heaviestChild.metadata?.attestedEth || 0;
       
-      for (let i = 1; i < current.children.length; i++) {
-        const child = current.children[i];
+      for (let i = 1; i < validChildren.length; i++) {
+        const child = validChildren[i];
         const childAttestedEth = child.metadata?.attestedEth || 0;
         
         if (childAttestedEth > maxAttestedEth) {

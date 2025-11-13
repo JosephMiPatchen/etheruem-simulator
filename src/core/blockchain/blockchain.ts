@@ -49,11 +49,8 @@ export class Blockchain {
     if (beaconState) {
       beaconState.setBlockchain(this);
       
-      // Initialize ghostHead to genesis block (all nodes have same genesis)
-      const genesisBlock = this.blockTree.getAllBlocks().find(b => b.header.height === 0);
-      if (genesisBlock && genesisBlock.hash) {
-        LmdGhost.setInitialGenesisHead(this.blockTree, genesisBlock.hash);
-      }
+      // Note: GHOST-HEAD is computed on-demand via blockTree.getGhostHead()
+      // No need to initialize it - it will be computed when first accessed
     }
   }
   
@@ -130,45 +127,48 @@ export class Blockchain {
    * Returns true if block was added successfully, false otherwise
    */
   async addBlock(block: Block): Promise<boolean> {
-    // Ensure block has a hash
+    // 1. Ensure block has a hash
     if (!block.hash) {
       block.hash = calculateBlockHeaderHash(block.header);
     }
     
-    // Add block to tree (handles genesis blocks and regular blocks)
-    const treeNode = this.blockTree.addBlock(block);
-    if (!treeNode) {
-      console.error(`Failed to add block ${block.hash} to tree - parent not found`);
+    // 2. Get old GHOST-HEAD before adding block
+    const oldGhostHead = this.blockTree.getGhostHead();
+    
+    // 3. Add block to tree (creates tree node, doesn't validate yet)
+    const newNode = this.blockTree.addBlock(block);
+    if (!newNode) {
+      console.error(`[Blockchain] Failed to add block ${block.hash} - parent not found`);
       return false;
     }
     
-    // Check if this block extends the current canonical chain (GHOST-HEAD)
-    const currentHead = this.blockTree.getCanonicalHead();
-    const extendsCanonical = block.header.previousHeaderHash === (currentHead!.block?.hash || '');
+    // 4. Get new GHOST-HEAD after adding block (recomputed via LMD-GHOST)
+    const newGhostHead = this.blockTree.getGhostHead();
     
-    if (extendsCanonical) {
-      // Validate the block against the current world state
-      const previousHash = currentHead!.block?.hash || '';
+    // 5. Check if new GHOST-HEAD would extend canonical chain
+    // This happens when new GHOST-HEAD's parent is the old GHOST-HEAD
+    const wouldExtendCanonical = newGhostHead?.parent?.hash === oldGhostHead?.hash;
+    
+    if (wouldExtendCanonical) {
+      // 6. Validate block against current world state
+      // Only validate when block would extend canonical (not for forks)
+      const previousHash = oldGhostHead?.hash || '';
       const isValid = await validateBlock(block, this.worldState, previousHash);
       
       if (!isValid) {
-        console.error(`Block ${block.hash} is invalid`);
-        return false;
+        // Mark block as invalid in tree so LMD - GHOST algorithm will not traverse it next time its invoked
+        newNode.metadata.isInvalid = true;
+        console.log(`[Blockchain] Block ${block.hash?.slice(0, 8)} marked invalid - GHOST will skip it`);
+        return true; // Block added to tree but marked invalid
       }
       
-      // Apply this block's state changes (world state + beacon state)
+      // 7. Block is valid - apply state changes
       this.applyBlockToElAndClState(block);
-      
-      // GHOST-HEAD moves forward (forward progress)
-      // Note: We don't need to check for reorg here because we're extending canonical
-      const oldHead = currentHead?.block?.hash;
-      this.blockTree.setGhostHead(block.hash);
-      
-      console.log(`[Blockchain] GHOST-HEAD moved forward: ${oldHead?.slice(0, 8)} → ${block.hash?.slice(0, 8)}`);
-      
+      console.log(`[Blockchain] Block ${block.hash?.slice(0, 8)} applied to canonical chain`);
       return true;
     } else {
-      // Block creates a fork - added to tree but doesn't update GHOST-HEAD or world state
+      // Block creates a fork - added to tree but not validated yet
+      // Will be validated later if it becomes canonical via attestations
       console.log(`[Blockchain] Block ${block.hash?.slice(0, 8)} added as fork at height ${block.header.height}`);
       return true;
     }
@@ -197,6 +197,7 @@ export class Blockchain {
     
     // Add each block using addBlock to ensure proper validation and state updates
     // Each addBlock call will move GHOST-HEAD forward if block extends canonical
+    // ** assumes block array is in order where blocks are in order of height
     let allAdded = true;
     for (const block of newBlocks) {
       const added = await this.addBlock(block);
@@ -309,13 +310,13 @@ export class Blockchain {
     const newGhostHead = this.blockTree.getGhostHead();
     
     // 4. Check if GHOST-HEAD changed and handle accordingly
-    if (oldGhostHead !== newGhostHead) {
+    if (oldGhostHead?.hash !== newGhostHead?.hash) {
       // GHOST-HEAD changed - determine what to do
       const isReorg = !this.isDescendant(newGhostHead, oldGhostHead);
       
       if (isReorg) {
         // ❌ Reorganization: GHOST-HEAD switched to a different fork
-        console.log(`[Blockchain] REORG: ${oldGhostHead?.slice(0, 8)} → ${newGhostHead?.slice(0, 8)} (rebuilding state)`);
+        console.log(`[Blockchain] REORG: ${oldGhostHead?.hash?.slice(0, 8)} → ${newGhostHead?.hash?.slice(0, 8)} (rebuilding state)`);
         
         // Rebuild world state and beacon state from scratch
         this.worldState = new WorldState();
@@ -329,7 +330,7 @@ export class Blockchain {
         }
       } else {
         // ✅ Forward Progress: GHOST-HEAD moved down same chain
-        console.log(`[Blockchain] GHOST-HEAD moved forward via attestation: ${oldGhostHead?.slice(0, 8)} → ${newGhostHead?.slice(0, 8)}`);
+        console.log(`[Blockchain] GHOST-HEAD moved forward via attestation: ${oldGhostHead?.hash?.slice(0, 8)} → ${newGhostHead?.hash?.slice(0, 8)}`);
         
         // Apply blocks between old and new GHOST-HEAD to state
         const blocksToApply = this.getBlocksBetween(oldGhostHead, newGhostHead);
@@ -345,14 +346,14 @@ export class Blockchain {
    * Check if newHead is a descendant of oldHead
    * Used to determine if GHOST-HEAD change is forward progress or reorg
    */
-  private isDescendant(newHead: string | null, oldHead: string | null): boolean {
+  private isDescendant(newHead: BlockTreeNode | null, oldHead: BlockTreeNode | null): boolean {
     if (!newHead || !oldHead) return false;
-    if (newHead === oldHead) return true;
+    if (newHead.hash === oldHead.hash) return true;
     
     // Walk up from new head to see if we reach old head
-    let current: BlockTreeNode | null | undefined = this.blockTree.getNode(newHead);
+    let current: BlockTreeNode | null | undefined = newHead;
     while (current) {
-      if (current.hash === oldHead) {
+      if (current.hash === oldHead.hash) {
         return true;  // newHead is descendant of oldHead
       }
       current = current.parent;
@@ -365,14 +366,14 @@ export class Blockchain {
    * Get blocks between oldHead and newHead (exclusive of oldHead, inclusive of newHead)
    * Used when GHOST-HEAD moves forward to apply new blocks to state
    */
-  private getBlocksBetween(oldHead: string | null, newHead: string | null): Block[] {
+  private getBlocksBetween(oldHead: BlockTreeNode | null, newHead: BlockTreeNode | null): Block[] {
     if (!newHead) return [];
     
     const blocks: Block[] = [];
-    let current: BlockTreeNode | null | undefined = this.blockTree.getNode(newHead);
+    let current: BlockTreeNode | null | undefined = newHead;
     
     // Walk up from new head to old head, collecting blocks
-    while (current && current.hash !== oldHead) {
+    while (current && current.hash !== oldHead?.hash) {
       if (current.block) {
         blocks.unshift(current.block);  // Add to front to maintain order
       }

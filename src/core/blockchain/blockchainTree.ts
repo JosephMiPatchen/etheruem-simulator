@@ -25,6 +25,7 @@ export interface BlockTreeNode {
     weight?: number;           // For GHOST: total attestation weight
     attestationCount?: number; // Number of attestations
     attestedEth?: number;      // For LMD GHOST: total staked ETH attesting to this subtree
+    isInvalid?: boolean;       // True if block is invalid (failed validation), false/undefined = valid
     [key: string]: any;        // Allow any future metadata
   };
 }
@@ -38,13 +39,11 @@ export class BlockchainTree {
   private root: BlockTreeNode | null;              // Genesis block (root of tree)
   private nodesByHash: Map<string, BlockTreeNode>; // Fast lookup by hash
   private leaves: Set<BlockTreeNode>;              // All leaf nodes (chain tips)
-  private ghostHead: string | null;                // LMD-GHOST HEAD (canonical chain tip)
   
   constructor() {
     this.root = null;  // Will be set when genesis block is added
     this.nodesByHash = new Map();
     this.leaves = new Set();
-    this.ghostHead = null;  // Will be set to genesis hash after genesis is added
   }
   
   /**
@@ -108,6 +107,9 @@ export class BlockchainTree {
     // Add new node as a leaf
     this.leaves.add(newNode);
     
+    // Note: GHOST-HEAD is computed on-demand via getGhostHead()
+    // No need to update it here - it will be recomputed when needed
+    
     return newNode;
   }
   
@@ -120,7 +122,7 @@ export class BlockchainTree {
     const chain: Block[] = [];
     
     // Use current GHOST-HEAD if no specific hash provided
-    const headHash = ghostHeadHash ?? this.ghostHead;
+    const headHash = ghostHeadHash ?? this.getGhostHead()?.hash;
     
     if (!headHash) {
       return chain;
@@ -158,7 +160,7 @@ export class BlockchainTree {
    */
   getCanonicalHead(ghostHeadHash?: string | null): BlockTreeNode | null {
     // Use current GHOST-HEAD if no specific hash provided
-    const headHash = ghostHeadHash ?? this.ghostHead;
+    const headHash = ghostHeadHash ?? this.getGhostHead()?.hash;
     
     if (!headHash) {
       return this.root;
@@ -268,16 +270,22 @@ export class BlockchainTree {
   
   /**
    * Get the LMD-GHOST HEAD (canonical chain tip)
+   * Computed on-demand using LMD-GHOST fork choice algorithm
+   * Returns the node directly (not just the hash)
+   * 
+   * GHOST-HEAD Movement:
+   * - Moves when blocks are added (if new block extends heaviest chain)
+   * - Moves when attestations update (if attestations shift weight to different fork)
+   * 
+   * Algorithm (via LmdGhost.computeGhostHead):
+   * 1. Start at genesis (tree root)
+   * 2. At each fork, choose child with highest attestedEth
+   * 3. Continue until reaching a leaf (chain tip)
    */
-  getGhostHead(): string | null {
-    return this.ghostHead;
-  }
-  
-  /**
-   * Set the LMD-GHOST HEAD (canonical chain tip)
-   * Called by LMD-GHOST fork choice algorithm
-   */
-  setGhostHead(ghostHead: string | null): void {
-    this.ghostHead = ghostHead;
+  getGhostHead(): BlockTreeNode | null {
+    // Import LmdGhost at runtime to avoid circular dependency
+    const { LmdGhost } = require('../consensus/LmdGhost');
+    const ghostHeadHash = LmdGhost.computeGhostHead(this);
+    return ghostHeadHash ? this.getNode(ghostHeadHash) || null : null;
   }
 }
