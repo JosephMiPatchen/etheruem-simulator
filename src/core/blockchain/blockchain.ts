@@ -59,10 +59,10 @@ export class Blockchain {
   
   /**
    * Gets all blocks in the canonical blockchain (computed from GHOST-HEAD)
+   * Uses the current GHOST-HEAD automatically
    */
   getCanonicalChain(): Block[] {
-    const ghostHead = this.blockTree.getGhostHead();
-    return this.blockTree.getCanonicalChain(ghostHead);
+    return this.blockTree.getCanonicalChain();
   }
   
   /**
@@ -323,7 +323,8 @@ export class Blockchain {
         this.beaconState.clearProcessedAttestations();
         
         // Apply each block in the new canonical chain to rebuild state
-        const canonicalChain = this.blockTree.getCanonicalChain(newGhostHead);
+        // Note: GHOST-HEAD is already updated to newGhostHead, so getCanonicalChain() uses it
+        const canonicalChain = this.getCanonicalChain();
         for (const block of canonicalChain) {
           this.applyBlockToElAndClState(block);
         }
@@ -404,8 +405,7 @@ export class Blockchain {
    * Gets a block by its height (from canonical chain determined by GHOST-HEAD)
    */
   getBlockByHeight(height: number): Block | undefined {
-    const ghostHead = this.blockTree.getGhostHead();
-    const canonicalChain = this.blockTree.getCanonicalChain(ghostHead);
+    const canonicalChain = this.getCanonicalChain();
     return height >= 0 && height < canonicalChain.length ? canonicalChain[height] : undefined;
   }
 }

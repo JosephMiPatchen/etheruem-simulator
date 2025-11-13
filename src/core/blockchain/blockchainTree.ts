@@ -113,17 +113,20 @@ export class BlockchainTree {
   
   /**
    * Gets the canonical chain as an array of blocks (from GHOST-HEAD to genesis)
-   * @param ghostHeadHash - Hash of the GHOST-HEAD (canonical chain tip from LMD-GHOST)
+   * @param ghostHeadHash - Optional hash to get chain for specific head (used in sync)
+   *                        If not provided, uses current GHOST-HEAD
    */
   getCanonicalChain(ghostHeadHash?: string | null): Block[] {
     const chain: Block[] = [];
     
-    // If no ghostHeadHash provided, return empty chain
-    if (!ghostHeadHash) {
+    // Use current GHOST-HEAD if no specific hash provided
+    const headHash = ghostHeadHash ?? this.ghostHead;
+    
+    if (!headHash) {
       return chain;
     }
     
-    let current: BlockTreeNode | null | undefined = this.nodesByHash.get(ghostHeadHash);
+    let current: BlockTreeNode | null | undefined = this.nodesByHash.get(headHash);
     
     // Walk up to genesis (root)
     while (current) {
