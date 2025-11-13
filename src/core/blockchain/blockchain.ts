@@ -180,13 +180,31 @@ export class Blockchain {
       return false;
     }
     
-    // Add each block using addBlock to ensure proper validation and state updates
-    // Each addBlock call will move GHOST-HEAD forward if block extends canonical
-    // ** assumes block array is in order where blocks are in order of height
+    // Filter out blocks we already have
+    // Start from the beginning and find the first block we don't have
+    const tree = this.blockTree;
+    const blocksToAdd: Block[] = [];
+    
     for (const block of newBlocks) {
+      const existingNode = tree.getNode(block.hash || '');
+      if (!existingNode) {
+        // We don't have this block, add it and all subsequent blocks
+        blocksToAdd.push(block);
+      }
+      // If we have it, continue checking (we might have gaps)
+    }
+    
+    if (blocksToAdd.length === 0) {
+      // We already have all blocks in this chain
+      return true;
+    }
+    
+    // Add each new block using addBlock to ensure proper validation and state updates
+    // Each addBlock call will move GHOST-HEAD forward if block extends canonical
+    for (const block of blocksToAdd) {
       if (!await this.addBlock(block)) {
         console.warn(`[Blockchain] Failed to add block ${block.hash?.slice(0, 8)} at height ${block.header.height}`);
-        return false
+        return false;
       }
     }
     
@@ -228,6 +246,12 @@ export class Blockchain {
     if (block.attestations && block.attestations.length > 0) {
       const poolSizeBefore = this.beaconState.beaconPool.length;
       for (const attestation of block.attestations) {
+        // Update latest attestation for this validator (for LMD-GHOST)
+        const existing = this.beaconState.latestAttestations.get(attestation.validatorAddress);
+        if (!existing || attestation.timestamp > existing.timestamp) {
+          this.beaconState.latestAttestations.set(attestation.validatorAddress, attestation);
+        }
+        
         // Mark as processed to prevent duplicate inclusion
         this.beaconState.markAttestationAsProcessed(attestation.blockHash, attestation.validatorAddress);
         
@@ -242,6 +266,10 @@ export class Blockchain {
         }
       }
       console.log(`[Blockchain] Beacon pool cleanup: ${poolSizeBefore} -> ${this.beaconState.beaconPool.length} (removed ${poolSizeBefore - this.beaconState.beaconPool.length})`);
+      
+      // Update latest attestations and decorate tree for LMD-GHOST
+      // This ensures fork choice considers the new attestations
+      this.updateLatestAttestationsAndTree();
     }
     // TODO: When implementing full PoS, also update:
     // - Slashing records (if any slashings in block)
