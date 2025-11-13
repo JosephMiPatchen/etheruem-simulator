@@ -9,7 +9,7 @@
  */
 
 import { Block } from '../../types/types';
-
+import { LmdGhost }  from '../consensus/LmdGhost';
 /**
  * Tree node wrapping a block with metadata
  * Extensible for future metadata (attestations, weight, etc.)
@@ -114,29 +114,38 @@ export class BlockchainTree {
   }
   
   /**
-   * Gets the canonical chain as an array of blocks (from GHOST-HEAD to genesis)
-   * @param ghostHeadHash - Optional hash to get chain for specific head (used in sync)
-   *                        If not provided, uses current GHOST-HEAD
+   * Get chain from a specific block hash to genesis
+   * Returns blocks in order from genesis to the specified hash
+   * 
+   * @param blockHash - Hash of the block to get chain for
    */
-  getCanonicalChain(ghostHeadHash?: string | null): Block[] {
+  getChain(blockHash: string): Block[] {
     const chain: Block[] = [];
+    let current: BlockTreeNode | null | undefined = this.nodesByHash.get(blockHash);
     
-    // Use current GHOST-HEAD if no specific hash provided
-    const headHash = ghostHeadHash ?? this.getGhostHead()?.hash;
-    
-    if (!headHash) {
-      return chain;
-    }
-    
-    let current: BlockTreeNode | null | undefined = this.nodesByHash.get(headHash);
-    
-    // Walk up to genesis (root)
+    // Walk up from block to genesis, collecting blocks
     while (current) {
-      chain.unshift(current.block);
+      if (current.block) {
+        chain.unshift(current.block);  // Add to front to maintain order
+      }
       current = current.parent;
     }
     
     return chain;
+  }
+  
+  /**
+   * Get the canonical chain (from current GHOST-HEAD to genesis)
+   * Returns blocks in order from genesis to GHOST-HEAD
+   * 
+   * For getting chain of a specific hash, use getChain(hash) instead
+   */
+  getCanonicalChain(): Block[] {
+    const headHash = this.getGhostHead()?.hash;
+    if (!headHash) {
+      return [];
+    }
+    return this.getChain(headHash);
   }
   
   /**
@@ -154,20 +163,12 @@ export class BlockchainTree {
   }
   
   /**
-   * Gets the canonical head node (current GHOST-HEAD)
-   * @param ghostHeadHash - Optional hash to get specific head node
-   *                        If not provided, uses current GHOST-HEAD
+   * Get the canonical head node (current GHOST-HEAD)
+   * 
+   * For getting a specific node by hash, use getNode(hash) instead
    */
-  getCanonicalHead(ghostHeadHash?: string | null): BlockTreeNode | null {
-    // Use current GHOST-HEAD if no specific hash provided
-    const headHash = ghostHeadHash ?? this.getGhostHead()?.hash;
-    
-    if (!headHash) {
-      return this.root;
-    }
-    
-    const headNode = this.nodesByHash.get(headHash);
-    return headNode || this.root;
+  getCanonicalHead(): BlockTreeNode | null {
+    return this.getGhostHead();
   }
   
   /**
@@ -188,9 +189,8 @@ export class BlockchainTree {
   
   /**
    * Gets tree statistics
-   * @param ghostHeadHash - Hash of the GHOST-HEAD for canonical chain calculation
    */
-  getStats(ghostHeadHash?: string | null): {
+  getStats(): {
     totalBlocks: number;
     canonicalChainLength: number;
     numberOfLeaves: number;
@@ -198,7 +198,7 @@ export class BlockchainTree {
   } {
     return {
       totalBlocks: this.nodesByHash.size,
-      canonicalChainLength: this.getCanonicalChain(ghostHeadHash).length,
+      canonicalChainLength: this.getCanonicalChain().length,
       numberOfLeaves: this.leaves.size,
       numberOfForks: this.leaves.size - 1 // Forks = leaves - 1
     };
@@ -266,6 +266,38 @@ export class BlockchainTree {
     
     traverse(this.root);
     return blocks;
+  }
+  
+  /**
+   * Mark a node as invalid and update tree attestedEth
+   * 
+   * This triggers a full tree recomputation because:
+   * 1. Invalid node gets isInvalid = true
+   * 2. Tree decoration recomputes attestedEth (invalid nodes return 0)
+   * 3. GHOST-HEAD will be recomputed on next access (skips invalid nodes)
+   * 
+   * Tree decoration happens in two cases:
+   * - When attestations change (onAttestationSetChanged)
+   * - When nodes marked invalid (this method)
+   * 
+   * @param blockHash - Hash of the block to mark invalid
+   * @param beaconState - BeaconState for tree decoration
+   */
+  markNodeInvalid(blockHash: string, beaconState: any): void {
+    const node = this.nodesByHash.get(blockHash);
+    if (!node) {
+      console.warn(`[BlockchainTree] Cannot mark node ${blockHash} invalid - not found`);
+      return;
+    }
+    
+    // Mark node as invalid
+    node.metadata.isInvalid = true;
+    console.log(`[BlockchainTree] Marked node ${blockHash.slice(0, 8)} invalid`);
+    
+    // Redecorate entire tree to update attestedEth
+    // Invalid nodes will return 0 and not contribute to parents
+    LmdGhost.decorateTree(beaconState, this);
+    console.log(`[BlockchainTree] Tree redecorated after marking node invalid`);
   }
   
   /**

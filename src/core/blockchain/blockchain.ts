@@ -150,21 +150,13 @@ export class Blockchain {
     const wouldExtendCanonical = newGhostHead?.parent?.hash === oldGhostHead?.hash;
     
     if (wouldExtendCanonical) {
-      // 6. Validate block against current world state
-      // Only validate when block would extend canonical (not for forks)
+      // 6. Validate and apply block (or mark invalid if validation fails)
       const previousHash = oldGhostHead?.hash || '';
-      const isValid = await validateBlock(block, this.worldState, previousHash);
+      const applied = await this.validateAndApplyBlock(block, previousHash);
       
-      if (!isValid) {
-        // Mark block as invalid in tree so LMD - GHOST algorithm will not traverse it next time its invoked
-        newNode.metadata.isInvalid = true;
-        console.log(`[Blockchain] Block ${block.hash?.slice(0, 8)} marked invalid - GHOST will skip it`);
-        return true; // Block added to tree but marked invalid
+      if (applied) {
+        console.log(`[Blockchain] Block ${block.hash?.slice(0, 8)} applied to canonical chain`);
       }
-      
-      // 7. Block is valid - apply state changes
-      this.applyBlockToElAndClState(block);
-      console.log(`[Blockchain] Block ${block.hash?.slice(0, 8)} applied to canonical chain`);
       return true;
     } else {
       // Block creates a fork - added to tree but not validated yet
@@ -198,17 +190,14 @@ export class Blockchain {
     // Add each block using addBlock to ensure proper validation and state updates
     // Each addBlock call will move GHOST-HEAD forward if block extends canonical
     // ** assumes block array is in order where blocks are in order of height
-    let allAdded = true;
     for (const block of newBlocks) {
-      const added = await this.addBlock(block);
-      if (!added) {
+      if (!await this.addBlock(block)) {
         console.warn(`[Blockchain] Failed to add block ${block.hash?.slice(0, 8)} at height ${block.header.height}`);
-        allAdded = false;
-        // Continue adding remaining blocks - they might succeed if they're on a different fork
+        return false
       }
     }
     
-    return allAdded;
+    return true;
   }
   
   /**
@@ -235,18 +224,11 @@ export class Blockchain {
     }
     
     // ========== Beacon State Updates (Consensus Layer) ==========
-    
-    // Update RANDAO mix with this block's reveal
-    // In PoS, every block must include a RANDAO reveal
-    if (!block.randaoReveal) {
-      throw new Error(`Block ${block.hash} is missing randaoReveal - required for PoS`);
-    }
-    
     // Calculate epoch from slot: epoch = floor(slot / SLOTS_PER_EPOCH)
     const epoch = Math.floor(block.header.slot / SimulatorConfig.SLOTS_PER_EPOCH);
     
     // Update RANDAO mix: new_mix = current_mix XOR reveal
-    RANDAO.updateRandaoMix(this.beaconState, epoch, block.randaoReveal);
+    RANDAO.updateRandaoMix(this.beaconState, epoch, block.randaoReveal!);
     
     // Mark all attestations in this block as processed and remove from beacon pool
     if (block.attestations && block.attestations.length > 0) {
@@ -267,9 +249,7 @@ export class Blockchain {
       }
       console.log(`[Blockchain] Beacon pool cleanup: ${poolSizeBefore} -> ${this.beaconState.beaconPool.length} (removed ${poolSizeBefore - this.beaconState.beaconPool.length})`);
     }
-    
     // TODO: When implementing full PoS, also update:
-    // - Validator balances (apply rewards/penalties)
     // - Slashing records (if any slashings in block)
     // - Finality checkpoints (update justified/finalized epochs)
   }
@@ -284,14 +264,14 @@ export class Blockchain {
    * 3. Compute new GHOST-HEAD based on attestations
    * 4. Check if GHOST-HEAD moved:
    *    - Stayed same → No action needed
-   *    - Moved forward → Apply new blocks to state
-   *    - Moved to different fork → Reorg (rebuild entire state)
+   *    - Moved forward → Validate and apply new blocks to state
+   *    - Moved to different fork → Reorg (rebuild entire state, validate all blocks)
    * 
    * This is the ONLY way reorgs can happen (not via block/chain addition)
    * 
    * @param attestation - The attestation to process
    */
-  onAttestationReceived(attestation: any): void {
+  async onAttestationReceived(attestation: any): Promise<void> {
     // Save old GHOST-HEAD to detect changes
     const oldGhostHead = this.blockTree.getGhostHead();
     
@@ -316,30 +296,104 @@ export class Blockchain {
       
       if (isReorg) {
         // ❌ Reorganization: GHOST-HEAD switched to a different fork
-        console.log(`[Blockchain] REORG: ${oldGhostHead?.hash?.slice(0, 8)} → ${newGhostHead?.hash?.slice(0, 8)} (rebuilding state)`);
+        console.log(`[Blockchain] REORG: ${oldGhostHead?.hash?.slice(0, 8)} → ${newGhostHead?.hash?.slice(0, 8)}`);
         
-        // Rebuild world state and beacon state from scratch
-        this.worldState = new WorldState();
-        this.beaconState.clearProcessedAttestations();
-        
-        // Apply each block in the new canonical chain to rebuild state
-        // Note: GHOST-HEAD is already updated to newGhostHead, so getCanonicalChain() uses it
-        const canonicalChain = this.getCanonicalChain();
-        for (const block of canonicalChain) {
-          this.applyBlockToElAndClState(block);
+        // Retry state rebuild until valid canonical chain found
+        // Each failure marks block invalid → tree redecorated → GHOST-HEAD recomputed
+        for (let attempt = 0; attempt < 10; attempt++) {
+          if (await this.rebuildStateFromCanonicalChain()) {
+            break; // Success
+          }
+          console.log(`[Blockchain] Invalid block (retry ${attempt + 1}/10) - new head: ${this.blockTree.getGhostHead()?.hash?.slice(0, 8)}`);
         }
       } else {
         // ✅ Forward Progress: GHOST-HEAD moved down same chain
         console.log(`[Blockchain] GHOST-HEAD moved forward via attestation: ${oldGhostHead?.hash?.slice(0, 8)} → ${newGhostHead?.hash?.slice(0, 8)}`);
         
-        // Apply blocks between old and new GHOST-HEAD to state
+        // Validate and apply blocks between old and new GHOST-HEAD
+        // Stop if any block is invalid
         const blocksToApply = this.getBlocksBetween(oldGhostHead, newGhostHead);
+        
         for (const block of blocksToApply) {
-          this.applyBlockToElAndClState(block);
+          // Each block's previous hash is in its header
+          const blockPrevHash = block.header.previousHeaderHash;
+          const applied = await this.validateAndApplyBlock(block, blockPrevHash);
+          
+          if (!applied) {
+            // Block is invalid - stop applying blocks
+            console.log(`[Blockchain] Block ${block.hash?.slice(0, 8)} invalid - stopping forward progress`);
+            break;
+          }
         }
       }
     }
     // else: GHOST-HEAD stayed same - no action needed
+  }
+  
+  /**
+   * Rebuild world state and beacon state from canonical chain
+   * Clears current state and validates/applies all blocks in canonical chain
+   * 
+   * @returns true if all blocks applied successfully, false if any block invalid
+   */
+  private async rebuildStateFromCanonicalChain(): Promise<boolean> {
+    // Clear state
+    this.worldState = new WorldState();
+    this.beaconState.clearProcessedAttestations();
+    
+    // Validate and apply each block in canonical chain
+    const canonicalChain = this.getCanonicalChain();
+    for (let i = 0; i < canonicalChain.length; i++) {
+      const block = canonicalChain[i];
+      const previousHash = i > 0 ? canonicalChain[i - 1].hash || '' : '';
+      const applied = await this.validateAndApplyBlock(block, previousHash);
+      
+      if (!applied) {
+        // Block is invalid - state rebuild incomplete
+        return false;
+      }
+    }
+    
+    return true;
+  }
+  
+  /**
+   * Validate and apply a block to world state and beacon state
+   * If validation fails, marks the block as invalid in the tree
+   * 
+   * @param block - Block to validate and apply
+   * @param previousHash - Hash of the previous block (for validation context)
+   * @returns true if block is valid and was applied, false if invalid
+   */
+  private async validateAndApplyBlock(block: Block, previousHash: string): Promise<boolean> {
+    // Get the tree node for this block
+    const node = this.blockTree.getNode(block.hash || '');
+    if (!node) {
+      console.error(`[Blockchain] Cannot validate block ${block.hash} - not in tree`);
+      return false;
+    }
+    
+    // Skip if already marked invalid
+    if (node.metadata.isInvalid) {
+      return false;
+    }
+    
+    // Validate block against current world state
+    const isValid = await validateBlock(block, this.worldState, previousHash);
+    
+    if (!isValid) {
+      // Mark block as invalid and redecorate tree
+      // Tree decoration happens in two cases:
+      // 1. When attestations change (onAttestationSetChanged)
+      // 2. When nodes marked invalid (here)
+      this.blockTree.markNodeInvalid(block.hash || '', this.beaconState);
+      console.log(`[Blockchain] Block ${block.hash?.slice(0, 8)} marked invalid - GHOST will skip it`);
+      return false;
+    } else {
+      // Block is valid - apply state changes
+      this.applyBlockToElAndClState(block);
+      return true; 
+    }
   }
   
   /**

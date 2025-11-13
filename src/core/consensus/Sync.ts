@@ -121,9 +121,8 @@ export class Sync {
     if (!this.onSendMessage) return;
     
     // Get the chain from the requested head to genesis
-    // NOT our current GHOST-HEAD chain (it may have changed)
     const tree = this.blockchain.getTree();
-    const chain = tree.getCanonicalChain(requestedHeadHash);
+    const chain = tree.getChain(requestedHeadHash);
     
     // If we don't have this head, we can't respond
     if (chain.length === 0) {

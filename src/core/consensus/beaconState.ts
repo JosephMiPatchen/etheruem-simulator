@@ -145,10 +145,11 @@ export class BeaconState {
    * 
    * Delegates to blockchain.onAttestationReceived which:
    * - Updates latest attestations
+   * - Validates blocks if GHOST-HEAD changes
    * - Checks for reorg (GHOST-HEAD change)
    * - Rebuilds state if needed
    */
-  addAttestation(attestation: Attestation): void {
+  async addAttestation(attestation: Attestation): Promise<void> {
     // Check if this exact attestation already exists (same validator + block hash)
     const exists = this.beaconPool.some(
       att => att.validatorAddress === attestation.validatorAddress && 
@@ -161,7 +162,7 @@ export class BeaconState {
       // Delegate to blockchain to handle attestation and check for reorg
       // This is the ONLY way reorgs can happen (not via block/chain addition)
       if (this.blockchain) {
-        this.blockchain.onAttestationReceived(attestation);
+        await this.blockchain.onAttestationReceived(attestation);
       }
     }
   }

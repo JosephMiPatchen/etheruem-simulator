@@ -36,10 +36,7 @@ export class LmdGhost {
    * Decorate a blockchain tree with attestedEth metadata
    * Computes cumulative attested weight for each block in the tree
    */
-  public static decorateTree(beaconState: any, tree: BlockchainTree): void {
-    // Get all blocks from the tree
-    const allBlocks = tree.getAllBlocks();
-    
+  public static decorateTree(beaconState: any, tree: BlockchainTree): void {    
     // Create a map of block hash to attestation count
     const blockAttestationCounts = new Map<string, number>();
     
@@ -50,27 +47,33 @@ export class LmdGhost {
     }
     
     // Decorate each node in the tree with attestedEth
-    LmdGhost.decorateNode(tree.getRoot(), blockAttestationCounts, allBlocks);
+    LmdGhost.decorateNode(tree.getRoot(), blockAttestationCounts);
   }
   
   /**
    * Recursively decorate a tree node and its descendants with attestedEth
+   * Invalid nodes get 0 attestedEth and don't contribute to their parents
    */
   private static decorateNode(
     node: BlockTreeNode | null,
-    blockAttestationCounts: Map<string, number>,
-    allBlocks: Block[]
+    blockAttestationCounts: Map<string, number>
   ): number {
     if (!node) return 0;
     
+    // Invalid nodes have 0 attestedEth and don't contribute to parents
+    if (node.metadata?.isInvalid) {
+      node.metadata.attestedEth = 0;
+      return 0;
+    }
+    
     // Get direct attestations for this block (32 ETH per attestation)
     const directAttestations = blockAttestationCounts.get(node.hash) || 0;
-    const directAttestedEth = directAttestations * 32;
+    const directAttestedEth = directAttestations * 32; // TODO: get this from the validtor set in beacon state
     
-    // Recursively compute attestedEth for all children
+    // Recursively compute attestedEth for all children (skips invalid children)
     let childrenAttestedEth = 0;
     for (const child of node.children) {
-      childrenAttestedEth += LmdGhost.decorateNode(child, blockAttestationCounts, allBlocks);
+      childrenAttestedEth += LmdGhost.decorateNode(child, blockAttestationCounts);
     }
     
     // Total attestedEth is direct + all descendants
