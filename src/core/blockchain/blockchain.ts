@@ -276,40 +276,49 @@ export class Blockchain {
   
   /**
    * Called when a new attestation message is received
-   * Updates latest attestations and checks if GHOST-HEAD changed (potential reorg)
+   * This is the single source of truth for attestation processing
    * 
-   * GHOST-HEAD Change Rule:
-   * - Attestations change attestedEth values in tree
-   * - GHOST-HEAD may switch to a different fork (reorg)
-   * - This is the ONLY way reorgs can happen
+   * Complete Flow:
+   * 1. Update latest attestations (per-validator map)
+   * 2. Update tree attestedEth values
+   * 3. Compute new GHOST-HEAD based on attestations
+   * 4. Check if GHOST-HEAD moved:
+   *    - Stayed same → No action needed
+   *    - Moved forward → Apply new blocks to state
+   *    - Moved to different fork → Reorg (rebuild entire state)
    * 
-   * If reorg detected:
-   * - Rebuild world state from new canonical chain
-   * - Rebuild beacon state from new canonical chain
+   * This is the ONLY way reorgs can happen (not via block/chain addition)
    * 
    * @param attestation - The attestation to process
    */
   onAttestationReceived(attestation: any): void {
-    // Save old GHOST-HEAD to detect reorg
+    // Save old GHOST-HEAD to detect changes
     const oldGhostHead = this.blockTree.getGhostHead();
     
-    // Update latest attestations and tree decoration (attestedEth)
-    // This may change GHOST-HEAD based on new attestation weights
-    this.beaconState.updateLatestAttestation(attestation);
-    this.updateLatestAttestationsAndTree();
+    // 1. Update latest attestations (per-validator map)
+    const existing = this.beaconState.latestAttestations.get(attestation.validatorAddress);
+    if (!existing || attestation.timestamp > existing.timestamp) {
+      this.beaconState.latestAttestations.set(attestation.validatorAddress, attestation);
+    }
     
-    // Check if GHOST-HEAD changed
+    // 2. Update tree attestedEth values and compute new GHOST-HEAD
+    // This uses the latest attestations to decorate tree and determine canonical chain
+    LmdGhost.onAttestationSetChanged(this.beaconState, this.blockTree, 
+      Array.from(this.beaconState.latestAttestations.values()));
+    
+    // 3. Get new GHOST-HEAD after attestation update
     const newGhostHead = this.blockTree.getGhostHead();
     
+    // 4. Check if GHOST-HEAD changed and handle accordingly
     if (oldGhostHead !== newGhostHead) {
-      // GHOST-HEAD changed - check if it's a reorg (different fork)
+      // GHOST-HEAD changed - determine what to do
       const isReorg = !this.isDescendant(newGhostHead, oldGhostHead);
       
       if (isReorg) {
         // ❌ Reorganization: GHOST-HEAD switched to a different fork
         console.log(`[Blockchain] REORG: ${oldGhostHead?.slice(0, 8)} → ${newGhostHead?.slice(0, 8)} (rebuilding state)`);
         
-        // Rebuild world state and beacon state from the new canonical chain
+        // Rebuild world state and beacon state from scratch
         this.worldState = new WorldState();
         this.beaconState.clearProcessedAttestations();
         
@@ -321,8 +330,15 @@ export class Blockchain {
       } else {
         // ✅ Forward Progress: GHOST-HEAD moved down same chain
         console.log(`[Blockchain] GHOST-HEAD moved forward via attestation: ${oldGhostHead?.slice(0, 8)} → ${newGhostHead?.slice(0, 8)}`);
+        
+        // Apply blocks between old and new GHOST-HEAD to state
+        const blocksToApply = this.getBlocksBetween(oldGhostHead, newGhostHead);
+        for (const block of blocksToApply) {
+          this.applyBlockToElAndClState(block);
+        }
       }
     }
+    // else: GHOST-HEAD stayed same - no action needed
   }
   
   /**
@@ -343,6 +359,27 @@ export class Blockchain {
     }
     
     return false;  // newHead is NOT descendant of oldHead (reorg!)
+  }
+  
+  /**
+   * Get blocks between oldHead and newHead (exclusive of oldHead, inclusive of newHead)
+   * Used when GHOST-HEAD moves forward to apply new blocks to state
+   */
+  private getBlocksBetween(oldHead: string | null, newHead: string | null): Block[] {
+    if (!newHead) return [];
+    
+    const blocks: Block[] = [];
+    let current: BlockTreeNode | null | undefined = this.blockTree.getNode(newHead);
+    
+    // Walk up from new head to old head, collecting blocks
+    while (current && current.hash !== oldHead) {
+      if (current.block) {
+        blocks.unshift(current.block);  // Add to front to maintain order
+      }
+      current = current.parent;
+    }
+    
+    return blocks;
   }
   
   /**
