@@ -52,7 +52,7 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
 
   const validateBlockHash = (block: Block) => {
     const hash = calculateBlockHeaderHash(block.header);
-    const isValid = isHashBelowCeiling(hash, SimulatorConfig.CEILING);
+    const isValid = true; // PoS blocks don't use PoW hash validation
     const isGenesis = block.header.height === 0;
     return { hash, isValid, isGenesis };
   };
@@ -176,7 +176,8 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
                 }
                 
                 // Check if this node is the GHOST-HEAD
-                const isGhostHead = beaconState && blockNode && beaconState.ghostHead === blockNode.hash;
+                const ghostHeadNode = blockchainTree.getGhostHead();
+                const isGhostHead = ghostHeadNode && blockNode && ghostHeadNode.hash === blockNode.hash;
                 
                 const handleClick = () => {
                   if (blockNode?.block) {
@@ -397,10 +398,6 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
                 <div className="info-row">
                   <span className="info-label">Timestamp:</span>
                   <span className="info-value">{new Date(selectedBlock.header.timestamp).toLocaleString()}</span>
-                </div>
-                <div className="info-row">
-                  <span className="info-label">Ceiling:</span>
-                  <span className="info-value hash-value">0x{SimulatorConfig.CEILING}</span>
                 </div>
                 {selectedBlock.randaoReveal && (
                   <div className="info-row">
