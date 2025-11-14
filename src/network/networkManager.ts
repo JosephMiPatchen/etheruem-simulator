@@ -139,6 +139,8 @@ export class NetworkManager {
     
     // Otherwise, it's a broadcast message - send to all peers of the sender
     const senderPeers = this.networkTopology.get(message.fromNodeId) || [];
+    console.log(`[NetworkManager] 🌐 Broadcasting ${message.type} from ${message.fromNodeId.slice(0, 8)} to ${senderPeers.length} peers: ${senderPeers.map(p => p.slice(0, 8)).join(', ')}`);
+    
     for (const peerId of senderPeers) {
       const peerNode = this.nodes.get(peerId);
       if (peerNode) {
