@@ -25,19 +25,19 @@ export const NodeSettingsModal: React.FC<NodeSettingsModalProps> = ({
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
+    <div className="settings-modal-overlay" onClick={onClose}>
+      <div className="settings-modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="settings-modal-header">
           <h3>Node Settings: {nodeId}</h3>
-          <button className="close-button" onClick={onClose}>×</button>
+          <button className="settings-modal-close-button" onClick={onClose}>×</button>
         </div>
         
-        <div className="modal-body">
-          <div className="setting-group">
+        <div className="settings-modal-body">
+          <div className="settings-modal-setting-group">
             <label htmlFor="delay-multiplier">
               Network Delay Multiplier: {multiplier.toFixed(1)}x
             </label>
-            <p className="setting-description">
+            <p className="settings-modal-setting-description">
               Controls how slow this node's network is. Higher values increase the chance of forks.
             </p>
             <input
@@ -48,9 +48,9 @@ export const NodeSettingsModal: React.FC<NodeSettingsModalProps> = ({
               step="0.1"
               value={multiplier}
               onChange={(e) => setMultiplier(parseFloat(e.target.value))}
-              className="slider"
+              className="settings-modal-slider"
             />
-            <div className="slider-labels">
+            <div className="settings-modal-slider-labels">
               <span>0.1x (Fast)</span>
               <span>1.0x (Normal)</span>
               <span>10x (Very Slow)</span>
@@ -58,11 +58,11 @@ export const NodeSettingsModal: React.FC<NodeSettingsModalProps> = ({
           </div>
         </div>
         
-        <div className="modal-footer">
-          <button className="button-secondary" onClick={onClose}>
+        <div className="settings-modal-footer">
+          <button className="settings-modal-button-secondary" onClick={onClose}>
             Cancel
           </button>
-          <button className="button-primary" onClick={handleSave}>
+          <button className="settings-modal-button-primary" onClick={handleSave}>
             Save
           </button>
         </div>
