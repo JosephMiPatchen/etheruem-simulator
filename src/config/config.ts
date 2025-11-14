@@ -17,8 +17,9 @@ export const SimulatorConfig = {
   MAX_BLOCK_TRANSACTIONS: 10, // Maximum number of transactions per block
   
   // Proof of Stake (PoS) parameters
-  SECONDS_PER_SLOT: 3,      // Duration of each slot in seconds
+  SECONDS_PER_SLOT: .5,      // Duration of each slot in seconds
   SLOTS_PER_EPOCH: 6,        // Number of slots per epoch (Ethereum mainnet: 32)
+  PROPOSER_BUFFER_MS: 100,   // Buffer time in ms to ensure slot increments before next proposal
   MAX_EFFECTIVE_BALANCE: 64, // Maximum effective balance in ETH for validators
   GENESIS_RANDAO_MIX: '0x0000000000000000000000000000000000000000000000000000000000000000', // RANDAO mix for epoch -1 (32 bytes of zeros)
   GENESIS_RANDAO_REVEAL: '0x0000000000000000000000000000000000000000000000000000000000000001', // RANDAO reveal for genesis block (epoch 0)

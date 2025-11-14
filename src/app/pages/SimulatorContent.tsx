@@ -57,7 +57,7 @@ const SimulatorContentInner: React.FC = () => {
     // Set up interval to process consensus slots (configurable PoS slot time)
     slotIntervalRef.current = setInterval(() => {
       networkManager.processAllSlots();
-    }, SimulatorConfig.SECONDS_PER_SLOT * 1000);
+    }, SimulatorConfig.SECONDS_PER_SLOT * 1000 + SimulatorConfig.PROPOSER_BUFFER_MS);
     
     // Cleanup on unmount
     return () => {
@@ -126,7 +126,7 @@ const SimulatorContentInner: React.FC = () => {
       // Start the network
       slotIntervalRef.current = setInterval(() => {
         networkManagerRef.current?.processAllSlots();
-      }, SimulatorConfig.SECONDS_PER_SLOT * 1000);
+      }, SimulatorConfig.SECONDS_PER_SLOT * 1000 + SimulatorConfig.PROPOSER_BUFFER_MS);
       setIsNetworkRunning(true);
       console.log('[Network] Started');
     }
