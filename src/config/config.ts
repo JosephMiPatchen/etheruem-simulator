@@ -9,18 +9,18 @@ export const SimulatorConfig = {
   
   // Network parameters
   NODE_COUNT: 4,             // Number of nodes in the network
-  MIN_NETWORK_DELAY_MS: 5,  // Minimum network delay in milliseconds
-  MAX_NETWORK_DELAY_MS: 10, // Maximum network delay in milliseconds
+  MIN_NETWORK_DELAY_MS: 10,  // Minimum network delay in milliseconds
+  MAX_NETWORK_DELAY_MS: 100, // Maximum network delay in milliseconds
   
   // Transaction parameters
   REDISTRIBUTION_RATIO: 0.5, // Ratio of coins to redistribute (0-1)
   MAX_BLOCK_TRANSACTIONS: 10, // Maximum number of transactions per block
   
   // Proof of Stake (PoS) parameters
-  SECONDS_PER_SLOT: .5,      // Duration of each slot in seconds
+  SECONDS_PER_SLOT: .2,      // Duration of each slot in seconds
   SLOTS_PER_EPOCH: 4,        // Number of slots per epoch (Ethereum mainnet: 32)
   PROPOSER_BUFFER_MS: 100,   // Buffer time in ms to ensure slot increments before next proposal
-  SYNC_INTERVAL_MS: 1000,    // Interval for broadcasting LMD-GHOST heads (sync)
+  SYNC_INTERVAL_MS: 4000,    // Interval for broadcasting LMD-GHOST heads (sync)
   MAX_EFFECTIVE_BALANCE: 64, // Maximum effective balance in ETH for validators
   GENESIS_RANDAO_MIX: '0x0000000000000000000000000000000000000000000000000000000000000000', // RANDAO mix for epoch -1 (32 bytes of zeros)
   GENESIS_RANDAO_REVEAL: '0x0000000000000000000000000000000000000000000000000000000000000001', // RANDAO reveal for genesis block (epoch 0)
