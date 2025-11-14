@@ -57,16 +57,23 @@ export class NetworkManager {
    * This allows for creating various network structures (mesh, ring, star, etc.)
    */
   setupNetworkTopology(topology: Map<string, string[]>): void {
-    this.networkTopology = new Map(topology);
-    
     // First collect all node addresses
     const addressMap: { [nodeId: string]: string } = {};
     for (const [nodeId, nodeWorker] of this.nodesMap.entries()) {
       addressMap[nodeId] = nodeWorker.getNodeAddress();
     }
     
+    // Convert topology from nodeId-based to address-based
+    // This allows messages with fromNodeId=address to find their peers
+    this.networkTopology = new Map();
+    for (const [nodeId, peerIds] of topology.entries()) {
+      const nodeAddress = addressMap[nodeId];
+      const peerAddresses = peerIds.map(peerId => addressMap[peerId]);
+      this.networkTopology.set(nodeAddress, peerAddresses);
+    }
+    
     // Set peer information with addresses for each node
-    for (const [nodeId, peerIds] of this.networkTopology.entries()) {
+    for (const [nodeId, peerIds] of topology.entries()) {
       const node = this.nodesMap.get(nodeId);
       if (node) {
         // Create peer objects with addresses

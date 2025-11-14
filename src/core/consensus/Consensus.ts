@@ -20,6 +20,7 @@ export class Consensus {
   private beaconState: BeaconState;
   private blockchain: Blockchain;
   private node: Node;
+  private nodeId: string;
   private nodeAddress: string;
   private mempool: Mempool;
   private paintingComplete: boolean = false; // Flag to stop creating paint transactions
@@ -39,6 +40,7 @@ export class Consensus {
     this.beaconState = beaconState;
     this.blockchain = blockchain;
     this.node = node;
+    this.nodeId = node.getNodeId();
     this.nodeAddress = node.getAddress();
     this.mempool = mempool;
     
