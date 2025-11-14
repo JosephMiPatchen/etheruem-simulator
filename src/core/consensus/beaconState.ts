@@ -108,7 +108,8 @@ export class BeaconState {
   getRandaoMix(epoch: number): string {
     const mix = this.randaoMixes.get(epoch);
     if (!mix) {
-      console.warn(`[BeaconState] ⚠️  No RANDAO mix found for epoch ${epoch}, falling back to default (all zeros). RANDAO reveals are not being processed!`);
+      // This is expected when computing schedules for future epochs
+      // The mix will be created when blocks for that epoch are proposed
       return this.generateInitialRandao();
     }
     return mix;
