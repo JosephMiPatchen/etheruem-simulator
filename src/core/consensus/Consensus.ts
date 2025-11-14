@@ -224,6 +224,13 @@ export class Consensus {
   private async proposeBlock(slot: number): Promise<void> {
     console.log(`[Consensus] Node ${this.nodeAddress.slice(0, 8)} proposing block for slot ${slot}`);
     
+    // Validate: Don't propose if previous block has the same slot
+    const latestBlock = this.blockchain.getLatestBlock();
+    if (latestBlock && latestBlock.header.slot === slot) {
+      console.warn(`[Consensus] Skipping proposal - previous block already has slot ${slot}`);
+      return;
+    }
+    
     // Calculate current epoch and generate RANDAO reveal
     const currentEpoch = this.getEpoch(slot);
     const randaoReveal = RANDAO.calculateRandaoReveal(currentEpoch, this.node);
