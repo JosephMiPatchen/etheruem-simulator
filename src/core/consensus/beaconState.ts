@@ -58,9 +58,11 @@ export class BeaconState {
     // Initialize LMD-GHOST fork choice state
     this.latestAttestations = new Map();
     
-    // Initialize RANDAO mix for epoch -1 (genesis)
-    // This allows epoch 0 to compute its proposer schedule
+    // Initialize RANDAO mixes for genesis and epoch 0
+    // Epoch -1: Genesis block (slot -1)
+    // Epoch 0: First real epoch (slots 0-3 with SLOTS_PER_EPOCH=4)
     this.randaoMixes.set(-1, SimulatorConfig.GENESIS_RANDAO_MIX);
+    this.randaoMixes.set(0, SimulatorConfig.GENESIS_RANDAO_MIX);
   }
   
   /**

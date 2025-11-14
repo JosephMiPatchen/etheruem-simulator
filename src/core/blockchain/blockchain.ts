@@ -238,9 +238,12 @@ export class Blockchain {
     // Calculate epoch from slot: epoch = floor(slot / SLOTS_PER_EPOCH)
     const epoch = Math.floor(block.header.slot / SimulatorConfig.SLOTS_PER_EPOCH);
     
-    // Update RANDAO mix: new_mix = current_mix XOR reveal
+    // Update RANDAO mix for NEXT epoch: new_mix = current_mix XOR reveal
+    // We update epoch+1 so the mix is available when computing the schedule for epoch+1
+    // (which needs the mix from epoch, i.e., the current epoch)
     // All blocks including genesis have RANDAO reveal
-    RANDAO.updateRandaoMix(this.beaconState, epoch, block.randaoReveal!);
+    const nextEpoch = epoch + 1;
+    RANDAO.updateRandaoMix(this.beaconState, nextEpoch, block.randaoReveal!);
     
     // Mark all attestations in this block as processed and remove from beacon pool
     if (block.attestations && block.attestations.length > 0) {
