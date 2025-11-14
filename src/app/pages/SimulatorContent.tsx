@@ -52,7 +52,7 @@ const SimulatorContentInner: React.FC = () => {
     // Set up interval to broadcast LMD-GHOST heads every second
     ghostHeadIntervalRef.current = setInterval(() => {
       networkManager.broadcastAllGhostHeads();
-    }, 1000);
+    }, SimulatorConfig.SYNC_INTERVAL_MS);
     
     // Set up interval to process consensus slots (configurable PoS slot time)
     slotIntervalRef.current = setInterval(() => {
@@ -148,7 +148,7 @@ const SimulatorContentInner: React.FC = () => {
       // Start syncing
       ghostHeadIntervalRef.current = setInterval(() => {
         networkManagerRef.current?.broadcastAllGhostHeads();
-      }, 1000);
+      }, SimulatorConfig.SYNC_INTERVAL_MS);
       setIsSyncEnabled(true);
       console.log('[Sync] Enabled');
     }
