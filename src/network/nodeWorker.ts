@@ -109,10 +109,13 @@ export class NodeWorker {
    * Adds the attestation to the local beacon pool
    */
   private handleAttestation(message: AttestationMessage): void {
+    console.log(`[NodeWorker ${this._node.getAddress().slice(0, 8)}] 📥 Received attestation from ${message.fromNodeId.slice(0, 8)} for block ${message.attestation.blockHash.slice(0, 8)}`);
+    
     // Add attestation to beacon state's beacon pool
     const beaconState = this._node.getState().beaconState;
     if (beaconState) {
       beaconState.addAttestation(message.attestation);
+      console.log(`[NodeWorker ${this._node.getAddress().slice(0, 8)}] ✅ Added attestation to beacon pool. Latest attestations count: ${beaconState.latestAttestations.size}`);
     }
   }
   
@@ -144,10 +147,11 @@ export class NodeWorker {
   }
   
   /**
-   * Handles proposer block broadcast message
-   * Thin wrapper - delegates to Consensus class
+   * Handles a block broadcast from a proposer
+   * Validators receive this and attest to the block
    */
   private handleProposerBlockBroadcast(message: ProposerBlockBroadcastMessage): void {
+    console.log(`[NodeWorker ${this._node.getAddress().slice(0, 8)}] 📦 Received proposer block ${message.block.hash?.slice(0, 8)} for slot ${message.slot} from ${message.fromNodeId.slice(0, 8)}`);
     const consensus = this._node.getConsensus();
     consensus.handleProposedBlock(message.block, message.slot, message.fromNodeId);
   }

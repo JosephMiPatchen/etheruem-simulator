@@ -342,6 +342,8 @@ export class Consensus {
   private broadcastAttestation(attestation: any): void {
     if (!this.onSendMessage) return;
     
+    console.log(`[Consensus ${this.nodeAddress.slice(0, 8)}] 📤 Broadcasting attestation for block ${attestation.blockHash.slice(0, 8)}`);
+    
     const message = {
       type: MessageType.ATTESTATION,
       fromNodeId: this.nodeAddress,
