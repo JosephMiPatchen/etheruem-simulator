@@ -122,6 +122,7 @@ const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [], onAdd
         <BeaconStateView
           beaconState={nodeState.beaconState}
           blockchain={nodeState.blockchain}
+          blockchainTree={nodeState.blockchainTree}
           onClose={() => setShowBeaconStateModal(false)}
         />
       )}

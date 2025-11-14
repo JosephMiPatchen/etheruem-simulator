@@ -10,13 +10,14 @@ import './BeaconStateView.css';
 interface BeaconStateViewProps {
   beaconState: BeaconState;
   blockchain: Block[];
+  blockchainTree?: any; // Blockchain tree for looking up blocks on forks
   onClose: () => void;
 }
 
 /**
  * BeaconStateView - Displays the Consensus Layer (CL) beacon state
  */
-const BeaconStateView: React.FC<BeaconStateViewProps> = ({ beaconState, blockchain, onClose }) => {
+const BeaconStateView: React.FC<BeaconStateViewProps> = ({ beaconState, blockchain, blockchainTree, onClose }) => {
   const { addressToNodeId } = useSimulatorContext();
   const [selectedAttestation, setSelectedAttestation] = useState<any | null>(null);
   const currentSlot = beaconState.getCurrentSlot();
@@ -133,8 +134,11 @@ const BeaconStateView: React.FC<BeaconStateViewProps> = ({ beaconState, blockcha
               ) : (
                 <div className="attestations-grid-compact">
                   {Array.from(beaconState.latestAttestations.values()).map((attestation, index) => {
-                    // Find the block being attested to get its height
-                    const attestedBlock = blockchain.find((b: Block) => b.hash === attestation.blockHash);
+                    // Find the block being attested - check tree first (includes forks), then canonical chain
+                    let attestedBlock = blockchainTree?.getNode(attestation.blockHash)?.block;
+                    if (!attestedBlock) {
+                      attestedBlock = blockchain.find((b: Block) => b.hash === attestation.blockHash);
+                    }
                     const blockHeight = attestedBlock ? attestedBlock.header.height : '?';
                     
                     // Get node name (color) from address using context
@@ -171,8 +175,11 @@ const BeaconStateView: React.FC<BeaconStateViewProps> = ({ beaconState, blockcha
               ) : (
                 <div className="attestations-grid-compact">
                   {beaconState.beaconPool.slice().reverse().map((attestation, index) => {
-                    // Find the block being attested to get its height
-                    const attestedBlock = blockchain.find((b: Block) => b.hash === attestation.blockHash);
+                    // Find the block being attested - check tree first (includes forks), then canonical chain
+                    let attestedBlock = blockchainTree?.getNode(attestation.blockHash)?.block;
+                    if (!attestedBlock) {
+                      attestedBlock = blockchain.find((b: Block) => b.hash === attestation.blockHash);
+                    }
                     const blockHeight = attestedBlock ? attestedBlock.header.height : '?';
                     
                     // Get node name (color) from address using context
