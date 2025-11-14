@@ -269,7 +269,7 @@ export class Consensus {
     
     const message = {
       type: MessageType.PROPOSER_BLOCK_BROADCAST,
-      fromNodeId: this.nodeAddress,
+      fromNodeId: this.nodeId,
       block,
       slot
     };
@@ -348,7 +348,7 @@ export class Consensus {
     
     const message = {
       type: MessageType.ATTESTATION,
-      fromNodeId: this.nodeAddress,
+      fromNodeId: this.nodeId,
       attestation
     };
     
