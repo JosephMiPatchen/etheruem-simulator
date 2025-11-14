@@ -114,10 +114,8 @@ export class NetworkManager {
    * Acts as the network layer that transmits messages between nodes
    */
   private routeMessageFromNode(message: Message): void {
-    // Simulate network delay
-    setTimeout(() => {
-      this.deliverMessageToRecipients(message);
-    }, this.getRandomNetworkDelay());
+    // Delay is now applied per-recipient in deliverMessageToRecipients
+    this.deliverMessageToRecipients(message);
   }
   
   /**
@@ -128,7 +126,14 @@ export class NetworkManager {
     if (message.toNodeId) {
       const targetNode = this.nodes.get(message.toNodeId);
       if (targetNode) {
-        targetNode.receiveIncomingMessage(message);
+        // Apply recipient's delay multiplier
+        const baseDelay = this.getRandomNetworkDelay();
+        const multiplier = targetNode.getNetworkDelayMultiplier();
+        const actualDelay = baseDelay * multiplier;
+        
+        setTimeout(() => {
+          targetNode.receiveIncomingMessage(message);
+        }, actualDelay);
       } else {
         // Silently drop the message if the target node no longer exists
         // This can happen during test cleanup when nodes are removed
@@ -144,7 +149,14 @@ export class NetworkManager {
     for (const peerId of senderPeers) {
       const peerNode = this.nodes.get(peerId);
       if (peerNode) {
-        peerNode.receiveIncomingMessage(message);
+        // Apply recipient's delay multiplier
+        const baseDelay = this.getRandomNetworkDelay();
+        const multiplier = peerNode.getNetworkDelayMultiplier();
+        const actualDelay = baseDelay * multiplier;
+        
+        setTimeout(() => {
+          peerNode.receiveIncomingMessage(message);
+        }, actualDelay);
       }
     }
   }

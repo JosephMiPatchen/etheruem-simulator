@@ -207,4 +207,18 @@ export class NodeWorker {
     // Add to mempool
     return this._node.addTransactionToMempool(transaction);
   }
+  
+  /**
+   * Gets the network delay multiplier for this node
+   */
+  getNetworkDelayMultiplier(): number {
+    return this._node.getNetworkDelayMultiplier();
+  }
+  
+  /**
+   * Sets the network delay multiplier for this node
+   */
+  setNetworkDelayMultiplier(multiplier: number): void {
+    this._node.setNetworkDelayMultiplier(multiplier);
+  }
 }

@@ -27,6 +27,9 @@ export class Node {
   // Painting state (for EPM contract)
   private paintingComplete: boolean = false;
   
+  // Network delay multiplier (1.0 = normal, higher = slower network for this node)
+  private networkDelayMultiplier: number = 1.0;
+  
   // Callbacks for network events (PoS uses Consensus for block broadcasting)
   private onChainUpdated?: () => void;
   
@@ -202,5 +205,20 @@ export class Node {
    */
   getWorldState(): Record<string, Account> {
     return this.blockchain.getWorldState();
+  }
+  
+  /**
+   * Gets the network delay multiplier for this node
+   */
+  getNetworkDelayMultiplier(): number {
+    return this.networkDelayMultiplier;
+  }
+  
+  /**
+   * Sets the network delay multiplier for this node
+   * @param multiplier - Multiplier for network delays (1.0 = normal, higher = slower)
+   */
+  setNetworkDelayMultiplier(multiplier: number): void {
+    this.networkDelayMultiplier = Math.max(0.1, multiplier); // Minimum 0.1x
   }
 }
