@@ -57,7 +57,7 @@
 
 .toolbar-row {
   display: flex;
-  gap: var(--spacing-xs);
+  gap: 4px;
   align-items: center;
 }
 
@@ -65,10 +65,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 6px 10px;
+  gap: 3px;
+  padding: 4px 8px;
   border-radius: var(--border-radius-sm);
-  font-size: var(--font-size-sm);
+  font-size: 0.75rem;
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;

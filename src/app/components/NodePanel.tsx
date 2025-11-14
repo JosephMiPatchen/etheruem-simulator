@@ -3,6 +3,7 @@ import { NodeState } from '../../types/types';
 import BlockchainView from './BlockchainView';
 import WorldStateView from './WorldStateView';
 import BeaconStateView from './BeaconStateView';
+import BlockTreeView from './BlockTreeView';
 import NodeToolbar from './NodeToolbar';
 import AddTransactionModal from './AddTransactionModal';
 import { NodeSettingsModal } from './NodeSettingsModal';
@@ -22,6 +23,7 @@ const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [], onAdd
   const [showBeaconStateModal, setShowBeaconStateModal] = useState(false);
   const [showAddTxModal, setShowAddTxModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showBlockTreeModal, setShowBlockTreeModal] = useState(false);
   const { addressToNodeId } = useSimulatorContext();
   
   // Find the address for this node
@@ -69,7 +71,7 @@ const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [], onAdd
             onBeaconStateClick={() => setShowBeaconStateModal(true)}
             onAddTransaction={() => setShowAddTxModal(true)}
             onSettingsClick={() => setShowSettingsModal(true)}
-            onBlockTreeClick={() => setShowUtxoModal(true)}
+            onBlockTreeClick={() => setShowBlockTreeModal(true)}
             nodeId={nodeState.nodeId}
           />
         </div>
@@ -131,6 +133,15 @@ const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [], onAdd
           currentMultiplier={nodeState.networkDelayMultiplier || 1.0}
           onClose={() => setShowSettingsModal(false)}
           onSave={handleSaveNetworkDelay}
+        />
+      )}
+      
+      {/* Block Tree Modal */}
+      {showBlockTreeModal && nodeState.blockchainTree && (
+        <BlockTreeView
+          blockchainTree={nodeState.blockchainTree}
+          beaconState={nodeState.beaconState}
+          onClose={() => setShowBlockTreeModal(false)}
         />
       )}
     </div>

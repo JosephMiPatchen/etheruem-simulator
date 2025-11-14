@@ -14,9 +14,9 @@
 
 /* Node Header */
 .node-header {
-  margin-bottom: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
   border-bottom: 1px solid var(--border-color);
-  padding-bottom: var(--spacing-sm);
+  padding-bottom: 4px;
 }
 
 .node-info {
@@ -24,11 +24,13 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
+  gap: 8px;
 }
 
 .node-id-container {
   display: flex;
   align-items: center;
+  flex-shrink: 0;
 }
 
 /* Node toolbar is now in NodeToolbar.css */
@@ -40,14 +42,16 @@
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
+  font-size: 1.1rem;
+  white-space: nowrap;
 }
 
 .node-address-suffix {
-  font-size: var(--font-size-sm);
+  font-size: 0.75rem;
   color: var(--text-secondary);
   font-weight: normal;
-  margin-left: 8px;
+  margin-left: 4px;
   opacity: 0.7;
 }
 
