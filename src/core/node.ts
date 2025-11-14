@@ -51,7 +51,7 @@ export class Node {
     this.mempool = new Mempool();
     
     // Initialize Sync for LMD-GHOST head synchronization
-    this.sync = new Sync(this.blockchain, this.nodeId);
+    this.sync = new Sync(this.blockchain, this.address);
     
     // Initialize Consensus for PoS block proposal and validation
     this.consensus = new Consensus(this.beaconState, this.blockchain, this, this.mempool);
