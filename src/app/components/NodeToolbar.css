@@ -50,6 +50,13 @@
 
 .toolbar-actions {
   display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: stretch;
+}
+
+.toolbar-row {
+  display: flex;
   gap: var(--spacing-xs);
   align-items: center;
 }

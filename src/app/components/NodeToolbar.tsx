@@ -22,6 +22,8 @@ interface NodeToolbarProps {
   onUtxoClick: () => void;
   onBeaconStateClick: () => void;
   onAddTransaction: () => void;
+  onSettingsClick: () => void;
+  onBlockTreeClick: () => void;
   nodeId: string;
 }
 
@@ -32,6 +34,8 @@ const NodeToolbar: React.FC<NodeToolbarProps> = ({
   onUtxoClick,
   onBeaconStateClick,
   onAddTransaction,
+  onSettingsClick,
+  onBlockTreeClick,
   nodeId
 }) => {
   const [showTooltip, setShowTooltip] = useState(false);
@@ -82,30 +86,50 @@ const NodeToolbar: React.FC<NodeToolbarProps> = ({
         <div className="divider"><RxDividerVertical size={20} color="var(--border-color)" /></div>
         
         <div className="toolbar-item toolbar-actions">
-          <button 
-            className="toolbar-button world-state-button"
-            onClick={onUtxoClick}
-            title="View World State"
-          >
-            <FaEarthAmericas size={16} />
-            <span>World State</span>
-          </button>
-          <button 
-            className="toolbar-button beacon-state-button"
-            onClick={onBeaconStateClick}
-            title="View Beacon State (Consensus Layer)"
-          >
-            <GiLighthouse size={16} />
-            <span>Beacon State</span>
-          </button>
-          <button 
-            className="toolbar-button add-tx-button"
-            onClick={onAddTransaction}
-            title="Add Transaction to Mempool"
-          >
-            <IoMdAdd size={16} />
-            <span>Add Tx</span>
-          </button>
+          <div className="toolbar-row">
+            <button 
+              className="toolbar-button world-state-button"
+              onClick={onUtxoClick}
+              title="View World State"
+            >
+              <FaEarthAmericas size={16} />
+              <span>World State</span>
+            </button>
+            <button 
+              className="toolbar-button beacon-state-button"
+              onClick={onBeaconStateClick}
+              title="View Beacon State (Consensus Layer)"
+            >
+              <GiLighthouse size={16} />
+              <span>Beacon State</span>
+            </button>
+            <button 
+              className="toolbar-button add-tx-button"
+              onClick={onAddTransaction}
+              title="Add Transaction to Mempool"
+            >
+              <IoMdAdd size={16} />
+              <span>Add Tx</span>
+            </button>
+          </div>
+          <div className="toolbar-row">
+            <button 
+              className="toolbar-button settings-button"
+              onClick={onSettingsClick}
+              title="Node Settings"
+            >
+              ⚙️
+              <span>Settings</span>
+            </button>
+            <button 
+              className="toolbar-button block-tree-button"
+              onClick={onBlockTreeClick}
+              title="View Block Tree"
+            >
+              🌳
+              <span>Block Tree</span>
+            </button>
+          </div>
         </div>
       </div>
 

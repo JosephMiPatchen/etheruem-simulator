@@ -59,13 +59,6 @@ const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [], onAdd
                   {nodeAddress.slice(-4)}
                 </span>
               )}
-              <button 
-                className="settings-icon-button" 
-                onClick={() => setShowSettingsModal(true)}
-                title="Node Settings"
-              >
-                ⚙️
-              </button>
             </h2>
           </div>
           <NodeToolbar 
@@ -75,6 +68,8 @@ const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [], onAdd
             onUtxoClick={() => setShowUtxoModal(true)}
             onBeaconStateClick={() => setShowBeaconStateModal(true)}
             onAddTransaction={() => setShowAddTxModal(true)}
+            onSettingsClick={() => setShowSettingsModal(true)}
+            onBlockTreeClick={() => setShowUtxoModal(true)}
             nodeId={nodeState.nodeId}
           />
         </div>
