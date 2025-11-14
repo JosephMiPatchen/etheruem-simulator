@@ -31,7 +31,7 @@ export class Blockchain {
     
     // Create and add shared genesis block (same for all nodes)
     const genesisBlock = BlockCreator.createGenesisBlock();
-    this.blockTree.addBlock(genesisBlock);
+    this.blockTree.addBlock(genesisBlock, this.beaconState);
     
     // Apply genesis block to both execution and consensus layers
     this.applyBlockToElAndClState(genesisBlock);
@@ -129,7 +129,8 @@ export class Blockchain {
     const oldGhostHead = this.blockTree.getGhostHead();
     
     // 3. Add block to tree (creates tree node, doesn't validate yet)
-    const newNode = this.blockTree.addBlock(block);
+    // Pass beaconState so tree can check if attestations point to this block and redecorate if needed
+    const newNode = this.blockTree.addBlock(block, this.beaconState);
     if (!newNode) {
       console.error(`[Blockchain] Failed to add block ${block.hash} - parent not found`);
       return false;
