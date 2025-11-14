@@ -108,6 +108,15 @@ const SimulatorContentInner: React.FC = () => {
     }
   };
   
+  // Handle updating node network delay multiplier
+  const handleUpdateNetworkDelay = (nodeId: string, multiplier: number) => {
+    if (!networkManagerRef.current) return;
+    
+    networkManagerRef.current.setNodeNetworkDelayMultiplier(nodeId, multiplier);
+    console.log(`Updated ${nodeId} network delay multiplier to ${multiplier}x`);
+    updateNodeStates();
+  };
+  
   // Toggle network running state
   const toggleNetwork = () => {
     if (!networkManagerRef.current) return;
@@ -184,6 +193,7 @@ const SimulatorContentInner: React.FC = () => {
             key={nodeId} 
             nodeState={nodeState}
             onAddTransaction={handleAddTransaction}
+            onUpdateNetworkDelay={handleUpdateNetworkDelay}
           />
         ))}
       </main>

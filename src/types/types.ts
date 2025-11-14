@@ -67,6 +67,7 @@ export interface NodeState {
   receipts?: any; // Optional receipts database
   mempool?: EthereumTransaction[]; // Optional mempool for pending transactions
   consensusStatus?: 'idle' | 'validating' | 'proposing'; // PoS consensus activity status
+  networkDelayMultiplier?: number; // Network delay multiplier for this node (1.0 = normal)
   peerIds: string[];
   publicKey: string;
   address: string;

@@ -5,6 +5,7 @@ import WorldStateView from './WorldStateView';
 import BeaconStateView from './BeaconStateView';
 import NodeToolbar from './NodeToolbar';
 import AddTransactionModal from './AddTransactionModal';
+import { NodeSettingsModal } from './NodeSettingsModal';
 import { useSimulatorContext } from '../contexts/SimulatorContext';
 import { getNodeColorEmoji, getNodeColorCSS } from '../../utils/nodeColorUtils';
 import './NodePanel.css';
@@ -13,12 +14,14 @@ interface NodePanelProps {
   nodeState: NodeState;
   allNodeIds?: string[];
   onAddTransaction?: (nodeId: string, recipient: string, amount: number) => void;
+  onUpdateNetworkDelay?: (nodeId: string, multiplier: number) => void;
 }
 
-const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [], onAddTransaction }) => {
+const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [], onAddTransaction, onUpdateNetworkDelay }) => {
   const [showUtxoModal, setShowUtxoModal] = useState(false);
   const [showBeaconStateModal, setShowBeaconStateModal] = useState(false);
   const [showAddTxModal, setShowAddTxModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
   const { addressToNodeId } = useSimulatorContext();
   
   // Find the address for this node
@@ -37,6 +40,13 @@ const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [], onAdd
     }
   };
   
+  // Handler for updating network delay multiplier
+  const handleSaveNetworkDelay = (multiplier: number) => {
+    if (onUpdateNetworkDelay) {
+      onUpdateNetworkDelay(nodeState.nodeId, multiplier);
+    }
+  };
+  
   return (
     <div className="node-panel">
       <div className="node-header">
@@ -49,6 +59,13 @@ const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [], onAdd
                   {nodeAddress.slice(-4)}
                 </span>
               )}
+              <button 
+                className="settings-icon-button" 
+                onClick={() => setShowSettingsModal(true)}
+                title="Node Settings"
+              >
+                ⚙️
+              </button>
             </h2>
           </div>
           <NodeToolbar 
@@ -109,6 +126,16 @@ const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [], onAdd
           beaconState={nodeState.beaconState}
           blockchain={nodeState.blockchain}
           onClose={() => setShowBeaconStateModal(false)}
+        />
+      )}
+      
+      {/* Node Settings Modal */}
+      {showSettingsModal && (
+        <NodeSettingsModal
+          nodeId={nodeState.nodeId}
+          currentMultiplier={nodeState.networkDelayMultiplier || 1.0}
+          onClose={() => setShowSettingsModal(false)}
+          onSave={handleSaveNetworkDelay}
         />
       )}
     </div>

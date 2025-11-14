@@ -225,7 +225,10 @@ export class NetworkManager {
     const state: Record<string, any> = {};
     
     for (const [nodeId, node] of this.nodesMap.entries()) {
-      state[nodeId] = node.getState();
+      state[nodeId] = {
+        ...node.getState(),
+        networkDelayMultiplier: node.getNetworkDelayMultiplier()
+      };
     }
     
     return state;
@@ -261,6 +264,21 @@ export class NetworkManager {
     }
     
     return await node.addTransactionToMempool(recipient, amount);
+  }
+  
+  /**
+   * Sets the network delay multiplier for a specific node
+   * @param nodeId ID of the node to update
+   * @param multiplier Network delay multiplier (1.0 = normal, higher = slower)
+   */
+  setNodeNetworkDelayMultiplier(nodeId: string, multiplier: number): void {
+    const node = this.nodesMap.get(nodeId);
+    if (!node) {
+      console.error(`Node ${nodeId} not found`);
+      return;
+    }
+    
+    node.setNetworkDelayMultiplier(multiplier);
   }
   
   /**
