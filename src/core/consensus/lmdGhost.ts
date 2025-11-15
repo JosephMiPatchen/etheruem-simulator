@@ -46,6 +46,10 @@ export class LmdGhost {
       blockAttestationCounts.set(attestation.blockHash, count + 1);
     }
     
+    // Debug: Log attestation counts
+    console.log(`[LmdGhost] decorateTree called with ${beaconState.latestAttestations.size} attestations pointing to ${blockAttestationCounts.size} blocks:`, 
+      Array.from(blockAttestationCounts.entries()).map(([hash, count]) => `${hash.slice(0, 8)}:${count}`).join(', '));
+    
     // Decorate each node in the tree with attestedEth
     LmdGhost.decorateNode(tree.getRoot(), blockAttestationCounts);
   }

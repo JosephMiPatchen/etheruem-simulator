@@ -139,6 +139,12 @@ const BeaconStateView: React.FC<BeaconStateViewProps> = ({ beaconState, blockcha
                     if (!attestedBlock) {
                       attestedBlock = blockchain.find((b: Block) => b.hash === attestation.blockHash);
                     }
+                    
+                    // Debug logging
+                    if (!attestedBlock) {
+                      console.log(`[BeaconStateView] Cannot find block ${attestation.blockHash.slice(0, 8)} - tree has node:`, !!blockchainTree?.getNode(attestation.blockHash), 'canonical has:', blockchain.some((b: Block) => b.hash === attestation.blockHash));
+                    }
+                    
                     const blockHeight = attestedBlock ? attestedBlock.header.height : '?';
                     
                     // Get node name (color) from address using context
