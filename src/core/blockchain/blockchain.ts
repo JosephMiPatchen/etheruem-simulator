@@ -52,7 +52,7 @@ export class Blockchain {
    * Uses the current GHOST-HEAD automatically
    */
   getCanonicalChain(): Block[] {
-    return this.blockTree.getCanonicalChain();
+    return this.blockTree.getCanonicalChain(this.beaconState);
   }
   
   /**

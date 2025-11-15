@@ -138,8 +138,8 @@ export class BlockchainTree {
    * 
    * For getting chain of a specific hash, use getChain(hash) instead
    */
-  getCanonicalChain(): Block[] {
-    const headHash = this.getGhostHead()?.hash;
+  getCanonicalChain(beaconState?: any): Block[] {
+    const headHash = this.getGhostHead(beaconState)?.hash;
     if (!headHash) {
       return [];
     }
@@ -165,8 +165,8 @@ export class BlockchainTree {
    * 
    * For getting a specific node by hash, use getNode(hash) instead
    */
-  getCanonicalHead(): BlockTreeNode | null {
-    return this.getGhostHead();
+  getCanonicalHead(beaconState?: any): BlockTreeNode | null {
+    return this.getGhostHead(beaconState);
   }
   
   /**
