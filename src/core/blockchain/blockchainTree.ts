@@ -138,8 +138,8 @@ export class BlockchainTree {
    * 
    * For getting chain of a specific hash, use getChain(hash) instead
    */
-  getCanonicalChain(beaconState?: any): Block[] {
-    const headHash = this.getGhostHead(beaconState)?.hash;
+  getCanonicalChain(): Block[] {
+    const headHash = this.getGhostHead()?.hash;
     if (!headHash) {
       return [];
     }
@@ -165,8 +165,8 @@ export class BlockchainTree {
    * 
    * For getting a specific node by hash, use getNode(hash) instead
    */
-  getCanonicalHead(beaconState?: any): BlockTreeNode | null {
-    return this.getGhostHead(beaconState);
+  getCanonicalHead(): BlockTreeNode | null {
+    return this.getGhostHead();
   }
   
   /**
@@ -292,10 +292,8 @@ export class BlockchainTree {
     node.metadata.isInvalid = true;
     console.log(`[BlockchainTree] Marked node ${blockHash.slice(0, 8)} invalid`);
     
-    // Redecorate entire tree to update attestedEth
-    // Invalid nodes will return 0 and not contribute to parents
-    LmdGhost.decorateTree(beaconState, this);
-    console.log(`[BlockchainTree] Tree redecorated after marking node invalid`);
+    // Note: attestedEth will be recalculated on next GHOST-HEAD computation
+    // Invalid nodes return 0 and don't contribute to parents in computeGhostHead
   }
   
   /**
@@ -312,15 +310,7 @@ export class BlockchainTree {
    * 2. At each fork, choose child with highest attestedEth
    * 3. Continue until reaching a leaf (chain tip)
    */
-  getGhostHead(beaconState?: any): BlockTreeNode | null {
-    // DEBUG: Use slow version that computes attestedEth on-the-fly
-    // This doesn't rely on cached metadata.attestedEth values
-    if (beaconState) {
-      const ghostHeadHash = LmdGhost.computeGhostHeadSlow(beaconState, this);
-      return ghostHeadHash ? this.getNode(ghostHeadHash) || null : null;
-    }
-    
-    // Fallback to fast version if no beaconState provided
+  getGhostHead(): BlockTreeNode | null {
     const ghostHeadHash = LmdGhost.computeGhostHead(this);
     return ghostHeadHash ? this.getNode(ghostHeadHash) || null : null;
   }

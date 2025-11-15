@@ -52,7 +52,7 @@ export class Blockchain {
    * Uses the current GHOST-HEAD automatically
    */
   getCanonicalChain(): Block[] {
-    return this.blockTree.getCanonicalChain(this.beaconState);
+    return this.blockTree.getCanonicalChain();
   }
   
   /**
@@ -126,7 +126,7 @@ export class Blockchain {
     }
     
     // 2. Get old GHOST-HEAD before adding block
-    const oldGhostHead = this.blockTree.getGhostHead(this.beaconState);
+    const oldGhostHead = this.blockTree.getGhostHead();
     
     // 3. Add block to tree (creates tree node, doesn't validate yet)
     const newNode = this.blockTree.addBlock(block);
@@ -135,12 +135,9 @@ export class Blockchain {
       return false;
     }
     
-    // 4. Fully redecorate tree with latest attestations
-    // This ensures attestedEth values are correct for fork choice
-    LmdGhost.decorateTree(this.beaconState, this.blockTree);
-    
-    // 5. Get new GHOST-HEAD after redecorating (recomputed via LMD-GHOST)
-    const newGhostHead = this.blockTree.getGhostHead(this.beaconState);
+    // 4. Get new GHOST-HEAD (recomputed via LMD-GHOST using incrementally updated attestedEth)
+    // Note: Tree decoration happens incrementally in recordAttestation, no need to redecorate here
+    const newGhostHead = this.blockTree.getGhostHead();
     
     // 5. Check if new GHOST-HEAD would extend canonical chain
     // This happens when new GHOST-HEAD's parent is the old GHOST-HEAD
@@ -298,7 +295,7 @@ export class Blockchain {
    */
   async onAttestationReceived(attestation: any): Promise<void> {
     // Save old GHOST-HEAD to detect changes
-    const oldGhostHead = this.blockTree.getGhostHead(this.beaconState);
+    const oldGhostHead = this.blockTree.getGhostHead();
     
     // 1. Update latest attestations (per-validator map)
     const existing = this.beaconState.latestAttestations.get(attestation.validatorAddress);
@@ -312,7 +309,7 @@ export class Blockchain {
       Array.from(this.beaconState.latestAttestations.values()));
     
     // 3. Get new GHOST-HEAD after attestation update
-    const newGhostHead = this.blockTree.getGhostHead(this.beaconState);
+    const newGhostHead = this.blockTree.getGhostHead();
     
     // 4. Check if GHOST-HEAD changed and handle accordingly
     if (oldGhostHead?.hash !== newGhostHead?.hash) {
@@ -329,7 +326,7 @@ export class Blockchain {
           if (await this.rebuildStateFromCanonicalChain()) {
             break; // Success
           }
-          console.log(`[Blockchain] Invalid block (retry ${attempt + 1}/10) - new head: ${this.blockTree.getGhostHead(this.beaconState)?.hash?.slice(0, 8)}`);
+          console.log(`[Blockchain] Invalid block (retry ${attempt + 1}/10) - new head: ${this.blockTree.getGhostHead()?.hash?.slice(0, 8)}`);
         }
       } else {
         // ✅ Forward Progress: GHOST-HEAD moved down same chain

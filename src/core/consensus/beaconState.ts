@@ -287,7 +287,13 @@ export class BeaconState {
     
     // If no existing attestation or new one is more recent, update
     if (!existing || attestation.timestamp > existing.timestamp) {
-      LmdGhost.recordAttestation(this, attestation);
+      // Pass blockchain tree for incremental decoration
+      if (this.blockchain) {
+        LmdGhost.recordAttestation(this, this.blockchain.getTree(), attestation);
+      } else {
+        // Fallback: just update map without tree decoration (shouldn't happen in normal flow)
+        this.latestAttestations.set(attestation.validatorAddress, attestation);
+      }
       return true;
     }
     

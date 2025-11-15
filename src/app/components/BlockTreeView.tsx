@@ -69,7 +69,7 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
       };
     }
     
-    const canonicalHead = blockchainTree.getCanonicalHead(beaconState);
+    const canonicalHead = blockchainTree.getCanonicalHead();
     
     // Build set of canonical node hashes (walk from head to genesis)
     const canonicalHashes = new Set<string>();
@@ -176,7 +176,7 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
                 }
                 
                 // Check if this node is the GHOST-HEAD
-                const ghostHeadNode = blockchainTree.getGhostHead(beaconState);
+                const ghostHeadNode = blockchainTree.getGhostHead();
                 const isGhostHead = ghostHeadNode && blockNode && ghostHeadNode.hash === blockNode.hash;
                 
                 const handleClick = () => {
