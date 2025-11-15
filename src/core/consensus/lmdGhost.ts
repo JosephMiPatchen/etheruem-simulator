@@ -33,6 +33,47 @@ export class LmdGhost {
   }
   
   /**
+   * Incrementally update tree decorations for a newly added block
+   * Only updates attestedEth if latest attestations point to this block
+   * Walks from the new node up to root, adding attestedEth along the path
+   */
+  public static updateTreeDecorations(beaconState: any, tree: BlockchainTree, newBlockHash: string): void {
+    // Check if any latest attestations point to this new block
+    let attestationCount = 0;
+    for (const attestation of beaconState.latestAttestations.values()) {
+      if (attestation.blockHash === newBlockHash) {
+        attestationCount++;
+      }
+    }
+    
+    // If no attestations point to this block, nothing to update
+    if (attestationCount === 0) {
+      return;
+    }
+    
+    // Get the new block node
+    const newNode = tree.getNode(newBlockHash);
+    if (!newNode) {
+      return;
+    }
+    
+    // Calculate attestedEth to add (32 ETH per attestation)
+    const attestedEthToAdd = attestationCount * 32;
+    
+    // Walk from new node up to root, adding attestedEth
+    let current: BlockTreeNode | null = newNode;
+    while (current) {
+      if (!current.metadata) {
+        current.metadata = {};
+      }
+      current.metadata.attestedEth = (current.metadata.attestedEth || 0) + attestedEthToAdd;
+      current = current.parent;
+    }
+    
+    console.log(`[LmdGhost] updateTreeDecorations: Added ${attestedEthToAdd} ETH (${attestationCount} attestations) to block ${newBlockHash.slice(0, 8)} and ancestors`);
+  }
+  
+  /**
    * Decorate a blockchain tree with attestedEth metadata
    * Computes cumulative attested weight for each block in the tree
    */

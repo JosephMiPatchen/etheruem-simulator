@@ -48,12 +48,9 @@ export class BlockchainTree {
   
   /**
    * Adds a block to the tree
-   * Returns the new tree node, or null if parent not found
-   * 
-   * @param block - Block to add to the tree
-   * @param beaconState - Optional beacon state to check if attestations point to this block
+   * Returns the new node if successful, null if parent not found
    */
-  addBlock(block: Block, beaconState?: any): BlockTreeNode | null {
+  addBlock(block: Block): BlockTreeNode | null {
     // Check if block already exists
     if (this.nodesByHash.has(block.hash || '')) {
       console.warn(`Block ${block.hash} already exists in tree`);
@@ -108,17 +105,8 @@ export class BlockchainTree {
     // Add new node as a leaf
     this.leaves.add(newNode);
     
-    // Always redecorate tree when block is added (especially important for sync)
-    // This ensures:
-    // 1. Existing attestations that point to newly synced blocks are resolved
-    // 2. attestedEth values are recalculated for entire tree
-    // 3. Tree decoration stays in sync with tree structure
-    if (beaconState && beaconState.latestAttestations) {
-      LmdGhost.decorateTree(beaconState, this);
-    }
-    
-    // Note: GHOST-HEAD is computed on-demand via getGhostHead()
-    // No need to update it here - it will be recomputed when needed
+    // Note: Tree decoration is handled by caller via LmdGhost.updateTreeDecorations()
+    // GHOST-HEAD is computed on-demand via getGhostHead()
     
     return newNode;
   }

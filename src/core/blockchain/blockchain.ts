@@ -31,7 +31,7 @@ export class Blockchain {
     
     // Create and add shared genesis block (same for all nodes)
     const genesisBlock = BlockCreator.createGenesisBlock();
-    this.blockTree.addBlock(genesisBlock, this.beaconState);
+    this.blockTree.addBlock(genesisBlock);
     
     // Apply genesis block to both execution and consensus layers
     this.applyBlockToElAndClState(genesisBlock);
@@ -129,14 +129,17 @@ export class Blockchain {
     const oldGhostHead = this.blockTree.getGhostHead();
     
     // 3. Add block to tree (creates tree node, doesn't validate yet)
-    // Pass beaconState so tree can check if attestations point to this block and redecorate if needed
-    const newNode = this.blockTree.addBlock(block, this.beaconState);
+    const newNode = this.blockTree.addBlock(block);
     if (!newNode) {
       console.error(`[Blockchain] Failed to add block ${block.hash} - parent not found`);
       return false;
     }
     
-    // 4. Get new GHOST-HEAD after adding block (recomputed via LMD-GHOST)
+    // 4. Incrementally update tree decorations if attestations point to this block
+    // This walks from the new node up to root, adding attestedEth along the path
+    LmdGhost.updateTreeDecorations(this.beaconState, this.blockTree, block.hash!);
+    
+    // 5. Get new GHOST-HEAD after updating decorations (recomputed via LMD-GHOST)
     const newGhostHead = this.blockTree.getGhostHead();
     
     // 5. Check if new GHOST-HEAD would extend canonical chain
@@ -268,9 +271,8 @@ export class Blockchain {
       }
       console.log(`[Blockchain] Beacon pool cleanup: ${poolSizeBefore} -> ${this.beaconState.beaconPool.length} (removed ${poolSizeBefore - this.beaconState.beaconPool.length})`);
       
-      // Update latest attestations and decorate tree for LMD-GHOST
-      // This ensures fork choice considers the new attestations
-      this.updateLatestAttestationsAndTree();
+      // Note: Tree decoration is now handled incrementally in addBlock() via LmdGhost.updateTreeDecorations()
+      // No need to redecorate entire tree here
     }
     // TODO: When implementing full PoS, also update:
     // - Slashing records (if any slashings in block)
