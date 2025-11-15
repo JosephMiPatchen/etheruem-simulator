@@ -135,11 +135,11 @@ export class Blockchain {
       return false;
     }
     
-    // 4. Incrementally update tree decorations if attestations point to this block
-    // This walks from the new node up to root, adding attestedEth along the path
-    LmdGhost.updateTreeDecorations(this.beaconState, this.blockTree, block.hash!);
+    // 4. Fully redecorate tree with latest attestations
+    // This ensures attestedEth values are correct for fork choice
+    LmdGhost.decorateTree(this.beaconState, this.blockTree);
     
-    // 5. Get new GHOST-HEAD after updating decorations (recomputed via LMD-GHOST)
+    // 5. Get new GHOST-HEAD after redecorating (recomputed via LMD-GHOST)
     const newGhostHead = this.blockTree.getGhostHead();
     
     // 5. Check if new GHOST-HEAD would extend canonical chain
