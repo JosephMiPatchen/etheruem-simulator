@@ -312,7 +312,15 @@ export class BlockchainTree {
    * 2. At each fork, choose child with highest attestedEth
    * 3. Continue until reaching a leaf (chain tip)
    */
-  getGhostHead(): BlockTreeNode | null {
+  getGhostHead(beaconState?: any): BlockTreeNode | null {
+    // DEBUG: Use slow version that computes attestedEth on-the-fly
+    // This doesn't rely on cached metadata.attestedEth values
+    if (beaconState) {
+      const ghostHeadHash = LmdGhost.computeGhostHeadSlow(beaconState, this);
+      return ghostHeadHash ? this.getNode(ghostHeadHash) || null : null;
+    }
+    
+    // Fallback to fast version if no beaconState provided
     const ghostHeadHash = LmdGhost.computeGhostHead(this);
     return ghostHeadHash ? this.getNode(ghostHeadHash) || null : null;
   }

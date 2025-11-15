@@ -187,6 +187,79 @@ export class LmdGhost {
   }
   
   /**
+   * DEBUG: Slow version that computes GHOST-HEAD without relying on cached attestedEth
+   * Recursively walks tree and computes attestedEth on-the-fly for each node
+   * Returns both the GHOST-HEAD hash and computed attestedEth values
+   */
+  public static computeGhostHeadSlow(beaconState: any, tree: BlockchainTree): string | null {
+    const root = tree.getRoot();
+    if (!root) return null;
+    
+    // Create attestation count map
+    const blockAttestationCounts = new Map<string, number>();
+    for (const attestation of beaconState.latestAttestations.values()) {
+      const count = blockAttestationCounts.get(attestation.blockHash) || 0;
+      blockAttestationCounts.set(attestation.blockHash, count + 1);
+    }
+    
+    // Recursively compute GHOST-HEAD and attestedEth
+    const result = LmdGhost.computeGhostHeadRecursive(root, blockAttestationCounts);
+    return result.ghostHeadHash;
+  }
+  
+  /**
+   * Recursive helper for computeGhostHeadSlow
+   * Returns: { attestedEth, ghostHeadHash }
+   */
+  private static computeGhostHeadRecursive(
+    node: BlockTreeNode,
+    blockAttestationCounts: Map<string, number>
+  ): { attestedEth: number; ghostHeadHash: string } {
+    // Invalid nodes have 0 attestedEth
+    if (node.metadata?.isInvalid) {
+      return { attestedEth: 0, ghostHeadHash: node.hash };
+    }
+    
+    // Get direct attestations for this block
+    const directAttestations = blockAttestationCounts.get(node.hash) || 0;
+    const directAttestedEth = directAttestations * 32;
+    
+    // If no children, this is a leaf - return direct attestedEth and this node as head
+    if (node.children.length === 0) {
+      return { attestedEth: directAttestedEth, ghostHeadHash: node.hash };
+    }
+    
+    // Recursively compute for all valid children
+    const validChildren = node.children.filter(child => !child.metadata?.isInvalid);
+    if (validChildren.length === 0) {
+      // No valid children - this node is the head
+      return { attestedEth: directAttestedEth, ghostHeadHash: node.hash };
+    }
+    
+    // Compute attestedEth for each child and find heaviest
+    let heaviestChild: { attestedEth: number; ghostHeadHash: string } | null = null;
+    let maxChildAttestedEth = -1;
+    
+    for (const child of validChildren) {
+      const childResult = LmdGhost.computeGhostHeadRecursive(child, blockAttestationCounts);
+      
+      if (childResult.attestedEth > maxChildAttestedEth) {
+        maxChildAttestedEth = childResult.attestedEth;
+        heaviestChild = childResult;
+      }
+    }
+    
+    // Total attestedEth = direct + heaviest child's subtree
+    const totalAttestedEth = directAttestedEth + maxChildAttestedEth;
+    
+    // GHOST-HEAD is the head from the heaviest child's subtree
+    return {
+      attestedEth: totalAttestedEth,
+      ghostHeadHash: heaviestChild!.ghostHeadHash
+    };
+  }
+  
+  /**
    * Compute GHOST-HEAD using LMD-GHOST fork choice rule
    * Returns the block hash of the canonical chain head
    * 

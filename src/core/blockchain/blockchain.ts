@@ -126,7 +126,7 @@ export class Blockchain {
     }
     
     // 2. Get old GHOST-HEAD before adding block
-    const oldGhostHead = this.blockTree.getGhostHead();
+    const oldGhostHead = this.blockTree.getGhostHead(this.beaconState);
     
     // 3. Add block to tree (creates tree node, doesn't validate yet)
     const newNode = this.blockTree.addBlock(block);
@@ -140,7 +140,7 @@ export class Blockchain {
     LmdGhost.decorateTree(this.beaconState, this.blockTree);
     
     // 5. Get new GHOST-HEAD after redecorating (recomputed via LMD-GHOST)
-    const newGhostHead = this.blockTree.getGhostHead();
+    const newGhostHead = this.blockTree.getGhostHead(this.beaconState);
     
     // 5. Check if new GHOST-HEAD would extend canonical chain
     // This happens when new GHOST-HEAD's parent is the old GHOST-HEAD
@@ -298,7 +298,7 @@ export class Blockchain {
    */
   async onAttestationReceived(attestation: any): Promise<void> {
     // Save old GHOST-HEAD to detect changes
-    const oldGhostHead = this.blockTree.getGhostHead();
+    const oldGhostHead = this.blockTree.getGhostHead(this.beaconState);
     
     // 1. Update latest attestations (per-validator map)
     const existing = this.beaconState.latestAttestations.get(attestation.validatorAddress);
@@ -312,7 +312,7 @@ export class Blockchain {
       Array.from(this.beaconState.latestAttestations.values()));
     
     // 3. Get new GHOST-HEAD after attestation update
-    const newGhostHead = this.blockTree.getGhostHead();
+    const newGhostHead = this.blockTree.getGhostHead(this.beaconState);
     
     // 4. Check if GHOST-HEAD changed and handle accordingly
     if (oldGhostHead?.hash !== newGhostHead?.hash) {
@@ -329,7 +329,7 @@ export class Blockchain {
           if (await this.rebuildStateFromCanonicalChain()) {
             break; // Success
           }
-          console.log(`[Blockchain] Invalid block (retry ${attempt + 1}/10) - new head: ${this.blockTree.getGhostHead()?.hash?.slice(0, 8)}`);
+          console.log(`[Blockchain] Invalid block (retry ${attempt + 1}/10) - new head: ${this.blockTree.getGhostHead(this.beaconState)?.hash?.slice(0, 8)}`);
         }
       } else {
         // ✅ Forward Progress: GHOST-HEAD moved down same chain
