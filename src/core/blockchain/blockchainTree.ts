@@ -108,21 +108,13 @@ export class BlockchainTree {
     // Add new node as a leaf
     this.leaves.add(newNode);
     
-    // Check if any latest attestations point to this new block
-    // If so, redecorate the tree so attestations now resolve to the actual block
+    // Always redecorate tree when block is added (especially important for sync)
+    // This ensures:
+    // 1. Existing attestations that point to newly synced blocks are resolved
+    // 2. attestedEth values are recalculated for entire tree
+    // 3. Tree decoration stays in sync with tree structure
     if (beaconState && beaconState.latestAttestations) {
-      let shouldRedecorate = false;
-      
-      for (const attestation of beaconState.latestAttestations.values()) {
-        if (attestation.blockHash === newNode.hash) {
-          shouldRedecorate = true;
-          break;
-        }
-      }
-      
-      if (shouldRedecorate) {
-        LmdGhost.decorateTree(beaconState, this);
-      }
+      LmdGhost.decorateTree(beaconState, this);
     }
     
     // Note: GHOST-HEAD is computed on-demand via getGhostHead()
