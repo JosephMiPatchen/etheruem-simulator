@@ -231,6 +231,10 @@ export class Consensus {
       return;
     }
     
+    // Capture parent hash BEFORE creating block to avoid race condition
+    // This ensures we validate against the same parent used during creation
+    const parentHash = latestBlock?.hash || '';
+    
     // Calculate current epoch and generate RANDAO reveal
     const currentEpoch = this.getEpoch(slot);
     const randaoReveal = RANDAO.calculateRandaoReveal(currentEpoch, this.node);
@@ -254,8 +258,8 @@ export class Consensus {
     }).join(', ')}`);
     
     // Process our own block through the same flow as received blocks
-    // This ensures RANDAO mix is updated in one place and validates before broadcasting
-    const success = await this.handleProposedBlock(block, slot, this.nodeAddress);
+    // Pass the parent hash we captured to ensure validation uses same parent as creation
+    const success = await this.handleProposedBlock(block, slot, this.nodeAddress, parentHash);
     
     if (!success) {
       console.error(`[Consensus] Failed to validate own proposed block for slot ${slot}`);
@@ -293,13 +297,14 @@ export class Consensus {
    * 4. Update own beacon pool (triggers LMD-GHOST update)
    * @returns true if block was successfully processed, false otherwise
    */
-  async handleProposedBlock(block: Block, slot: number, fromAddress: string): Promise<boolean> {
+  async handleProposedBlock(block: Block, slot: number, fromAddress: string, parentHash?: string): Promise<boolean> {
     console.log(`[Consensus] Received proposed block for slot ${slot} from ${fromAddress.slice(0, 8)}`);
     console.log(`[Consensus] Block has randaoReveal: ${!!block.randaoReveal}, value: ${block.randaoReveal?.slice(0, 16)}...`);
     
     // 1. Validate the block
-    const latestBlock = this.blockchain.getLatestBlock();
-    const previousHash = latestBlock?.hash || '';
+    // Use provided parentHash if available (from own proposal) to avoid race condition
+    // Otherwise get current latest block (for received blocks)
+    const previousHash = parentHash !== undefined ? parentHash : (this.blockchain.getLatestBlock()?.hash || '');
     const worldState = this.blockchain.getWorldStateObject();
     const isValid = await validateBlock(block, worldState, previousHash);
     if (!isValid) {
