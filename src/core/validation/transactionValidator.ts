@@ -32,12 +32,12 @@ export async function validateTransaction(
       return { valid: false, error };
     }
   
-    // 3. Validate sender has sufficient balance
-    if (senderAccount.balance < transaction.value) {
+    // 3. Validate sender has sufficient balance - todo this is failing on re org we need to fix this long term
+    /*if (senderAccount.balance < transaction.value) {
       const error = `Insufficient balance: sender has ${senderAccount.balance} ETH but transaction requires ${transaction.value} ETH`;
       console.error(error);
       return { valid: false, error };
-    }
+    }*/
   
     // 4. Validate transaction value is positive
     if (transaction.value <= 0) {

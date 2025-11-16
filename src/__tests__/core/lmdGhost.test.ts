@@ -285,15 +285,15 @@ describe('LmdGhost', () => {
   });
 
   describe('computeGhostHead', () => {
-    it('should return genesis when no attestations', () => {
-      // Given: No attestations
+    it('should use smallest hash tiebreaker when no attestations', () => {
+      // Given: No attestations (all children have equal attestedEth = 0)
       
       // When: Compute GHOST-HEAD
       const ghostHead = LmdGhost.computeGhostHead(tree);
       
-      // Then: Should return blockA (follows chain to first leaf with no attestations)
-      // Note: GHOST follows the chain down, so with no attestations it goes to a leaf
-      expect(ghostHead).toBe('blockA');
+      // Then: Should return blockB (smallest hash: 'blockB' < 'blockC')
+      // Tree: genesis -> blockA -> [blockB, blockC] (tie at 0 ETH, blockB wins)
+      expect(ghostHead).toBe('blockB');
     });
 
     it('should follow heaviest chain', () => {
@@ -312,7 +312,7 @@ describe('LmdGhost', () => {
       expect(ghostHead).toBe('blockB');
     });
 
-    it('should stop at parent when children have equal attestedEth (tie)', () => {
+    it('should use smallest hash as tiebreaker when children have equal attestedEth', () => {
       // Given: blockB and blockC have equal attestations
       const attestations = [
         createAttestation('validator1', 'blockB', 1000),
@@ -323,8 +323,8 @@ describe('LmdGhost', () => {
       // When: Compute GHOST-HEAD
       const ghostHead = LmdGhost.computeGhostHead(tree);
       
-      // Then: Should return blockA (parent of tie)
-      expect(ghostHead).toBe('blockA');
+      // Then: Should return blockB (smallest hash: 'blockB' < 'blockC')
+      expect(ghostHead).toBe('blockB');
     });
 
     it('should skip invalid nodes', () => {

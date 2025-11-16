@@ -121,7 +121,8 @@ export class LmdGhost {
    * Algorithm:
    * 1. Start at genesis (tree root)
    * 2. At each fork, choose the valid child with highest attestedEth
-   * 3. Continue until a leaf or tie
+   * 3. If tie, choose block with smallest hash (deterministic tiebreaker)
+   * 4. Continue until a leaf
    */
   public static computeGhostHead(tree: BlockchainTree): string | null {
     const root = tree.getRoot();
@@ -145,11 +146,14 @@ export class LmdGhost {
       // collect children that have that maximum value
       const heaviest = validChildren.filter(c => getAttestedEth(c) === maxEth);
   
-      // if there's a tie (2 or more heaviest children), stop and return the parent (current)
-      if (heaviest.length > 1) break;
-  
-      // otherwise exactly one heaviest child -> descend into it
-      current = heaviest[0];
+      // if there's a tie (2 or more heaviest children), choose the one with smallest hash
+      if (heaviest.length > 1) {
+        heaviest.sort((a, b) => a.hash.localeCompare(b.hash));
+        current = heaviest[0]; // smallest hash wins
+      } else {
+        // exactly one heaviest child -> descend into it
+        current = heaviest[0];
+      }
     }
   
     return current.hash;
