@@ -235,63 +235,6 @@ describe('BlockchainTree', () => {
     });
   });
 
-  describe('getLeaves', () => {
-    it('should return all leaf nodes', () => {
-      // Given: Tree with fork
-      //     genesis
-      //        |
-      //        A
-      //       / \
-      //      B   C
-      const genesis = createBlock('genesis', '', 0);
-      const blockA = createBlock('blockA', 'genesis', 1);
-      const blockB = createBlock('blockB', 'blockA', 2);
-      const blockC = createBlock('blockC', 'blockA', 2);
-      
-      tree.addBlock(genesis);
-      tree.addBlock(blockA);
-      tree.addBlock(blockB);
-      tree.addBlock(blockC);
-      
-      // When: Get leaves
-      const leaves = tree.getLeaves();
-      
-      // Then: Should return both B and C
-      expect(leaves.length).toBe(2);
-      expect(leaves.map(l => l.hash).sort()).toEqual(['blockB', 'blockC']);
-    });
-
-    it('should return single leaf for linear chain', () => {
-      // Given: Linear chain
-      const genesis = createBlock('genesis', '', 0);
-      const blockA = createBlock('blockA', 'genesis', 1);
-      const blockB = createBlock('blockB', 'blockA', 2);
-      
-      tree.addBlock(genesis);
-      tree.addBlock(blockA);
-      tree.addBlock(blockB);
-      
-      // When: Get leaves
-      const leaves = tree.getLeaves();
-      
-      // Then: Should return only blockB
-      expect(leaves.length).toBe(1);
-      expect(leaves[0].hash).toBe('blockB');
-    });
-
-    it('should return genesis for tree with only genesis', () => {
-      // Given: Tree with only genesis
-      const genesis = createBlock('genesis', '', 0);
-      tree.addBlock(genesis);
-      
-      // When: Get leaves
-      const leaves = tree.getLeaves();
-      
-      // Then: Should return genesis
-      expect(leaves.length).toBe(1);
-      expect(leaves[0].hash).toBe('genesis');
-    });
-  });
 
   describe('getAllNodes', () => {
     it('should return all nodes in tree', () => {

@@ -1,4 +1,4 @@
-import { LmdGhost } from './LmdGhost';
+import { LmdGhost } from './lmdGhost';
 import { SimulatorConfig } from '../../config/config';
 
 /**

@@ -288,6 +288,18 @@
   filter: drop-shadow(0 0 8px rgba(102, 126, 234, 0.6));
 }
 
+/* Invalid Node Styling - Red color for invalid blocks */
+.block-tree-modal g[invalid="yes"] circle {
+  fill: #f44336 !important;
+  stroke: #d32f2f !important;
+  stroke-width: 2px;
+}
+
+.block-tree-modal g[invalid="yes"] text {
+  fill: #f44336 !important;
+  font-weight: 700;
+}
+
 /* Non-Canonical Warning Banner */
 .non-canonical-warning {
   background: linear-gradient(135deg, #ffa726 0%, #ff9800 100%);

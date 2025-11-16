@@ -24,6 +24,7 @@ interface TreeNodeData {
     height?: string;
     hash?: string;
     canonical?: string;
+    invalid?: string;
   };
   children?: TreeNodeData[];
 }
@@ -84,13 +85,19 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
       const height = node.block.header.height;
       const shortHash = node.hash.slice(-6); // Last 6 characters
       const isGenesis = height === 0;
+      const isInvalid = node.metadata?.isInvalid || false;
+      
+      // Add ❌ to name if invalid
+      const blockName = isGenesis ? `Genesis (Block 0)` : `Block ${height}`;
+      const displayName = isInvalid ? `❌ ${blockName}` : blockName;
       
       return {
-        name: isGenesis ? `Genesis (Block 0)` : `Block ${height}`,
+        name: displayName,
         attributes: {
           height: `${height}`,
           hash: shortHash,
-          canonical: isCanonical ? 'yes' : isGenesis ? 'genesis' : 'no'
+          canonical: isCanonical ? 'yes' : isGenesis ? 'genesis' : 'no',
+          invalid: isInvalid ? 'yes' : 'no'
         },
         children: node.children.map(convertNode)
       };
