@@ -42,9 +42,9 @@ export const validateBlock = async (
   // todo: also create temp beacon state when we have valdition rules specific to beacon state
   
   // 2. First transaction must be a coinbase(issuance) transaction
-  const coinbaseValid = await validateTransaction(transactions[0], tempWorldState, true);
-  if (!coinbaseValid) {
-    const error = 'Invalid coinbase transaction';
+  const coinbaseResult = await validateTransaction(transactions[0], tempWorldState, true);
+  if (!coinbaseResult.valid) {
+    const error = `Invalid coinbase transaction: ${coinbaseResult.error}`;
     console.error(error);
     return { valid: false, error };
   }
@@ -54,9 +54,9 @@ export const validateBlock = async (
   
   // 3. Validate all other transactions sequentially
   for (let i = 1; i < transactions.length; i++) {
-    const txValid = await validateTransaction(transactions[i], tempWorldState, false);
-    if (!txValid) {
-      const error = `Invalid transaction at index ${i}`;
+    const txResult = await validateTransaction(transactions[i], tempWorldState, false);
+    if (!txResult.valid) {
+      const error = `Transaction ${i} failed: ${txResult.error}`;
       console.error(error);
       return { valid: false, error };
     }

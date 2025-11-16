@@ -5,60 +5,71 @@ import { validateTransactionSecurity } from './securityValidator';
 
 /**
  * Validates an Ethereum transaction against the world state
- * Returns true if valid, false otherwise
+ * Returns {valid: true} if valid, {valid: false, error: string} if invalid
  */
 export async function validateTransaction(
   transaction: EthereumTransaction,
   worldState: WorldState,
   isCoinbase: boolean = false
-): Promise<boolean> {
+): Promise<{valid: boolean; error?: string}> {
   try {
     // 1. For coinbase transactions, validate they come from REWARDER
     if (isCoinbase) {
-      if (transaction.from !== SimulatorConfig.PROTOCOL_NODE_ID ||
-          transaction.value !== SimulatorConfig.BLOCK_REWARD) {
-        console.error('Invalid coinbase transaction');
-        return false;
+      if (transaction.from !== SimulatorConfig.PROTOCOL_NODE_ID) {
+        const error = `Coinbase transaction must be from ${SimulatorConfig.PROTOCOL_NODE_ID}, got ${transaction.from}`;
+        console.error(error);
+        return { valid: false, error };
+      }
+      if (transaction.value !== SimulatorConfig.BLOCK_REWARD) {
+        const error = `Coinbase transaction must have value ${SimulatorConfig.BLOCK_REWARD}, got ${transaction.value}`;
+        console.error(error);
+        return { valid: false, error };
       }
       // Skip further validation for coinbase transactions
-      return true;
+      return { valid: true };
     }
   
     // 2. Validate sender account exists
     const senderAccount = worldState.getAccount(transaction.from);
     if (!senderAccount) {
-      console.error(`Sender account not found: ${transaction.from}`);
-      return false;
+      const error = `Sender account not found: ${transaction.from.slice(0, 16)}...`;
+      console.error(error);
+      return { valid: false, error };
     }
   
     // 3. Validate sender has sufficient balance
     if (senderAccount.balance < transaction.value) {
-      console.error(`Insufficient balance: ${senderAccount.balance} < ${transaction.value}`);
-      return false;
+      const error = `Insufficient balance: sender has ${senderAccount.balance} ETH but transaction requires ${transaction.value} ETH`;
+      console.error(error);
+      return { valid: false, error };
     }
   
     // 4. Validate transaction value is positive
     if (transaction.value <= 0) {
-      console.error(`Transaction value must be positive: ${transaction.value}`);
-      return false;
+      const error = `Transaction value must be positive, got ${transaction.value}`;
+      console.error(error);
+      return { valid: false, error };
     }
   
     // 5. Validate nonce matches sender's current nonce
     if (transaction.nonce !== senderAccount.nonce) {
-      console.error(`Invalid nonce: expected ${senderAccount.nonce}, got ${transaction.nonce}`);
-      return false;
+      const error = `Invalid nonce: expected ${senderAccount.nonce}, got ${transaction.nonce} (sender: ${transaction.from.slice(0, 16)}...)`;
+      console.error(error);
+      return { valid: false, error };
     }
   
     // 6. Security validation: Verify signature and address
     const securityValid = await validateTransactionSecurity(transaction);
     if (!securityValid) {
-      console.error('Transaction security validation failed');
-      return false;
+      const error = `Transaction signature validation failed (txid: ${transaction.txid?.slice(0, 16)}...)`;
+      console.error(error);
+      return { valid: false, error };
     }
     
-    return true;
+    return { valid: true };
   } catch (error) {
-    console.error('Error validating transaction:', error);
-    return false;
+    const errorMsg = `Error validating transaction: ${error}`;
+    console.error(errorMsg);
+    return { valid: false, error: errorMsg };
   }
 }
