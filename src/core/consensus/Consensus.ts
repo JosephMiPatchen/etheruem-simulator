@@ -1,6 +1,5 @@
 import { Block } from '../../types/types';
 import { SimulatorConfig } from '../../config/config';
-import { validateBlock } from '../validation/blockValidator';
 import { Node } from '../node';
 import { BeaconState } from './beaconState';
 import { Blockchain } from '../blockchain/blockchain';
@@ -231,10 +230,6 @@ export class Consensus {
       return;
     }
     
-    // Capture parent hash BEFORE creating block to avoid race condition
-    // This ensures we validate against the same parent used during creation
-    const parentHash = latestBlock?.hash || '';
-    
     // Calculate current epoch and generate RANDAO reveal
     const currentEpoch = this.getEpoch(slot);
     const randaoReveal = RANDAO.calculateRandaoReveal(currentEpoch, this.node);
@@ -258,8 +253,7 @@ export class Consensus {
     }).join(', ')}`);
     
     // Process our own block through the same flow as received blocks
-    // Pass the parent hash we captured to ensure validation uses same parent as creation
-    const success = await this.handleProposedBlock(block, slot, this.nodeAddress, parentHash);
+    const success = await this.handleProposedBlock(block, slot, this.nodeAddress);
     
     if (!success) {
       console.error(`[Consensus] Failed to validate own proposed block for slot ${slot}`);
@@ -297,57 +291,45 @@ export class Consensus {
    * 4. Update own beacon pool (triggers LMD-GHOST update)
    * @returns true if block was successfully processed, false otherwise
    */
-  async handleProposedBlock(block: Block, slot: number, fromAddress: string, parentHash?: string): Promise<boolean> {
+  async handleProposedBlock(block: Block, slot: number, fromAddress: string): Promise<boolean> {
     console.log(`[Consensus] Received proposed block for slot ${slot} from ${fromAddress.slice(0, 8)}`);
-    console.log(`[Consensus] Block has randaoReveal: ${!!block.randaoReveal}, value: ${block.randaoReveal?.slice(0, 16)}...`);
     
-    // 1. Validate the block
-    // Use provided parentHash if available (from own proposal) to avoid race condition
-    // Otherwise get current latest block (for received blocks)
-    const previousHash = parentHash !== undefined ? parentHash : (this.blockchain.getLatestBlock()?.hash || '');
-    const worldState = this.blockchain.getWorldStateObject();
-    const isValid = await validateBlock(block, worldState, previousHash);
-    if (!isValid) {
-      console.warn(`[Consensus] Invalid block received for slot ${slot}`);
-      return false;
-    }
+    // 1. Get current GHOST-HEAD before adding block
+    const oldGhostHead = this.blockchain.getTree().getGhostHead();
     
-    // 2. Process RANDAO reveal if present
-    if (block.randaoReveal) {
-      const currentEpoch = this.getEpoch(slot);
-      console.log(`[Consensus] Processing RANDAO reveal for epoch ${currentEpoch} from block`);
-      RANDAO.updateRandaoMix(this.beaconState, currentEpoch, block.randaoReveal);
-      console.log(`[Consensus] Updated RANDAO mix for epoch ${currentEpoch}`);
-    } else {
-      console.warn(`[Consensus] ⚠️  Block for slot ${slot} has NO randaoReveal field!`);
-    }
-    
-    // 3. Add to blockchain
+    // 2. Add block to blockchain (handles validation, state updates, and tree management)
     const added = await this.blockchain.addBlock(block);
     if (!added) {
-      console.warn(`[Consensus] Failed to add received block for slot ${slot}`);
+      console.warn(`[Consensus] Failed to add block for slot ${slot} - validation failed or parent not found`);
       return false;
     }
     
-    // 4. Create attestation for this block
-    if (!block.hash) {
-      console.error('[Consensus] Cannot attest to block without hash');
-      return false;
+    // 3. Get new GHOST-HEAD after adding block
+    const newGhostHead = this.blockchain.getTree().getGhostHead();
+    
+    // 4. Only attest if new GHOST-HEAD points to the block we just added
+    if (newGhostHead?.hash === block.hash) {
+      console.log(`[Consensus] New GHOST-HEAD is our block ${block.hash!.slice(0, 8)} - creating attestation`);
+      
+      const attestation = {
+        validatorAddress: this.nodeAddress,
+        blockHash: block.hash!,
+        timestamp: Date.now()
+      };
+      
+      // Update own beacon pool (triggers LMD-GHOST update)
+      this.beaconState.addAttestation(attestation);
+      
+      // Broadcast attestation to peers
+      this.broadcastAttestation(attestation);
+      
+      console.log(`[Consensus] Attested to block ${block.hash!.slice(0, 8)} for slot ${slot}`);
+      return true;
+    } else {
+      // Block was added but didn't become GHOST-HEAD (on a fork or behind)
+      console.log(`[Consensus] Block ${block.hash!.slice(0, 8)} added but not GHOST-HEAD (old: ${oldGhostHead?.hash.slice(0, 8)}, new: ${newGhostHead?.hash.slice(0, 8)}) - not attesting`);
+      return true; // Still successful, just not attesting
     }
-    const attestation = {
-      validatorAddress: this.nodeAddress,
-      blockHash: block.hash,
-      timestamp: Date.now()
-    };
-    
-    // 5. Update own beacon pool FIRST (triggers LMD-GHOST update)
-    this.beaconState.addAttestation(attestation);
-    
-    // 6. Broadcast attestation to peers
-    this.broadcastAttestation(attestation);
-    
-    console.log(`[Consensus] Attested to block ${block.hash.slice(0, 8)} for slot ${slot}`);
-    return true;
   }
   
   /**
