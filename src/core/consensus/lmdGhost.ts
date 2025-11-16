@@ -147,13 +147,8 @@ export class LmdGhost {
       const heaviest = validChildren.filter(c => getAttestedEth(c) === maxEth);
   
       // if there's a tie (2 or more heaviest children), choose the one with smallest hash
-      if (heaviest.length > 1) {
-        heaviest.sort((a, b) => a.hash.localeCompare(b.hash));
-        current = heaviest[0]; // smallest hash wins
-      } else {
-        // exactly one heaviest child -> descend into it
-        current = heaviest[0];
-      }
+      heaviest.sort((a, b) => a.hash.localeCompare(b.hash));
+      current = heaviest[0];
     }
   
     return current.hash;
