@@ -38,8 +38,18 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
   const [isSelectedBlockCanonical, setIsSelectedBlockCanonical] = useState(true);
   const [selectedAttestation, setSelectedAttestation] = useState<any | null>(null);
   const [copied, setCopied] = useState(false);
+  const [updateTrigger, setUpdateTrigger] = useState(0);
   const { addressToNodeId } = useSimulatorContext();
   const stats = blockchainTree.getStats();
+  
+  // Poll for tree changes to update view in real-time
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setUpdateTrigger(prev => prev + 1);
+    }, 500); // Update every 500ms
+    
+    return () => clearInterval(interval);
+  }, []);
 
   const copyToClipboard = async (text: string) => {
     try {
@@ -104,7 +114,7 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
     };
     
     return convertNode(root);
-  }, [blockchainTree]);
+  }, [blockchainTree, updateTrigger]);
   
   return (
     <div className="block-tree-modal">
