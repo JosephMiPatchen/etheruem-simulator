@@ -155,10 +155,19 @@ export class LmdGhost {
   }
 }
 /**
- * Attestation type for LMD-GHOST
+ * Attestation type for LMD-GHOST with Casper FFG fields
  */
 export interface Attestation {
   validatorAddress: string;
   blockHash: string;
   timestamp: number;
+  // Casper FFG fields for finality
+  ffgSource: {
+    epoch: number;
+    root: string;  // Block hash at source checkpoint
+  };
+  ffgTarget: {
+    epoch: number;
+    root: string;  // Block hash at target checkpoint
+  };
 }

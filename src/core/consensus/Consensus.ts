@@ -5,6 +5,7 @@ import { BeaconState } from './beaconState';
 import { Blockchain } from '../blockchain/blockchain';
 import { BlockCreator } from '../blockchain/blockCreator';
 import { RANDAO } from './randao';
+import { CasperFFG } from './casperFFG';
 import { MessageType } from '../../network/messages';
 import { Mempool } from '../mempool/mempool';
 
@@ -311,11 +312,19 @@ export class Consensus {
     if (newGhostHead?.hash === block.hash) {
       console.log(`[Consensus] New GHOST-HEAD is our block ${block.hash!.slice(0, 8)} - creating attestation`);
       
+      // Compute FFG checkpoints (source and target) for this attestation
+      const canonicalChain = this.blockchain.getCanonicalChain();
+      const checkpoints = CasperFFG.computeCheckpoints(slot, canonicalChain);
+      
       const attestation = {
         validatorAddress: this.nodeAddress,
         blockHash: block.hash!,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        ffgSource: checkpoints.source,
+        ffgTarget: checkpoints.target
       };
+      
+      console.log(`[Consensus] FFG checkpoints - Source: epoch ${checkpoints.source.epoch} (${checkpoints.source.root.slice(0, 8)}), Target: epoch ${checkpoints.target.epoch} (${checkpoints.target.root.slice(0, 8)})`);
       
       // Update own beacon pool (triggers LMD-GHOST update)
       this.beaconState.addAttestation(attestation);
