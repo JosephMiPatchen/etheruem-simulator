@@ -463,8 +463,8 @@ export class Blockchain {
       return false;
     }
     
-    // Validate block against current world state
-    const validationResult = await validateBlock(block, this.worldState, previousHash);
+    // Validate block against current world state (skip for genesis block)
+    const validationResult = (block.header.height != 0) ? await validateBlock(block, this.worldState, previousHash) : {valid: true};
     
     if (!validationResult.valid) {
       // Store validation error in metadata

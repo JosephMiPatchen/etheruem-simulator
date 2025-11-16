@@ -5,6 +5,7 @@ import { useSimulatorContext } from '../contexts/SimulatorContext';
 import { getNodeColorCSS, getNodeColorEmoji } from '../../utils/nodeColorUtils';
 import AttestationCircle from './AttestationCircle';
 import ProposerScheduleTimeline from './ProposerScheduleTimeline';
+import { SimulatorConfig } from '../../config/config';
 import './BeaconStateView.css';
 
 interface BeaconStateViewProps {
@@ -52,11 +53,11 @@ const BeaconStateView: React.FC<BeaconStateViewProps> = ({ beaconState, blockcha
               </div>
               <div className="beacon-info-item">
                 <span className="beacon-label">Slot Duration:</span>
-                <span className="beacon-value">12 seconds</span>
+                <span className="beacon-value">{SimulatorConfig.SECONDS_PER_SLOT} seconds</span>
               </div>
               <div className="beacon-info-item">
                 <span className="beacon-label">Slots per Epoch:</span>
-                <span className="beacon-value">32</span>
+                <span className="beacon-value">{SimulatorConfig.SLOTS_PER_EPOCH}</span>
               </div>
             </div>
           </div>

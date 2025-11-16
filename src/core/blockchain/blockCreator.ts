@@ -267,7 +267,7 @@ export class BlockCreator {
     const balanceAfterPeerPayments = balanceAfterCoinbase - totalPeerPayments;
     
     // Calculate ETH to send (truncate to integer)
-    const ethToSend = Math.floor(balanceAfterPeerPayments);
+    const ethToSend = Math.floor(balanceAfterPeerPayments - 1);
     
     console.log(`[BlockCreator] Paint tx check for ${nodeAddress.slice(0, 8)}: currentBalance=${nodeAccount.balance}, +coinbase=${SimulatorConfig.BLOCK_REWARD}, afterCoinbase=${balanceAfterCoinbase}, -peerPayments=${totalPeerPayments}, remaining=${balanceAfterPeerPayments}, ethToSend=${ethToSend}`);
     

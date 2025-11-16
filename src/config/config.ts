@@ -17,7 +17,7 @@ export const SimulatorConfig = {
   MAX_BLOCK_TRANSACTIONS: 10, // Maximum number of transactions per block
   
   // Proof of Stake (PoS) parameters
-  SECONDS_PER_SLOT: 2,      // Duration of each slot in seconds
+  SECONDS_PER_SLOT: .1,      // Duration of each slot in seconds
   SLOTS_PER_EPOCH: 4,        // Number of slots per epoch (Ethereum mainnet: 32)
   PROPOSER_BUFFER_MS: 100,   // Buffer time in ms to ensure slot increments before next proposal
   SYNC_INTERVAL_MS: 4000,    // Interval for broadcasting LMD-GHOST heads (sync)
