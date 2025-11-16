@@ -39,6 +39,7 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
   const [selectedAttestation, setSelectedAttestation] = useState<any | null>(null);
   const [copied, setCopied] = useState(false);
   const [updateTrigger, setUpdateTrigger] = useState(0);
+  const [errorModalData, setErrorModalData] = useState<{blockHash: string; error: string} | null>(null);
   const { addressToNodeId } = useSimulatorContext();
   const stats = blockchainTree.getStats();
   
@@ -198,8 +199,16 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
                 
                 const handleClick = () => {
                   if (blockNode?.block) {
-                    setSelectedBlock(blockNode.block);
-                    setIsSelectedBlockCanonical(isCanonical);
+                    // If block is invalid, show error modal instead of block details
+                    if (blockNode.metadata?.isInvalid && blockNode.metadata?.validationError) {
+                      setErrorModalData({
+                        blockHash: blockNode.hash,
+                        error: blockNode.metadata.validationError
+                      });
+                    } else {
+                      setSelectedBlock(blockNode.block);
+                      setIsSelectedBlockCanonical(isCanonical);
+                    }
                   }
                 };
                 
@@ -487,6 +496,43 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
                 <div className="info-row">
                   <span className="info-label">Canonical:</span>
                   <span className="info-value">{selectedAttestation.isCanonical ? '✓ Yes' : '✗ No'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Validation Error Modal */}
+      {errorModalData && (
+        <div className="block-modal-overlay" onClick={() => setErrorModalData(null)}>
+          <div className="block-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="block-modal-header" style={{ borderBottom: '2px solid #f44336' }}>
+              <h3 style={{ color: '#f44336' }}>❌ Validation Error</h3>
+              <button className="close-button" onClick={() => setErrorModalData(null)}>×</button>
+            </div>
+            
+            <div className="block-modal-content">
+              <div className="attestation-detail-section">
+                <div className="info-row">
+                  <span className="info-label">Block Hash:</span>
+                  <span className="info-value hash-value">{errorModalData.blockHash}</span>
+                </div>
+                <div className="info-row" style={{ marginTop: '1rem' }}>
+                  <span className="info-label">Error:</span>
+                  <span className="info-value" style={{ 
+                    color: '#f44336', 
+                    fontWeight: 'bold',
+                    fontSize: '1.1rem',
+                    display: 'block',
+                    marginTop: '0.5rem',
+                    padding: '1rem',
+                    background: 'rgba(244, 67, 54, 0.1)',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(244, 67, 54, 0.3)'
+                  }}>
+                    {errorModalData.error}
+                  </span>
                 </div>
               </div>
             </div>
