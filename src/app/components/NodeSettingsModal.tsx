@@ -43,16 +43,16 @@ export const NodeSettingsModal: React.FC<NodeSettingsModalProps> = ({
             <input
               id="delay-multiplier"
               type="range"
-              min="0.1"
+              min="1"
               max="10000"
-              step="0.1"
+              step="1"
               value={multiplier}
               onChange={(e) => setMultiplier(parseFloat(e.target.value))}
               className="settings-modal-slider"
             />
             <div className="settings-modal-slider-labels">
-              <span>0.1x (Fast)</span>
-              <span>1.0x (Normal)</span>
+              <span>1x (Normal)</span>
+              <span>100x (Slow)</span>
               <span>10,000x (Network Partition)</span>
             </div>
           </div>

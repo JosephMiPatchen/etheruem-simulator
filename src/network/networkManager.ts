@@ -153,7 +153,7 @@ export class NetworkManager {
         const baseDelay = this.getRandomNetworkDelay();
         const multiplier = peerNode.getNetworkDelayMultiplier();
         const actualDelay = baseDelay * multiplier;
-        
+        console.log(`[NetworkManager] 🌐 Broadcasting ${message.type} from ${message.fromNodeId.slice(0, 8)} to ${peerId.slice(0, 8)} with delay ${actualDelay.toFixed(2)}ms`);
         setTimeout(() => {
           peerNode.receiveIncomingMessage(message);
         }, actualDelay);
