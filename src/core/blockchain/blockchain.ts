@@ -138,6 +138,18 @@ export class Blockchain {
     // update tree decorations if new block is referenced by any attestation
     LmdGhost.onNewBlock(block, this.blockTree, this.beaconState); 
     
+    // 3.5. Process any queued attestations for this block
+    const queuedAttestations = this.beaconState.pendingAttestations.get(block.hash!);
+    if (queuedAttestations && queuedAttestations.length > 0) {
+      console.log(`[Blockchain] Processing ${queuedAttestations.length} queued attestations for block ${block.hash!.slice(0, 8)}`);
+      
+      // Process all queued attestations now that the block exists
+      LmdGhost.onNewAttestations(this.beaconState, this.blockTree, queuedAttestations);
+      
+      // Remove from queue
+      this.beaconState.pendingAttestations.delete(block.hash!);
+    }
+    
     // 4. Get new GHOST-HEAD (recomputed via LMD-GHOST using incrementally updated attestedEth)
     const newGhostHead = this.blockTree.getGhostHead();
     
@@ -296,10 +308,25 @@ export class Blockchain {
    * @param attestation - The attestation to process
    */
   async onAttestationReceived(attestation: any): Promise<void> {
+    // Check if we have the block this attestation is for
+    const blockNode = this.blockTree.getNode(attestation.blockHash);
+    
+    if (!blockNode) {
+      // Block doesn't exist yet - queue the attestation for later processing
+      console.log(`[Blockchain] Queuing attestation for unknown block ${attestation.blockHash.slice(0, 8)} from ${attestation.validatorAddress}`);
+      
+      if (!this.beaconState.pendingAttestations.has(attestation.blockHash)) {
+        this.beaconState.pendingAttestations.set(attestation.blockHash, []);
+      }
+      this.beaconState.pendingAttestations.get(attestation.blockHash)!.push(attestation);
+      return; // Don't process further until block arrives
+    }
+    
+    // Block exists - process attestation normally
     // Save old GHOST-HEAD to detect changes
     const oldGhostHead = this.blockTree.getGhostHead();
     
-    // 1. Possibly update decorations as per new incomming attestation
+    // 1. Possibly update decorations as per new incoming attestation
     LmdGhost.onNewAttestations(this.beaconState, this.blockTree, [attestation]);
     
     // 2. Get new GHOST-HEAD after attestation update
@@ -312,7 +339,7 @@ export class Blockchain {
       if (needsRewind) {
         // ❌ Reorganization: GHOST-HEAD switched to a different fork or backwards
         console.log(`[Blockchain] REORG: ${oldGhostHead?.hash?.slice(0, 8)} → ${newGhostHead?.hash?.slice(0, 8)}`);
-        await this.handleReorg();
+        await this.handleBacktrack();
       } else {
         // ✅ Forward Progress: GHOST-HEAD moved down same chain
         console.log(`[Blockchain] GHOST-HEAD moved forward via attestation: ${oldGhostHead?.hash?.slice(0, 8)} → ${newGhostHead?.hash?.slice(0, 8)}`);
@@ -331,7 +358,7 @@ export class Blockchain {
    * 3. Apply blocks with retry logic if invalid blocks encountered
    * 4. Each invalid block triggers: mark invalid → recompute GHOST-HEAD → retry
    */
-  private async handleReorg(): Promise<void> {
+  private async handleBacktrack(): Promise<void> {
     // Clear state and get blocks to apply from new canonical chain
     this.clearAllState();
     
@@ -372,7 +399,7 @@ export class Blockchain {
       // Invalid block encountered during forward progress
       // Fall back to full reorg to ensure consistency
       console.log(`[Blockchain] Invalid block during forward progress - falling back to full reorg`);
-      await this.handleReorg();
+      await this.handleBacktrack();
     } else {
       console.log(`[Blockchain] Forward progress complete - applied ${blocksToApply.length} blocks`);
     }

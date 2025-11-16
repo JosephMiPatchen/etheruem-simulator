@@ -33,8 +33,12 @@ export class BeaconState {
   // Genesis timestamp in UTC seconds
   public genesisTime: number;
   
-  // Beacon pool - accumulates attestations from validators
+  // Beacon pool - accumulates attestations from validators <- part of our state machine
   public beaconPool: Attestation[];
+  
+  // Pending attestations queue - attestations for blocks we don't have yet
+  // Maps blockHash -> array of attestations waiting for that block
+  public pendingAttestations: Map<string, Attestation[]>;
   
   // Set of processed attestations (key: "blockHash-validatorAddress")
   // Tracks attestations that have been included in blocks to prevent duplicates
@@ -53,6 +57,7 @@ export class BeaconState {
     this.randaoMixes = new Map();
     this.proposerSchedules = new Map();
     this.beaconPool = [];
+    this.pendingAttestations = new Map();
     this.processedAttestations = new Set();
     
     // Initialize LMD-GHOST fork choice state
