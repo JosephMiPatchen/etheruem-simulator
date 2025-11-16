@@ -9,7 +9,7 @@
  */
 
 import { Block } from '../../types/types';
-import { LmdGhost }  from '../consensus/LmdGhost';
+import { LmdGhost }  from '../consensus/lmdGhost';
 /**
  * Tree node wrapping a block with metadata
  * Extensible for future metadata (attestations, weight, etc.)

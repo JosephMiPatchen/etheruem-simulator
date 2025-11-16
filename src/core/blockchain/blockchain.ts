@@ -4,7 +4,7 @@ import { WorldState } from './worldState';
 import { validateBlock, calculateBlockHeaderHash } from '../validation/blockValidator';
 import { lightValidateChain } from '../validation/chainValidator';
 import { BlockchainTree, BlockTreeNode } from './blockchainTree';
-import { LmdGhost } from '../consensus/LmdGhost';
+import { LmdGhost } from '../consensus/lmdGhost';
 import { RANDAO } from '../consensus/randao';
 import { SimulatorConfig } from '../../config/config';
 
@@ -129,14 +129,16 @@ export class Blockchain {
     const oldGhostHead = this.blockTree.getGhostHead();
     
     // 3. Add block to tree (creates tree node, doesn't validate yet)
+    // and if valid, update tree decorations
     const newNode = this.blockTree.addBlock(block);
     if (!newNode) {
       console.error(`[Blockchain] Failed to add block ${block.hash} - parent not found`);
       return false;
-    }
+    } 
+    // update tree decorations if new block is referenced by any attestation
+    LmdGhost.onNewBlock(block, this.blockTree, this.beaconState); 
     
     // 4. Get new GHOST-HEAD (recomputed via LMD-GHOST using incrementally updated attestedEth)
-    // Note: Tree decoration happens incrementally in recordAttestation, no need to redecorate here
     const newGhostHead = this.blockTree.getGhostHead();
     
     // 5. Check if new GHOST-HEAD would extend canonical chain
@@ -297,59 +299,104 @@ export class Blockchain {
     // Save old GHOST-HEAD to detect changes
     const oldGhostHead = this.blockTree.getGhostHead();
     
-    // 1. Update latest attestations (per-validator map)
-    const existing = this.beaconState.latestAttestations.get(attestation.validatorAddress);
-    if (!existing || attestation.timestamp > existing.timestamp) {
-      this.beaconState.latestAttestations.set(attestation.validatorAddress, attestation);
-    }
+    // 1. Possibly update decorations as per new incomming attestation
+    LmdGhost.onNewAttestations(this.beaconState, this.blockTree, [attestation]);
     
-    // 2. Update tree attestedEth values and compute new GHOST-HEAD
-    // This uses the latest attestations to decorate tree and determine canonical chain
-    LmdGhost.onAttestationSetChanged(this.beaconState, this.blockTree, 
-      Array.from(this.beaconState.latestAttestations.values()));
-    
-    // 3. Get new GHOST-HEAD after attestation update
+    // 2. Get new GHOST-HEAD after attestation update
     const newGhostHead = this.blockTree.getGhostHead();
     
-    // 4. Check if GHOST-HEAD changed and handle accordingly
+    // 3. Check if GHOST-HEAD changed and handle accordingly
     if (oldGhostHead?.hash !== newGhostHead?.hash) {
-      // GHOST-HEAD changed - determine what to do
-      const isReorg = !this.isDescendant(newGhostHead, oldGhostHead);
+      const needsRewind = !this.isDescendant(newGhostHead, oldGhostHead);
       
-      if (isReorg) {
-        // ❌ Reorganization: GHOST-HEAD switched to a different fork
+      if (needsRewind) {
+        // ❌ Reorganization: GHOST-HEAD switched to a different fork or backwards
         console.log(`[Blockchain] REORG: ${oldGhostHead?.hash?.slice(0, 8)} → ${newGhostHead?.hash?.slice(0, 8)}`);
-        
-        // Retry state rebuild until valid canonical chain found
-        // Each failure marks block invalid → tree redecorated → GHOST-HEAD recomputed
-        for (let attempt = 0; attempt < 10; attempt++) {
-          if (await this.rebuildStateFromCanonicalChain()) {
-            break; // Success
-          }
-          console.log(`[Blockchain] Invalid block (retry ${attempt + 1}/10) - new head: ${this.blockTree.getGhostHead()?.hash?.slice(0, 8)}`);
-        }
+        await this.handleReorg();
       } else {
         // ✅ Forward Progress: GHOST-HEAD moved down same chain
         console.log(`[Blockchain] GHOST-HEAD moved forward via attestation: ${oldGhostHead?.hash?.slice(0, 8)} → ${newGhostHead?.hash?.slice(0, 8)}`);
-        
-        // Validate and apply blocks between old and new GHOST-HEAD
-        // Stop if any block is invalid
-        const blocksToApply = this.getBlocksBetween(oldGhostHead, newGhostHead);
-        
-        for (const block of blocksToApply) {
-          // Each block's previous hash is in its header
-          const blockPrevHash = block.header.previousHeaderHash;
-          const applied = await this.validateAndApplyBlock(block, blockPrevHash);
-          
-          if (!applied) {
-            // Block is invalid - stop applying blocks
-            console.log(`[Blockchain] Block ${block.hash?.slice(0, 8)} invalid - stopping forward progress`);
-            break;
-          }
-        }
+        await this.handleForwardProgress(oldGhostHead, newGhostHead);
       }
     }
     // else: GHOST-HEAD stayed same - no action needed
+  }
+  
+  /**
+   * Handle reorganization: GHOST-HEAD switched to a different fork or moved backwards
+   * 
+   * Strategy:
+   * 1. Clear all state (world state, beacon state)
+   * 2. Get all blocks on new canonical chain
+   * 3. Apply blocks with retry logic if invalid blocks encountered
+   * 4. Each invalid block triggers: mark invalid → recompute GHOST-HEAD → retry
+   */
+  private async handleReorg(): Promise<void> {
+    // Clear state and get blocks to apply from new canonical chain
+    this.clearAllState();
+    
+    // Retry loop: if we encounter invalid blocks, GHOST-HEAD will change
+    // and we'll need to rebuild from the new canonical chain
+    for (let attempt = 0; attempt < 10; attempt++) {
+      const blocksToApply = this.getCanonicalChain();
+      const success = await this.applyBlocksSequentially(blocksToApply);
+      
+      if (success) {
+        console.log(`[Blockchain] Reorg complete - applied ${blocksToApply.length} blocks`);
+        return; // Success!
+      }
+      
+      // Invalid block encountered - GHOST-HEAD has changed, retry with new canonical chain
+      const newHead = this.blockTree.getGhostHead();
+      console.log(`[Blockchain] Invalid block (retry ${attempt + 1}/10) - new head: ${newHead?.hash?.slice(0, 8)}`);
+    }
+    
+    console.error(`[Blockchain] Reorg failed after 10 attempts`);
+  }
+  
+  /**
+   * Handle forward progress: GHOST-HEAD moved down the same chain
+   * 
+   * Strategy:
+   * 1. Get blocks between old and new GHOST-HEAD
+   * 2. Apply blocks sequentially
+   * 3. If invalid block encountered, fall back to full reorg
+   */
+  private async handleForwardProgress(oldHead: BlockTreeNode | null, newHead: BlockTreeNode | null): Promise<void> {
+    if (!oldHead || !newHead) return;
+    
+    const blocksToApply = this.getBlocksBetween(oldHead, newHead);
+    const success = await this.applyBlocksSequentially(blocksToApply);
+    
+    if (!success) {
+      // Invalid block encountered during forward progress
+      // Fall back to full reorg to ensure consistency
+      console.log(`[Blockchain] Invalid block during forward progress - falling back to full reorg`);
+      await this.handleReorg();
+    } else {
+      console.log(`[Blockchain] Forward progress complete - applied ${blocksToApply.length} blocks`);
+    }
+  }
+  
+  /**
+   * Apply blocks sequentially, validating each one
+   * 
+   * @param blocks - Blocks to apply in order
+   * @returns true if all blocks applied successfully, false if any block invalid
+   */
+  private async applyBlocksSequentially(blocks: Block[]): Promise<boolean> {
+    for (const block of blocks) {
+      const blockPrevHash = block.header.previousHeaderHash;
+      const applied = await this.validateAndApplyBlock(block, blockPrevHash);
+      
+      if (!applied) {
+        // Block is invalid - mark it and stop
+        console.log(`[Blockchain] Block ${block.hash?.slice(0, 8)} invalid - stopping`);
+        return false;
+      }
+    }
+    
+    return true; // All blocks applied successfully
   }
   
   /**
@@ -366,38 +413,6 @@ export class Blockchain {
     this.worldState = new WorldState();
     this.beaconState.clearProcessedAttestations();
     this.beaconState.clearRandaoState();
-  }
-  
-  /**
-   * Rebuild world state and beacon state from canonical chain
-   * Clears current state and validates/applies all blocks in canonical chain
-   * 
-   * On reorg:
-   * - All state cleared via clearAllState()
-   * - RANDAO mixes rebuilt as blocks applied
-   * - Proposer schedules recomputed lazily by Consensus
-   * 
-   * @returns true if all blocks applied successfully, false if any block invalid
-   */
-  private async rebuildStateFromCanonicalChain(): Promise<boolean> {
-    // Clear all state
-    this.clearAllState();
-    
-    // Validate and apply each block in canonical chain
-    // This rebuilds RANDAO mixes (proposer schedules recomputed lazily)
-    const canonicalChain = this.getCanonicalChain();
-    for (let i = 0; i < canonicalChain.length; i++) {
-      const block = canonicalChain[i];
-      const previousHash = i > 0 ? canonicalChain[i - 1].hash || '' : '';
-      const applied = await this.validateAndApplyBlock(block, previousHash);
-      
-      if (!applied) {
-        // Block is invalid - state rebuild incomplete
-        return false;
-      }
-    }
-    
-    return true;
   }
   
   /**
@@ -425,11 +440,8 @@ export class Blockchain {
     const isValid = await validateBlock(block, this.worldState, previousHash);
     
     if (!isValid) {
-      // Mark block as invalid and redecorate tree
-      // Tree decoration happens in two cases:
-      // 1. When attestations change (onAttestationSetChanged)
-      // 2. When nodes marked invalid (here)
-      this.blockTree.markNodeInvalid(block.hash || '', this.beaconState);
+      // Mark block as invalid and redecorate tree accordinly (attestedEth for invalid accounts will no longer count for parent nodes)
+      LmdGhost.markNodeInvalid(node);
       console.log(`[Blockchain] Block ${block.hash?.slice(0, 8)} marked invalid - GHOST will skip it`);
       return false;
     } else {
@@ -478,16 +490,6 @@ export class Blockchain {
     }
     
     return blocks;
-  }
-  
-  /**
-   * Update latest attestations and tree decoration
-   * Delegates to BeaconState (consensus layer logic)
-   */
-  updateLatestAttestationsAndTree(): void {
-    if (this.beaconState) {
-      this.beaconState.updateLatestAttestationsAndTree();
-    }
   }
   
   /**

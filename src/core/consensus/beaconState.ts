@@ -289,7 +289,7 @@ export class BeaconState {
     if (!existing || attestation.timestamp > existing.timestamp) {
       // Pass blockchain tree for incremental decoration
       if (this.blockchain) {
-        LmdGhost.recordAttestation(this, this.blockchain.getTree(), attestation);
+        LmdGhost.onLatestAttestChange(this, this.blockchain.getTree(), attestation);
       } else {
         // Fallback: just update map without tree decoration (shouldn't happen in normal flow)
         this.latestAttestations.set(attestation.validatorAddress, attestation);
@@ -316,7 +316,7 @@ export class BeaconState {
     
     // Use LMD-GHOST to decorate tree and compute GHOST-HEAD
     const tree = this.blockchain.getTree();
-    LmdGhost.onAttestationSetChanged(this, tree, allAttestations);
+    LmdGhost.onNewAttestations(this, tree, allAttestations);
   }
   
   /**

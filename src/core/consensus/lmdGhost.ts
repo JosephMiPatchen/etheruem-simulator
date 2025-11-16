@@ -1,5 +1,6 @@
 import { Block } from '../../types/types';
 import { BlockchainTree, BlockTreeNode } from '../blockchain/blockchainTree';
+import { BeaconState } from './beaconState';
 
 /**
  * LMD-GHOST (Latest Message Driven Greedy Heaviest Observed SubTree)
@@ -20,39 +21,31 @@ export class LmdGhost {
    * @param tree - Blockchain tree to update
    * @param attestation - New attestation to record
    */
-  public static recordAttestation(beaconState: any, tree: BlockchainTree, attestation: Attestation): void {
-    const existing = beaconState.latestAttestations.get(attestation.validatorAddress);
+  public static onLatestAttestChange(beaconState: any, tree: BlockchainTree, oldAtt: Attestation | undefined, newAtt: Attestation): void {
+    // a) Decrement attestedEth for old attestation (if it points to a node in tree)
+    if (oldAtt) {
+      const oldNode = tree.getNode(oldAtt.blockHash);
+      if (oldNode) {
+        LmdGhost.decrementAttestedEthOfParents(oldNode);
+      }
+    }
     
-    // Only update if this attestation is newer
-    if (!existing || attestation.timestamp > existing.timestamp) {
-      // a) Decrement attestedEth for old attestation (if it points to a node in tree)
-      if (existing) {
-        const oldNode = tree.getNode(existing.blockHash);
-        if (oldNode) {
-          LmdGhost.decrementAttestedEth(oldNode);
-        }
-      }
-      
-      // Update latest attestation
-      beaconState.latestAttestations.set(attestation.validatorAddress, attestation);
-      
-      // b) Increment attestedEth for new attestation (if it points to a node in tree)
-      const newNode = tree.getNode(attestation.blockHash);
-      if (newNode) {
-        LmdGhost.incrementAttestedEth(newNode);
-      }
+    // b) Increment attestedEth for new attestation (if it points to a node in tree)
+    const newNode = tree.getNode(newAtt.blockHash);
+    if (newNode) {
+      LmdGhost.incrementAttestedEthOfParents(newNode);
     }
   }
   
   /**
    * Increment attestedEth from a node up to root
    * Called when a new attestation points to this node
+   * todo: attestedEthToAdd should come from validator set
    */
-  private static incrementAttestedEth(node: BlockTreeNode): void {
-    const attestedEthToAdd = 32; // 32 ETH per attestation
+  private static incrementAttestedEthOfParents(node: BlockTreeNode,attestedEthToAdd: number = 32): void {
     let current: BlockTreeNode | null = node;
     
-    while (current) {
+    while (current && !current.metadata.isInvalid) { // dont keep updating once we hit invalid node
       if (!current.metadata) {
         current.metadata = {};
       }
@@ -64,89 +57,62 @@ export class LmdGhost {
   /**
    * Decrement attestedEth from a node up to root
    * Called when an old attestation is replaced
+   * todo: attestedEthToRemove should come from validator set
    */
-  private static decrementAttestedEth(node: BlockTreeNode): void {
-    const attestedEthToRemove = 32; // 32 ETH per attestation
+  private static decrementAttestedEthOfParents(node: BlockTreeNode, attestedEthToRemove: number = 32): void {
     let current: BlockTreeNode | null = node;
     
-    while (current) {
+    while (current && !current.metadata.isInvalid) { // dont keep updating once we hit invalid node
       if (current.metadata) {
         current.metadata.attestedEth = Math.max(0, (current.metadata.attestedEth || 0) - attestedEthToRemove);
       }
       current = current.parent;
     }
   }
-  
-  /**
-   * Clear all attestations and reset tree decorations
-   */
-  public static clearAttestations(beaconState: any, tree: BlockchainTree): void {
-    beaconState.latestAttestations.clear();
     
-    // Reset all attestedEth values in tree
-    const root = tree.getRoot();
-    if (root) {
-      LmdGhost.resetAttestedEth(root);
-    }
-  }
-  
-  /**
-   * Recursively reset attestedEth for all nodes in tree
-   */
-  private static resetAttestedEth(node: BlockTreeNode): void {
-    if (node.metadata) {
-      node.metadata.attestedEth = 0;
-    }
-    for (const child of node.children) {
-      LmdGhost.resetAttestedEth(child);
-    }
-  }
-  
   /**
    * Handle attestation set changes
    * Called when new attestations arrive
    * Updates latest attestations and incrementally updates tree decorations
    */
-  public static onAttestationSetChanged(
+  public static onNewAttestations(
     beaconState: any,
     tree: BlockchainTree,
     allAttestations: Attestation[]
   ): void {
-    // Update latest attestations for each validator
-    // This will incrementally update tree decorations
-    for (const attestation of allAttestations) {
-      LmdGhost.recordAttestation(beaconState, tree, attestation);
-    }
-    
-    // Note: GHOST-HEAD is computed on-demand via tree.getGhostHead()
-    // No need to compute it here - it will be recomputed when needed
-  }
-  
-  /**
-   * Get attestations pointing to a specific block
-   */
-  public static getAttestationsForBlock(beaconState: any, blockHash: string): Attestation[] {
-    const attestations: Attestation[] = [];
-    
-    for (const attestation of beaconState.latestAttestations.values()) {
-      if (attestation.blockHash === blockHash) {
-        attestations.push(attestation);
+
+    for (const newAtt of allAttestations) {
+      const existingAtt = beaconState.latestAttestations.get(newAtt.validatorAddress) as Attestation;
+      if (!existingAtt || newAtt.timestamp > existingAtt.timestamp) {
+        // if we have a newer one, update then update tree decorations
+        beaconState.latestAttestations.set(newAtt.validatorAddress, newAtt); // update
+        LmdGhost.onLatestAttestChange(beaconState, tree, existingAtt, newAtt);
       }
     }
-    
-    return attestations;
   }
-  
-  /**
-   * Get the total attested ETH for a specific block
-   * (direct attestations only, not including descendants)
-   */
-  public static getDirectAttestedEth(beaconState: any, blockHash: string): number {
-    const attestations = LmdGhost.getAttestationsForBlock(beaconState, blockHash);
-    return attestations.length * 32;
-  }
-  
 
+  public static onNewBlock(block: Block, tree: BlockchainTree, beaconState: BeaconState): void {
+    const blockNode = tree.getNode(block.hash || '');
+    if (!blockNode) return;
+    
+    for (const att of beaconState.latestAttestations.values()) {
+      if (att.blockHash === block.hash) {
+        LmdGhost.incrementAttestedEthOfParents(blockNode);
+      }
+    }
+  }
+
+  public static markNodeInvalid(node: BlockTreeNode): void {
+    node.metadata.isInvalid = true;
+    
+    // Decrement parent's attestedEth by this node's attestedEth
+    if (node.parent && node.metadata.attestedEth) {
+      LmdGhost.decrementAttestedEthOfParents(node.parent, node.metadata.attestedEth);
+    }
+    
+    node.metadata.attestedEth = 0;
+    console.log(`[BlockchainTree] Marked node ${node.hash.slice(0, 8)} invalid`);
+  }
   
   /**
    * Compute GHOST-HEAD using LMD-GHOST fork choice rule
@@ -154,47 +120,41 @@ export class LmdGhost {
    * 
    * Algorithm:
    * 1. Start at genesis (tree root)
-   * 2. At each fork, choose the child with highest attestedEth
-   * 3. Continue until reaching a leaf (chain tip)
+   * 2. At each fork, choose the valid child with highest attestedEth
+   * 3. Continue until a leaf or tie
    */
   public static computeGhostHead(tree: BlockchainTree): string | null {
     const root = tree.getRoot();
     if (!root) return null;
-    
-    // Start at root and follow the heaviest valid path
     let current = root;
-    
+    const isValid = (n: any) => !n.metadata?.isInvalid;
+    const getAttestedEth = (n: any) => Number(n.metadata?.attestedEth ?? 0);
+  
     while (current.children.length > 0) {
-      // Filter out invalid children (blocks that failed validation)
-      const validChildren = current.children.filter(child => !child.metadata?.isInvalid);
-      
-      if (validChildren.length === 0) {
-        // No valid children - current node is the GHOST-HEAD
-        break;
+      // consider only valid children
+      const validChildren = current.children.filter(isValid);
+      if (validChildren.length === 0) break; // no valid children -> current is head
+  
+      // find the maximum attestedEth among valid children
+      let maxEth = -Infinity;
+      for (const child of validChildren) {
+        const v = getAttestedEth(child);
+        if (v > maxEth) maxEth = v;
       }
-      
-      // Find valid child with highest attestedEth
-      let heaviestChild = validChildren[0];
-      let maxAttestedEth = heaviestChild.metadata?.attestedEth || 0;
-      
-      for (let i = 1; i < validChildren.length; i++) {
-        const child = validChildren[i];
-        const childAttestedEth = child.metadata?.attestedEth || 0;
-        
-        if (childAttestedEth > maxAttestedEth) {
-          heaviestChild = child;
-          maxAttestedEth = childAttestedEth;
-        }
-      }
-      
-      current = heaviestChild;
+  
+      // collect children that have that maximum value
+      const heaviest = validChildren.filter(c => getAttestedEth(c) === maxEth);
+  
+      // if there's a tie (2 or more heaviest children), stop and return the parent (current)
+      if (heaviest.length > 1) break;
+  
+      // otherwise exactly one heaviest child -> descend into it
+      current = heaviest[0];
     }
-    
-    // Return the hash of the leaf node (chain tip)
+  
     return current.hash;
   }
 }
-
 /**
  * Attestation type for LMD-GHOST
  */
