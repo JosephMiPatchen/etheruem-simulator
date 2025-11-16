@@ -84,7 +84,7 @@ export class LmdGhost {
     for (const newAtt of allAttestations) {
       const existingAtt = beaconState.latestAttestations.get(newAtt.validatorAddress) as Attestation;
       if (!existingAtt || newAtt.timestamp > existingAtt.timestamp) {
-        // if we have a newer one, update then update tree decorations
+        // if we have a newer one, update then update tree decorations or create it if it doesn't exist
         beaconState.latestAttestations.set(newAtt.validatorAddress, newAtt); // update
         LmdGhost.onLatestAttestChange(beaconState, tree, existingAtt, newAtt);
       }

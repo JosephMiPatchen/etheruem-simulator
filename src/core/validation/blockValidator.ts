@@ -20,19 +20,20 @@ export const calculateTransactionHash = (transactions: any[]): string => {
 
 /**
  * Validates a block against the blockchain rules
- * Returns true if valid, false otherwise
+ * Returns {valid: true} if valid, {valid: false, error: string} if invalid
  */
 export const validateBlock = async (
   block: Block, 
   worldState: WorldState,
   previousHeaderHash: string
-): Promise<boolean> => {
+): Promise<{valid: boolean; error?: string}> => {
   const { header, transactions } = block;
   
   // 1. Validate block has at least one transaction
   if (transactions.length === 0) {
-    console.error('Block has no transactions');
-    return false;
+    const error = 'Block has no transactions';
+    console.error(error);
+    return { valid: false, error };
   }
   
   // Create a temporary world state for sequential validation
@@ -43,8 +44,9 @@ export const validateBlock = async (
   // 2. First transaction must be a coinbase(issuance) transaction
   const coinbaseValid = await validateTransaction(transactions[0], tempWorldState, true);
   if (!coinbaseValid) {
-    console.error('Invalid coinbase transaction');
-    return false;
+    const error = 'Invalid coinbase transaction';
+    console.error(error);
+    return { valid: false, error };
   }
   
   // Update the temporary world state with the coinbase transaction
@@ -54,8 +56,9 @@ export const validateBlock = async (
   for (let i = 1; i < transactions.length; i++) {
     const txValid = await validateTransaction(transactions[i], tempWorldState, false);
     if (!txValid) {
-      console.error(`Invalid transaction at index ${i}`);
-      return false;
+      const error = `Invalid transaction at index ${i}`;
+      console.error(error);
+      return { valid: false, error };
     }
     
     // Update the temporary world state with this transaction
@@ -65,21 +68,24 @@ export const validateBlock = async (
   // 4. Validate transaction hash in header matches the hash of all transactions
   const calculatedTransactionHash = calculateTransactionHash(transactions);
   if (header.transactionHash !== calculatedTransactionHash) {
-    console.error(`Transaction hash mismatch: ${header.transactionHash} !== ${calculatedTransactionHash}`);
-    return false;
+    const error = `Transaction hash mismatch: ${header.transactionHash} !== ${calculatedTransactionHash}`;
+    console.error(error);
+    return { valid: false, error };
   }
   
   // 5. Validate previous header hash matches the provided hash
   // For non-genesis blocks, validate previous hash
   if (header.height > 0) {
     if (!previousHeaderHash) {
-      console.error('Cannot validate a non-genesis block without a previous header hash');
-      return false;
+      const error = 'Cannot validate a non-genesis block without a previous header hash';
+      console.error(error);
+      return { valid: false, error };
     }
     
     if (header.previousHeaderHash !== previousHeaderHash) {
-      console.error(`Previous header hash mismatch: ${header.previousHeaderHash} !== ${previousHeaderHash}`);
-      return false;
+      const error = `Previous header hash mismatch: ${header.previousHeaderHash} !== ${previousHeaderHash}`;
+      console.error(error);
+      return { valid: false, error };
     }
   }
   
@@ -87,8 +93,9 @@ export const validateBlock = async (
   const now = Date.now();
   const fiveHoursInMs = 5 * 60 * 60 * 1000;
   if (header.timestamp > now + fiveHoursInMs || header.timestamp < now - fiveHoursInMs) {
-    console.error(`Block timestamp is unreasonable: ${header.timestamp}`);
-    return false;
+    const error = `Block timestamp is unreasonable: ${header.timestamp}`;
+    console.error(error);
+    return { valid: false, error };
   }
   
   // 7. Validate attestations (if any)
@@ -103,12 +110,13 @@ export const validateBlock = async (
     for (const attestation of block.attestations) {
       const key = `${attestation.blockHash}-${attestation.validatorAddress}`;
       if (attestationKeys.has(key)) {
-        console.error(`Duplicate attestation in block: ${key}`);
-        return false;
+        const error = `Duplicate attestation in block: ${key}`;
+        console.error(error);
+        return { valid: false, error };
       }
       attestationKeys.add(key);
     }
   }
   
-  return true;
+  return { valid: true };
 };

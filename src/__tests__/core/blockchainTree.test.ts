@@ -235,7 +235,6 @@ describe('BlockchainTree', () => {
     });
   });
 
-
   describe('getAllNodes', () => {
     it('should return all nodes in tree', () => {
       // Given: Tree with multiple blocks

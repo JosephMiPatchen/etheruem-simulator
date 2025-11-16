@@ -26,6 +26,7 @@ export interface BlockTreeNode {
     attestationCount?: number; // Number of attestations
     attestedEth?: number;      // For LMD GHOST: total staked ETH attesting to this subtree
     isInvalid?: boolean;       // True if block is invalid (failed validation), false/undefined = valid
+    validationError?: string;  // Error message if block failed validation
     [key: string]: any;        // Allow any future metadata
   };
 }
@@ -266,35 +267,6 @@ export class BlockchainTree {
     return blocks;
   }
   
-  /**
-   * Mark a node as invalid and update tree attestedEth
-   * 
-   * This triggers a full tree recomputation because:
-   * 1. Invalid node gets isInvalid = true
-   * 2. Tree decoration recomputes attestedEth (invalid nodes return 0)
-   * 3. GHOST-HEAD will be recomputed on next access (skips invalid nodes)
-   * 
-   * Tree decoration happens in two cases:
-   * - When attestations change (onAttestationSetChanged)
-   * - When nodes marked invalid (this method)
-   * 
-   * @param blockHash - Hash of the block to mark invalid
-   * @param beaconState - BeaconState for tree decoration
-   */
-  markNodeInvalid(blockHash: string, beaconState: any): void {
-    const node = this.nodesByHash.get(blockHash);
-    if (!node) {
-      console.warn(`[BlockchainTree] Cannot mark node ${blockHash} invalid - not found`);
-      return;
-    }
-    
-    // Mark node as invalid
-    node.metadata.isInvalid = true;
-    console.log(`[BlockchainTree] Marked node ${blockHash.slice(0, 8)} invalid`);
-    
-    // Note: attestedEth will be recalculated on next GHOST-HEAD computation
-    // Invalid nodes return 0 and don't contribute to parents in computeGhostHead
-  }
   
   /**
    * Get the LMD-GHOST HEAD (canonical chain tip)

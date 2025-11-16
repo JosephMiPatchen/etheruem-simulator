@@ -464,12 +464,15 @@ export class Blockchain {
     }
     
     // Validate block against current world state
-    const isValid = await validateBlock(block, this.worldState, previousHash);
+    const validationResult = await validateBlock(block, this.worldState, previousHash);
     
-    if (!isValid) {
-      // Mark block as invalid and redecorate tree accordinly (attestedEth for invalid accounts will no longer count for parent nodes)
+    if (!validationResult.valid) {
+      // Store validation error in metadata
+      node.metadata.validationError = validationResult.error;
+      
+      // Mark block as invalid and redecorate tree accordingly (attestedEth for invalid accounts will no longer count for parent nodes)
       LmdGhost.markNodeInvalid(node);
-      console.log(`[Blockchain] Block ${block.hash?.slice(0, 8)} marked invalid - GHOST will skip it`);
+      console.log(`[Blockchain] Block ${block.hash?.slice(0, 8)} marked invalid: ${validationResult.error}`);
       return false;
     } else {
       // Block is valid - apply state changes
