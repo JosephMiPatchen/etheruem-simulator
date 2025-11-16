@@ -4,7 +4,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -12,9 +13,10 @@
 }
 
 .settings-modal-content {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background: var(--panel-background);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
   width: 90%;
   max-width: 500px;
   max-height: 90vh;
@@ -25,60 +27,64 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px;
-  border-bottom: 1px solid #e5e7eb;
+  padding: var(--spacing-lg);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .settings-modal-header h3 {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: var(--font-size-xl);
   font-weight: 600;
+  color: var(--primary-color);
 }
 
 .settings-modal-close-button {
   background: none;
   border: none;
-  font-size: 1.5rem;
+  font-size: 2rem;
   cursor: pointer;
-  color: #6b7280;
+  color: var(--text-color);
   padding: 0;
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: var(--border-radius-sm);
+  transition: all 0.2s;
 }
 
 .settings-modal-close-button:hover {
-  color: #374151;
+  background: var(--overlay-background);
+  color: var(--primary-color);
 }
 
 .settings-modal-body {
-  padding: 20px;
+  padding: var(--spacing-lg);
 }
 
 .settings-modal-setting-group {
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-lg);
 }
 
 .settings-modal-setting-group label {
   display: block;
   font-weight: 600;
-  margin-bottom: 8px;
-  color: #374151;
+  margin-bottom: var(--spacing-sm);
+  color: var(--text-color);
 }
 
 .settings-modal-setting-description {
-  font-size: 0.875rem;
-  color: #6b7280;
-  margin-bottom: 12px;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-md);
 }
 
 .settings-modal-slider {
   width: 100%;
   height: 6px;
   border-radius: 3px;
-  background: #e5e7eb;
+  background: var(--border-color);
   outline: none;
   -webkit-appearance: none;
   appearance: none;
@@ -90,59 +96,75 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #3b82f6;
+  background: var(--primary-color);
   cursor: pointer;
+  transition: all 0.2s;
+}
+
+.settings-modal-slider::-webkit-slider-thumb:hover {
+  background: var(--primary-hover);
+  transform: scale(1.1);
 }
 
 .settings-modal-slider::-moz-range-thumb {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #3b82f6;
+  background: var(--primary-color);
   cursor: pointer;
   border: none;
+  transition: all 0.2s;
+}
+
+.settings-modal-slider::-moz-range-thumb:hover {
+  background: var(--primary-hover);
+  transform: scale(1.1);
 }
 
 .settings-modal-slider-labels {
   display: flex;
   justify-content: space-between;
-  margin-top: 8px;
-  font-size: 0.75rem;
-  color: #6b7280;
+  margin-top: var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
 }
 
 .settings-modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
-  padding: 20px;
-  border-top: 1px solid #e5e7eb;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  border-top: 1px solid var(--border-color);
 }
 
 .settings-modal-button-primary,
 .settings-modal-button-secondary {
-  padding: 8px 16px;
-  border-radius: 6px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius-md);
   font-weight: 500;
   cursor: pointer;
   border: none;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
+  transition: all 0.2s;
 }
 
 .settings-modal-button-primary {
-  background-color: #3b82f6;
+  background-color: var(--primary-color);
   color: white;
 }
 
 .settings-modal-button-primary:hover {
-  background-color: #2563eb;
+  background-color: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 .settings-modal-button-secondary {
-  background-color: #f3f4f6;
-  color: #374151;
+  background-color: var(--overlay-background);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
 }
 
 .settings-modal-button-secondary:hover {
-  background-color: #e5e7eb;
+  background-color: var(--border-color);
 }
