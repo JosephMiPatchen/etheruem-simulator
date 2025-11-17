@@ -186,29 +186,76 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, rec
               </div>
               
               {/* Attestations Section */}
-              {selectedBlock.attestations && selectedBlock.attestations.length > 0 && (
+              {selectedBlock.attestations && Array.isArray(selectedBlock.attestations) && selectedBlock.attestations.length > 0 && (
                 <div className="attestations-container">
-                  <h3>Attestations ({selectedBlock.attestations.length})</h3>
-                  <div className="attestations-grid-compact">
-                    {selectedBlock.attestations.map((attestation, index) => {
-                      // Find the block being attested to get its height
-                      const attestedBlock = blocks.find((b: Block) => b.hash === attestation.blockHash);
-                      const blockHeight = attestedBlock ? attestedBlock.header.height : '?';
-                      
-                      // Get node name (color) from address using context
-                      const nodeName = addressToNodeId[attestation.validatorAddress] || attestation.validatorAddress.slice(-4);
-                      
-                      // Check if canonical for modal data
-                      const isCanonical = blocks.some((b: Block) => b.hash === attestation.blockHash);
+                  <h3>Included Attestations ({selectedBlock.attestations.length})</h3>
+                  
+                  <div className="attestations-list">
+                    {selectedBlock.attestations.map((attestation: any, index: number) => {
+                      const validatorNodeId = addressToNodeId[attestation.validatorAddress] || 'Unknown';
+                      const validatorColor = getNodeColorCSS(validatorNodeId);
                       
                       return (
-                        <AttestationCircle
-                          key={index}
-                          attestation={attestation}
-                          blocks={blocks}
-                          addressToNodeId={addressToNodeId}
-                          onClick={() => setSelectedAttestation({ ...attestation, blockHeight, nodeName, isCanonical })}
-                        />
+                        <div key={index} className="attestation-item">
+                          <div className="attestation-header">
+                            <span 
+                              className="attestation-validator" 
+                              style={{ 
+                                color: validatorColor,
+                                fontWeight: 'bold',
+                                fontSize: '14px'
+                              }}
+                            >
+                              {validatorNodeId}
+                            </span>
+                            <span className="attestation-timestamp">
+                              {new Date(attestation.timestamp).toLocaleTimeString()}
+                            </span>
+                          </div>
+                          
+                          <div className="attestation-details">
+                            <div className="attestation-row">
+                              <span className="attestation-label">Block Hash:</span>
+                              <span className="attestation-value hash-short">
+                                ...{attestation.blockHash.slice(-8)}
+                              </span>
+                            </div>
+                            
+                            {attestation.ffgSource && (
+                              <div className="attestation-row">
+                                <span className="attestation-label">FFG Source:</span>
+                                <div className="attestation-checkpoint">
+                                  <span className="checkpoint-epoch">Epoch {attestation.ffgSource.epoch}</span>
+                                  <span className="checkpoint-block">
+                                    <div 
+                                      className="mini-block-icon" 
+                                      title={`Block: ${attestation.ffgSource.root}`}
+                                    >
+                                      ...{attestation.ffgSource.root.slice(-6)}
+                                    </div>
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {attestation.ffgTarget && (
+                              <div className="attestation-row">
+                                <span className="attestation-label">FFG Target:</span>
+                                <div className="attestation-checkpoint">
+                                  <span className="checkpoint-epoch">Epoch {attestation.ffgTarget.epoch}</span>
+                                  <span className="checkpoint-block">
+                                    <div 
+                                      className="mini-block-icon" 
+                                      title={`Block: ${attestation.ffgTarget.root}`}
+                                    >
+                                      ...{attestation.ffgTarget.root.slice(-6)}
+                                    </div>
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       );
                     })}
                   </div>
