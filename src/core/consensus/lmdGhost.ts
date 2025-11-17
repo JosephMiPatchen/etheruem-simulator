@@ -161,6 +161,7 @@ export interface Attestation {
   validatorAddress: string;
   blockHash: string;
   timestamp: number;
+  
   // Casper FFG fields for finality
   ffgSource: {
     epoch: number;
