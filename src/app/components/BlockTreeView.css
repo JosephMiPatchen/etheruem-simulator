@@ -358,3 +358,146 @@
     gap: 0.75rem;
   }
 }
+
+/* Attestations Display in Block Modal */
+.attestations-container {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.attestations-container h3 {
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.attestations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.attestation-item {
+  background: rgba(102, 126, 234, 0.05);
+  border: 1px solid rgba(102, 126, 234, 0.2);
+  border-radius: 8px;
+  padding: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.attestation-item:hover {
+  background: rgba(102, 126, 234, 0.1);
+  border-color: rgba(102, 126, 234, 0.4);
+  transform: translateX(2px);
+}
+
+.attestation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(102, 126, 234, 0.15);
+}
+
+.attestation-validator {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.attestation-timestamp {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-family: 'Courier New', monospace;
+}
+
+.attestation-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.attestation-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 12px;
+}
+
+.attestation-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+  min-width: 90px;
+}
+
+.attestation-value {
+  color: var(--text-primary);
+  font-family: 'Courier New', monospace;
+}
+
+.hash-short {
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+.attestation-checkpoint {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.checkpoint-epoch {
+  color: var(--text-primary);
+  font-weight: 500;
+  padding: 2px 6px;
+  background: rgba(102, 126, 234, 0.15);
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.checkpoint-block {
+  display: flex;
+  align-items: center;
+}
+
+.mini-block-icon {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  cursor: help;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.mini-block-icon:hover {
+  transform: scale(1.05);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Scrollbar styling for attestations list */
+.attestations-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.attestations-list::-webkit-scrollbar-track {
+  background: rgba(102, 126, 234, 0.05);
+  border-radius: 3px;
+}
+
+.attestations-list::-webkit-scrollbar-thumb {
+  background: rgba(102, 126, 234, 0.3);
+  border-radius: 3px;
+}
+
+.attestations-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(102, 126, 234, 0.5);
+}

@@ -7,6 +7,7 @@ import { isHashBelowCeiling } from '../../utils/cryptoUtils';
 import { SimulatorConfig } from '../../config/config';
 import TransactionView from './TransactionView';
 import AttestationCircle from './AttestationCircle';
+import { getNodeColorCSS } from '../../utils/nodeColorUtils';
 import { MdContentCopy, MdCheck } from 'react-icons/md';
 import { BiFork } from 'react-icons/bi';
 import { useSimulatorContext } from '../contexts/SimulatorContext';
@@ -455,6 +456,83 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
                   />
                 ))}
               </div>
+
+              {/* Attestations Section */}
+              {selectedBlock.attestations && Array.isArray(selectedBlock.attestations) && selectedBlock.attestations.length > 0 && (
+                <div className="attestations-container">
+                  <h3>Included Attestations ({selectedBlock.attestations.length})</h3>
+                  
+                  <div className="attestations-list">
+                    {selectedBlock.attestations.map((attestation: any, index: number) => {
+                      const validatorNodeId = addressToNodeId.get(attestation.validatorAddress) || 'Unknown';
+                      const validatorColor = getNodeColorCSS(validatorNodeId);
+                      
+                      return (
+                        <div key={index} className="attestation-item">
+                          <div className="attestation-header">
+                            <span 
+                              className="attestation-validator" 
+                              style={{ 
+                                color: validatorColor,
+                                fontWeight: 'bold',
+                                fontSize: '14px'
+                              }}
+                            >
+                              {validatorNodeId}
+                            </span>
+                            <span className="attestation-timestamp">
+                              {new Date(attestation.timestamp).toLocaleTimeString()}
+                            </span>
+                          </div>
+                          
+                          <div className="attestation-details">
+                            <div className="attestation-row">
+                              <span className="attestation-label">Block Hash:</span>
+                              <span className="attestation-value hash-short">
+                                ...{attestation.blockHash.slice(-8)}
+                              </span>
+                            </div>
+                            
+                            {attestation.ffgSource && (
+                              <div className="attestation-row">
+                                <span className="attestation-label">FFG Source:</span>
+                                <div className="attestation-checkpoint">
+                                  <span className="checkpoint-epoch">Epoch {attestation.ffgSource.epoch}</span>
+                                  <span className="checkpoint-block">
+                                    <div 
+                                      className="mini-block-icon" 
+                                      title={`Block: ${attestation.ffgSource.root}`}
+                                    >
+                                      ...{attestation.ffgSource.root.slice(-6)}
+                                    </div>
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {attestation.ffgTarget && (
+                              <div className="attestation-row">
+                                <span className="attestation-label">FFG Target:</span>
+                                <div className="attestation-checkpoint">
+                                  <span className="checkpoint-epoch">Epoch {attestation.ffgTarget.epoch}</span>
+                                  <span className="checkpoint-block">
+                                    <div 
+                                      className="mini-block-icon" 
+                                      title={`Block: ${attestation.ffgTarget.root}`}
+                                    >
+                                      ...{attestation.ffgTarget.root.slice(-6)}
+                                    </div>
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
