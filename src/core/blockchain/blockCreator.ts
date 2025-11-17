@@ -96,6 +96,7 @@ export class BlockCreator {
    * @param node - The proposing node
    * @param blockchain - Blockchain instance
    * @param mempool - Mempool instance
+   * @param beaconState - Beacon state with attestation pool
    * @param slot - Slot number for this block
    * @param randaoReveal - RANDAO reveal for this block
    * @param paintingComplete - Whether painting is complete
@@ -105,6 +106,7 @@ export class BlockCreator {
     node: Node,
     blockchain: Blockchain,
     mempool: Mempool,
+    beaconState: any,
     slot: number,
     randaoReveal: string,
     paintingComplete: boolean
@@ -133,16 +135,28 @@ export class BlockCreator {
       slot: slot
     };
     
-    // Create block with RANDAO reveal
+    // Compute block hash first (we need it to filter attestations)
+    const blockHash = calculateBlockHeaderHash(header);
+    
+    // Include attestations from beacon pool that point to canonical chain blocks
+    // Exclude attestations for the current block we're creating
+    const canonicalChain = blockchain.getCanonicalChain();
+    const canonicalHashes = new Set(canonicalChain.map(b => b.hash));
+    
+    const includedAttestations = beaconState.beaconPool.filter((attestation: any) => {
+      // Include if attestation points to a block in canonical chain
+      // Exclude if attestation points to the block we're currently creating
+      return canonicalHashes.has(attestation.blockHash) && attestation.blockHash !== blockHash;
+    });
+    
+    // Create block with RANDAO reveal and attestations
     const block: Block = {
       header,
       transactions,
-      attestations: [],
-      randaoReveal: randaoReveal
+      attestations: includedAttestations,
+      randaoReveal: randaoReveal,
+      hash: blockHash
     };
-    
-    // Compute block hash (includes slot in hash)
-    block.hash = calculateBlockHeaderHash(header);
     
     return block;
   }

@@ -241,6 +241,7 @@ export class Consensus {
       this.node,
       this.blockchain,
       this.mempool,
+      this.beaconState,
       slot,
       randaoReveal,
       this.paintingComplete
