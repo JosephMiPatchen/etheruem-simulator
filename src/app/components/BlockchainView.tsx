@@ -124,13 +124,26 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, rec
             // Handle empty slot placeholders
             if (item.type === 'empty-slot') {
               const slots = item.slots!;
-              const slotDisplay = slots.length === 1 
-                ? `Slot ${slots[0]}` 
-                : `Slots ${slots[0]}-${slots[slots.length - 1]}`;
+              const firstSlot = slots[0];
+              const lastSlot = slots[slots.length - 1];
+              
+              // For slot numbers >= 100, split "Slot" and the range onto separate lines
+              const needsLineBreak = firstSlot >= 100 || lastSlot >= 100;
+              
+              let slotDisplay;
+              if (slots.length === 1) {
+                slotDisplay = needsLineBreak ? (
+                  <>Slot<br />{firstSlot}</>
+                ) : `Slot ${firstSlot}`;
+              } else {
+                slotDisplay = needsLineBreak ? (
+                  <>Slot<br />{firstSlot}-{lastSlot}</>
+                ) : `Slot ${firstSlot}-${lastSlot}`;
+              }
               
               return (
                 <div 
-                  key={`empty-slot-${slots[0]}-${slots[slots.length - 1]}`}
+                  key={`empty-slot-${firstSlot}-${lastSlot}`}
                   className="empty-slot-item"
                 >
                   <div className="empty-slot-content">
