@@ -163,6 +163,15 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
                   <span className="attestation-color-dot blue"></span>
                   Latest Attestations
                 </span>
+                <span className="legend-item" title="Casper FFG: Finalized blocks are irreversible">
+                  <span className="checkpoint-badge finalized">Finalized</span>
+                </span>
+                <span className="legend-item" title="Casper FFG: Justified blocks are candidates for finalization">
+                  <span className="checkpoint-badge justified">Justified</span>
+                </span>
+                <span className="legend-item" title="Casper FFG: Previous justified checkpoint">
+                  <span className="checkpoint-badge prev-justified">Prev Justified</span>
+                </span>
               </div>
             </div>
           </div>
