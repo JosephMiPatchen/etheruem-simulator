@@ -8,7 +8,7 @@ import NodeToolbar from './NodeToolbar';
 import AddTransactionModal from './AddTransactionModal';
 import { NodeSettingsModal } from './NodeSettingsModal';
 import { useSimulatorContext } from '../contexts/SimulatorContext';
-import { getNodeColorEmoji, getNodeColorCSS } from '../../utils/nodeColorUtils';
+import { getNodeColorEmoji, getNodeColorCSS, getNodeBackgroundTint } from '../../utils/nodeColorUtils';
 import './NodePanel.css';
 
 interface NodePanelProps {
@@ -50,7 +50,7 @@ const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [], onAdd
   };
   
   return (
-    <div className="node-panel">
+    <div className="node-panel" style={{ backgroundColor: getNodeBackgroundTint(nodeState.nodeId) }}>
       <div className="node-header">
         <div className="node-info">
           <div className="node-id-container">

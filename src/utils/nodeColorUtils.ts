@@ -58,3 +58,21 @@ export function getNodeColorCSS(nodeId: string): string {
   const color = getNodePaintColor(nodeId);
   return COLOR_CSS[color];
 }
+
+/**
+ * Get a subtle background tint color for a node panel
+ * Returns a very subtle rgba color for professional appearance
+ */
+export function getNodeBackgroundTint(nodeId: string): string {
+  const color = getNodePaintColor(nodeId);
+  
+  // Subtle tints with very low opacity for professional look
+  const BACKGROUND_TINTS: Record<PaintColorName, string> = {
+    blue: 'rgba(59, 130, 246, 0.03)',    // Subtle blue tint
+    green: 'rgba(34, 197, 94, 0.03)',    // Subtle green tint
+    red: 'rgba(239, 68, 68, 0.03)',      // Subtle red tint
+    yellow: 'rgba(234, 179, 8, 0.03)'    // Subtle yellow tint
+  };
+  
+  return BACKGROUND_TINTS[color];
+}
