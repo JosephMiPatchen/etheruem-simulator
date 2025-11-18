@@ -155,12 +155,23 @@ export class CasperFFG {
       beaconState.latestAttestationByValidator[validator] = att;
       
       // 3) Check if attestation is countable for FFG (source must match current justified)
-      if (!att.ffgSource || !att.ffgTarget) continue;
-      if (!currentJustified || 
-          att.ffgSource.epoch !== currentJustified.epoch || 
-          att.ffgSource.root !== currentJustified.root) {
+      if (!att.ffgSource || !att.ffgTarget) {
+        console.log(`[CasperFFG] Skipping attestation from ${validator.slice(0, 8)} - missing FFG fields`);
+        continue;
+      }
+      
+      // Check if source matches current justified checkpoint
+      const sourceMatches = currentJustified && 
+                           att.ffgSource.epoch === currentJustified.epoch && 
+                           att.ffgSource.root === currentJustified.root;
+      
+      if (!sourceMatches) {
+        console.log(`[CasperFFG] Skipping attestation from ${validator.slice(0, 8)} - source mismatch. Att source: epoch ${att.ffgSource.epoch} (${att.ffgSource.root?.slice(-8) || 'null'}), Justified: epoch ${currentJustified?.epoch} (${currentJustified?.root?.slice(-8) || 'null'})`);
         continue; // Not countable - ignore for votes
       }
+      
+      console.log(`[CasperFFG] Counting vote from ${validator.slice(0, 8)} for target epoch ${att.ffgTarget.epoch} (${att.ffgTarget.root.slice(-8)})`);
+
       
       // 4) Add validator to the target bucket for this attestation's target epoch/root
       const targetEpoch = att.ffgTarget.epoch;
