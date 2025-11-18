@@ -226,10 +226,6 @@ const SimulatorContentInner: React.FC = () => {
           />
         ))}
       </main>
-      
-      <footer className="app-footer">
-        <p>Simple Ethereum Simulator</p>
-      </footer>
     </div>
   );
 };
