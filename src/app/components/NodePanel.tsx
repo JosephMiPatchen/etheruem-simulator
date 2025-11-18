@@ -50,7 +50,7 @@ const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [], onAdd
   };
   
   return (
-    <div className="node-panel" style={{ backgroundColor: getNodeBackgroundTint(nodeState.nodeId) }}>
+    <div className="node-panel" style={{ background: getNodeBackgroundTint(nodeState.nodeId) }}>
       <div className="node-header">
         <div className="node-info">
           <div className="node-id-container">

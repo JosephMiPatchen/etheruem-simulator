@@ -94,7 +94,7 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, rec
   const sortedBlocksForDisplay = getBlocksForDisplay();
   
   return (
-    <div className="blockchain-container" style={{ backgroundColor: nodeId ? getNodeBackgroundTint(nodeId) : undefined }}>
+    <div className="blockchain-container" style={{ background: nodeId ? getNodeBackgroundTint(nodeId) : undefined }}>
       <div className="blockchain-row">
         {sortedBlocksForDisplay.map((block, index) => {
             const { hash, isValid, isGenesis } = validateBlockHash(block);
