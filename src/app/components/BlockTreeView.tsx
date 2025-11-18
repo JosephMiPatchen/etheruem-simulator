@@ -297,15 +297,25 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
                     
                     {/* Casper FFG Checkpoint label - purple box with white text, two lines */}
                     {checkpointLabel && (
-                      <g transform={isGhostHead ? "translate(-50, 10)" : "translate(-50, -15)"}>
-                        <foreignObject x="-160" y="0" width="210" height="40">
-                          <div style={{ 
-                            display: 'flex', 
-                            alignItems: 'center',
-                            justifyContent: 'flex-start',
-                            gap: '6px',
-                            width: '100%'
-                          }}>
+                      <g transform={isGhostHead ? "translate(-40, 10)" : "translate(-40, -15)"}>
+                        <foreignObject x="-140" y="0" width="210" height="40">
+                          <div 
+                            style={{ 
+                              display: 'flex', 
+                              alignItems: 'center',
+                              justifyContent: 'flex-start',
+                              gap: '6px',
+                              width: '100%',
+                              pointerEvents: 'none'
+                            }}
+                            title={
+                              checkpointType === 'finalized' 
+                                ? 'Finalized Checkpoint: Block has reached finality with 2/3+ validator votes across consecutive epochs. Cannot be reverted (irreversible).'
+                                : checkpointType === 'justified'
+                                ? 'Justified Checkpoint: Block has received 2/3+ validator votes. Candidate for finalization if next epoch is also justified.'
+                                : 'Previous Justified Checkpoint: The justified checkpoint from the previous epoch. Used as source for new attestations.'
+                            }
+                          >
                             <div style={{
                               backgroundColor: checkpointType === 'finalized' ? '#6a1b9a' : checkpointType === 'justified' ? '#9b59b6' : '#ab47bc',
                               color: 'white',
