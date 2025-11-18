@@ -295,10 +295,10 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
                       </g>
                     )}
                     
-                    {/* Casper FFG Checkpoint label - purple box with white text */}
+                    {/* Casper FFG Checkpoint label - purple box with white text, two lines */}
                     {checkpointLabel && (
-                      <g transform={isGhostHead ? "translate(-60, 18)" : "translate(-60, -8)"}>
-                        <foreignObject x="-180" y="0" width="210" height="24">
+                      <g transform={isGhostHead ? "translate(-50, 10)" : "translate(-50, -15)"}>
+                        <foreignObject x="-160" y="0" width="210" height="40">
                           <div style={{ 
                             display: 'flex', 
                             alignItems: 'center',
@@ -309,15 +309,17 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
                             <div style={{
                               backgroundColor: checkpointType === 'finalized' ? '#6a1b9a' : checkpointType === 'justified' ? '#9b59b6' : '#ab47bc',
                               color: 'white',
-                              padding: '3px 8px',
+                              padding: '4px 8px',
                               borderRadius: '4px',
-                              fontSize: '9px',
+                              fontSize: '8px',
                               fontWeight: 'bold',
-                              whiteSpace: 'nowrap',
+                              lineHeight: '1.3',
                               boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
-                              border: '1px solid rgba(255,255,255,0.2)'
+                              border: '1px solid rgba(255,255,255,0.2)',
+                              textAlign: 'center'
                             }}>
-                              {checkpointLabel}
+                              <div>Casper FFG Checkpoint</div>
+                              <div style={{ fontSize: '9px', marginTop: '1px' }}>{checkpointLabel}</div>
                             </div>
                             <span style={{ fontSize: '14px', color: checkpointType === 'finalized' ? '#6a1b9a' : '#9b59b6' }}>→</span>
                           </div>
