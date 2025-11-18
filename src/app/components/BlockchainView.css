@@ -98,22 +98,23 @@
 .block-height {
   font-weight: bold;
   color: var(--primary-color);
-  margin-bottom: 6px;
-  font-size: var(--font-size-lg);
+  margin-bottom: 2px;
+  font-size: 0.9rem;
 }
 
 .block-hash {
   font-family: monospace;
-  font-size: 0.8rem;
+  font-size: 0.65rem;
   background-color: rgba(247, 147, 26, 0.2);
-  padding: 2px 6px;
-  border-radius: 3px;
-  margin-bottom: 6px;
+  padding: 1px 3px;
+  border-radius: 2px;
+  margin-bottom: 2px;
   text-align: center;
 }
 
 .block-validation {
-  margin-bottom: 6px;
+  margin-bottom: 2px;
+  font-size: 0.9rem;
 }
 
 .valid-block {
@@ -126,30 +127,31 @@
 
 .genesis-text {
   color: var(--accent-color);
-  font-size: 0.8rem;
+  font-size: 0.65rem;
 }
 
 .block-counts-row {
   display: flex;
-  gap: 6px;
+  gap: 3px;
   align-items: center;
   flex-wrap: wrap;
+  justify-content: center;
 }
 
 .block-tx-count {
-  font-size: 10px;
+  font-size: 8px;
   color: var(--text-secondary);
   background-color: rgba(98, 126, 234, 0.1);
-  padding: 2px 6px;
-  border-radius: 3px;
+  padding: 1px 3px;
+  border-radius: 2px;
 }
 
 .block-attestation-count {
-  font-size: 10px;
+  font-size: 8px;
   color: var(--text-secondary);
   background-color: rgba(76, 175, 80, 0.1);
-  padding: 2px 6px;
-  border-radius: 3px;
+  padding: 1px 3px;
+  border-radius: 2px;
 }
 
 .block-attested-eth {
