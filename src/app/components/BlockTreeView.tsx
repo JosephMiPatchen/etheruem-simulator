@@ -200,13 +200,26 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
                 
                 // Check if this node is a Casper FFG checkpoint
                 let checkpointLabel = '';
+                let checkpointType: 'finalized' | 'justified' | 'prev-justified' | '' = '';
+                
                 if (beaconState && blockNode?.hash) {
-                  if (beaconState.finalizedCheckpoint?.root === blockNode.hash) {
-                    checkpointLabel = 'Finalized Checkpoint';
-                  } else if (beaconState.justifiedCheckpoint?.root === blockNode.hash) {
-                    checkpointLabel = 'Justified Checkpoint';
-                  } else if (beaconState.previousJustifiedCheckpoint?.root === blockNode.hash) {
-                    checkpointLabel = 'Prev Justified Checkpoint';
+                  const isFinalized = beaconState.finalizedCheckpoint?.root === blockNode.hash;
+                  const isJustified = beaconState.justifiedCheckpoint?.root === blockNode.hash;
+                  const isPrevJustified = beaconState.previousJustifiedCheckpoint?.root === blockNode.hash;
+                  
+                  // Combine labels if block is both prev justified and finalized
+                  if (isFinalized && isPrevJustified) {
+                    checkpointLabel = 'Prev Justified + Finalized';
+                    checkpointType = 'finalized';
+                  } else if (isFinalized) {
+                    checkpointLabel = 'Finalized';
+                    checkpointType = 'finalized';
+                  } else if (isJustified) {
+                    checkpointLabel = 'Justified';
+                    checkpointType = 'justified';
+                  } else if (isPrevJustified) {
+                    checkpointLabel = 'Prev Justified';
+                    checkpointType = 'prev-justified';
                   }
                 }
                 
@@ -259,22 +272,30 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
                       </g>
                     )}
                     
-                    {/* Casper FFG Checkpoint label - positioned to the left below GHOST HEAD */}
+                    {/* Casper FFG Checkpoint label - purple box with white text */}
                     {checkpointLabel && (
-                      <g transform={isGhostHead ? "translate(-180, 25)" : "translate(-180, 0)"}>
-                        <foreignObject width="150" height="20">
+                      <g transform={isGhostHead ? "translate(-200, 25)" : "translate(-200, 0)"}>
+                        <foreignObject width="200" height="24">
                           <div style={{ 
                             display: 'flex', 
                             alignItems: 'center',
                             justifyContent: 'flex-end',
-                            gap: '4px',
-                            color: '#9b59b6',
-                            fontSize: '10px',
-                            fontWeight: 'bold',
-                            whiteSpace: 'nowrap'
+                            gap: '6px'
                           }}>
-                            <span>{checkpointLabel}</span>
-                            <span style={{ fontSize: '12px' }}>→</span>
+                            <div style={{
+                              backgroundColor: checkpointType === 'finalized' ? '#6a1b9a' : checkpointType === 'justified' ? '#9b59b6' : '#ab47bc',
+                              color: 'white',
+                              padding: '3px 8px',
+                              borderRadius: '4px',
+                              fontSize: '9px',
+                              fontWeight: 'bold',
+                              whiteSpace: 'nowrap',
+                              boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                              border: '1px solid rgba(255,255,255,0.2)'
+                            }}>
+                              {checkpointLabel}
+                            </div>
+                            <span style={{ fontSize: '14px', color: checkpointType === 'finalized' ? '#6a1b9a' : '#9b59b6' }}>→</span>
                           </div>
                         </foreignObject>
                       </g>
