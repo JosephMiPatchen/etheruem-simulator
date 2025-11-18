@@ -2,7 +2,7 @@
 
 /* Node Panel Container */
 .node-panel {
-  background-color: var(--panel-background);
+  /* background-color applied via inline style with color tint */
   border-radius: var(--border-radius-lg);
   padding: var(--spacing-lg);
   box-shadow: var(--shadow-md);

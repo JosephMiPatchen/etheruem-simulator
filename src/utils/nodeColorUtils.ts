@@ -61,17 +61,18 @@ export function getNodeColorCSS(nodeId: string): string {
 
 /**
  * Get a subtle background tint color for a node panel
- * Returns a very subtle rgba color for professional appearance
+ * Returns a light gray background with a subtle color tint
  */
 export function getNodeBackgroundTint(nodeId: string): string {
   const color = getNodePaintColor(nodeId);
   
-  // Subtle tints that blend with the lighter gray panel background
+  // Light gray backgrounds with subtle color tints
+  // Using rgb values that mix gray (45, 52, 54) with a hint of the node color
   const BACKGROUND_TINTS: Record<PaintColorName, string> = {
-    blue: 'rgba(59, 130, 246, 0.05)',    // Subtle blue tint
-    green: 'rgba(34, 197, 94, 0.05)',    // Subtle green tint
-    red: 'rgba(239, 68, 68, 0.05)',      // Subtle red tint
-    yellow: 'rgba(234, 179, 8, 0.05)'    // Subtle yellow tint
+    blue: 'rgb(43, 50, 56)',      // Gray with subtle blue tint
+    green: 'rgb(43, 52, 52)',     // Gray with subtle green tint
+    red: 'rgb(48, 50, 52)',       // Gray with subtle red tint
+    yellow: 'rgb(48, 52, 50)'     // Gray with subtle yellow tint
   };
   
   return BACKGROUND_TINTS[color];
