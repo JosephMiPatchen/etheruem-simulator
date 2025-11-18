@@ -5,7 +5,7 @@ import { calculateBlockHeaderHash } from '../../core/validation/blockValidator';
 import TransactionView from './TransactionView';
 import AttestationCircle from './AttestationCircle';
 import { useSimulatorContext } from '../contexts/SimulatorContext';
-import { getNodeColorCSS } from '../../utils/nodeColorUtils';
+import { getNodeColorCSS, getNodeBackgroundTint } from '../../utils/nodeColorUtils';
 import { BiFork } from "react-icons/bi";
 import { MdContentCopy, MdCheck } from 'react-icons/md';
 import './BlockchainView.css';
@@ -15,9 +15,10 @@ interface BlockchainViewProps {
   worldState?: Record<string, Account>; // Optional world state for smart contract display
   receipts?: ReceiptsDatabase; // Optional receipts database
   beaconState?: any; // Optional beacon state for showing finalized checkpoint
+  nodeId?: string; // Node ID for background tinting
 }
 
-const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, receipts, beaconState }) => {
+const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, receipts, beaconState, nodeId }) => {
   const [selectedBlock, setSelectedBlock] = useState<Block | null>(null);
   const [selectedAttestation, setSelectedAttestation] = useState<any | null>(null);
   const [copied, setCopied] = useState(false);
@@ -93,7 +94,7 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, rec
   const sortedBlocksForDisplay = getBlocksForDisplay();
   
   return (
-    <div className="blockchain-container">
+    <div className="blockchain-container" style={{ backgroundColor: nodeId ? getNodeBackgroundTint(nodeId) : undefined }}>
       <div className="blockchain-row">
         {sortedBlocksForDisplay.map((block, index) => {
             const { hash, isValid, isGenesis } = validateBlockHash(block);

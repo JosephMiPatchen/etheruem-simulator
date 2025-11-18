@@ -80,6 +80,7 @@ const NodePanel: React.FC<NodePanelProps> = ({ nodeState, allNodeIds = [], onAdd
         worldState={nodeState.worldState}
         receipts={nodeState.receipts}
         beaconState={nodeState.beaconState}
+        nodeId={nodeState.nodeId}
       />
       
       {/* UTXO Modal */}
