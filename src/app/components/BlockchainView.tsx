@@ -79,10 +79,36 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, rec
     return { hash, isValid, isGenesis };
   };
   
-  // Let all blocks display in a single container and let CSS handle the wrapping
+  // Create display items including blocks and empty slot placeholders
   const getBlocksForDisplay = () => {
     // Sort blocks by height
-    return [...sortedBlocks].sort((a, b) => a.header.height - b.header.height);
+    const sorted = [...sortedBlocks].sort((a, b) => a.header.height - b.header.height);
+    
+    // Create array of display items (blocks + empty slots)
+    const displayItems: Array<{ type: 'block' | 'empty-slot', block?: Block, slots?: number[] }> = [];
+    
+    for (let i = 0; i < sorted.length; i++) {
+      const currentBlock = sorted[i];
+      const prevBlock = i > 0 ? sorted[i - 1] : null;
+      
+      // Check for slot gap between consecutive blocks
+      if (prevBlock && currentBlock.header.slot > prevBlock.header.slot + 1) {
+        const missedSlots: number[] = [];
+        for (let slot = prevBlock.header.slot + 1; slot < currentBlock.header.slot; slot++) {
+          missedSlots.push(slot);
+        }
+        
+        // Add empty slot placeholder for each missed slot
+        for (const slot of missedSlots) {
+          displayItems.push({ type: 'empty-slot', slots: [slot] });
+        }
+      }
+      
+      // Add the actual block
+      displayItems.push({ type: 'block', block: currentBlock });
+    }
+    
+    return displayItems;
   };
   
   // Determine if a block is the last one in the chain (for arrow display)
@@ -96,7 +122,25 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, rec
   return (
     <div className="blockchain-container" style={{ background: nodeId ? getNodeBackgroundTint(nodeId) : undefined }}>
       <div className="blockchain-row">
-        {sortedBlocksForDisplay.map((block, index) => {
+        {sortedBlocksForDisplay.map((item, index) => {
+            // Handle empty slot placeholders
+            if (item.type === 'empty-slot') {
+              const slot = item.slots![0];
+              return (
+                <div 
+                  key={`empty-slot-${slot}`}
+                  className="empty-slot-item"
+                >
+                  <div className="empty-slot-content">
+                    <div className="empty-slot-label">EMPTY</div>
+                    <div className="empty-slot-number">Slot {slot}</div>
+                  </div>
+                </div>
+              );
+            }
+            
+            // Handle actual blocks
+            const block = item.block!;
             const { hash, isValid, isGenesis } = validateBlockHash(block);
             const isLast = isLastBlock(index, sortedBlocksForDisplay.length);
             const isFinalized = isFinalizedCheckpoint(block);
