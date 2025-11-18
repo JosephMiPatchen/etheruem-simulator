@@ -14,9 +14,10 @@ interface BlockchainViewProps {
   blocks: Block[];
   worldState?: Record<string, Account>; // Optional world state for smart contract display
   receipts?: ReceiptsDatabase; // Optional receipts database
+  beaconState?: any; // Optional beacon state for showing finalized checkpoint
 }
 
-const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, receipts }) => {
+const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, receipts, beaconState }) => {
   const [selectedBlock, setSelectedBlock] = useState<Block | null>(null);
   const [selectedAttestation, setSelectedAttestation] = useState<any | null>(null);
   const [copied, setCopied] = useState(false);
@@ -36,6 +37,19 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, rec
   const isForkedBlock = (block: Block): boolean => {
     if (forkStartHeight === null) return false;
     return block.header.height >= forkStartHeight;
+  };
+  
+  // Check if a block is the finalized Casper FFG checkpoint
+  const isFinalizedCheckpoint = (block: Block): boolean => {
+    if (!beaconState?.finalizedCheckpoint) return false;
+    const blockHash = calculateBlockHeaderHash(block.header);
+    return beaconState.finalizedCheckpoint.root === blockHash;
+  };
+  
+  // Check if a block is the LMD-GHOST head
+  const isGhostHead = (block: Block): boolean => {
+    if (!beaconState?.ghostHead) return false;
+    return beaconState.ghostHead === calculateBlockHeaderHash(block.header);
   };
   
   // Get the last 6 characters of a hash for display
@@ -73,11 +87,14 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, rec
         {sortedBlocksForDisplay.map((block, index) => {
             const { hash, isValid, isGenesis } = validateBlockHash(block);
             const isLast = isLastBlock(index, sortedBlocksForDisplay.length);
+            const isFinalized = isFinalizedCheckpoint(block);
+            const isGhost = isGhostHead(block);
+            const isForked = isForkedBlock(block);
             
             return (
               <div 
                 key={hash} 
-                className={`block-item ${selectedBlock === block ? 'selected' : ''} ${isGenesis ? 'genesis-block' : ''} ${isLast ? 'last-in-row' : ''} ${isForkedBlock(block) ? 'forked-block' : ''}`}
+                className={`block-item ${selectedBlock === block ? 'selected' : ''} ${isGenesis ? 'genesis-block' : ''} ${isLast ? 'last-in-row' : ''} ${isForked ? 'forked-block' : ''} ${isFinalized ? 'finalized-checkpoint' : ''} ${isGhost ? 'ghost-head-block' : ''}`}
                 onClick={() => setSelectedBlock(block === selectedBlock ? null : block)}
               >
                 <div className="block-height">{block.header.height}</div>

@@ -135,3 +135,87 @@
     gap: var(--spacing-md);
   }
 }
+
+/* Blockchain Legend Styles */
+.blockchain-legend {
+  background: var(--panel-background);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: 1rem 1.5rem;
+  margin: 1rem 2rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.blockchain-legend h3 {
+  margin: 0 0 1rem 0;
+  color: var(--primary-color);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.blockchain-legend .legend-items {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.blockchain-legend .legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: help;
+  transition: transform 0.2s;
+}
+
+.blockchain-legend .legend-item:hover {
+  transform: translateY(-2px);
+}
+
+.blockchain-legend .legend-item span {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.blockchain-legend .legend-square {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border-width: 3px;
+  border-style: solid;
+  background: var(--overlay-background);
+  flex-shrink: 0;
+}
+
+.blockchain-legend .finalized-square {
+  border-color: #6a1b9a;
+  box-shadow: 0 0 4px rgba(106, 27, 154, 0.5);
+}
+
+.blockchain-legend .ghost-square {
+  border-color: #ff9800;
+  box-shadow: 0 0 4px rgba(255, 152, 0, 0.5);
+}
+
+.blockchain-legend .fork-square {
+  border-color: #444;
+  box-shadow: 0 0 4px rgba(68, 68, 68, 0.5);
+  position: relative;
+}
+
+/* Add fork icon to fork square */
+.blockchain-legend .fork-square::after {
+  content: "⑂";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 14px;
+  color: #666;
+}
+
+.blockchain-legend .canonical-square {
+  border-color: #667eea;
+  box-shadow: 0 0 4px rgba(102, 126, 234, 0.5);
+}

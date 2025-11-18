@@ -187,6 +187,29 @@ const SimulatorContentInner: React.FC = () => {
         </div>
       </header>
       
+      {/* Blockchain Legend */}
+      <div className="blockchain-legend">
+        <h3>Blockchain Legend</h3>
+        <div className="legend-items">
+          <div className="legend-item" title="Finalized Checkpoint: Block has reached finality with 2/3+ validator votes across consecutive epochs. Cannot be reverted (irreversible).">
+            <div className="legend-square finalized-square"></div>
+            <span>Finalized Checkpoint</span>
+          </div>
+          <div className="legend-item" title="LMD-GHOST Head: The current head of the chain according to the Latest Message Driven Greedy Heaviest Observed SubTree fork choice rule.">
+            <div className="legend-square ghost-square"></div>
+            <span>LMD-GHOST Head</span>
+          </div>
+          <div className="legend-item" title="Fork: Block is part of a fork where nodes disagree on the canonical chain. Indicates chain divergence.">
+            <div className="legend-square fork-square"></div>
+            <span>Fork Block</span>
+          </div>
+          <div className="legend-item" title="Canonical Block: Block with consensus across all nodes. Part of the agreed-upon main chain.">
+            <div className="legend-square canonical-square"></div>
+            <span>Canonical Block</span>
+          </div>
+        </div>
+      </div>
+      
       <main className="nodes-container">
         {Object.entries(nodeStates).map(([nodeId, nodeState]) => (
           <NodePanel 

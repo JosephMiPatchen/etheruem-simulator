@@ -517,3 +517,24 @@
   word-break: break-all;
   flex: 1;
 }
+
+/* Finalized Casper FFG Checkpoint - Purple outline */
+.finalized-checkpoint {
+  border-color: #6a1b9a !important;
+  border-width: 3px !important;
+  box-shadow: 0 0 8px rgba(106, 27, 154, 0.5);
+}
+
+/* LMD-GHOST Head - Orange outline */
+.ghost-head-block {
+  border-color: #ff9800 !important;
+  border-width: 3px !important;
+  box-shadow: 0 0 8px rgba(255, 152, 0, 0.5);
+}
+
+/* If a block is both finalized and GHOST head, show both colors with gradient */
+.finalized-checkpoint.ghost-head-block {
+  border-image: linear-gradient(135deg, #6a1b9a 50%, #ff9800 50%) 1;
+  border-width: 3px !important;
+  box-shadow: 0 0 8px rgba(106, 27, 154, 0.5), 0 0 8px rgba(255, 152, 0, 0.5);
+}
