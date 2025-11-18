@@ -13,7 +13,7 @@
   position: relative;
   flex-wrap: wrap;
   width: 100%;
-  background-color: var(--panel-background);
+  background-color: transparent;
   border-radius: var(--border-radius-md);
 }
 
