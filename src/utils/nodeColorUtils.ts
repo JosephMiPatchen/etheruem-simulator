@@ -61,19 +61,26 @@ export function getNodeColorCSS(nodeId: string): string {
 
 /**
  * Get a subtle background tint color for a node panel
- * Returns a light gray background with a subtle color tint
+ * Uses a base gray with a transparent color overlay for easy tuning
  */
 export function getNodeBackgroundTint(nodeId: string): string {
   const color = getNodePaintColor(nodeId);
   
-  // Light gray backgrounds with extremely subtle color tints
-  // Base gray is rgb(45, 52, 54) with barely perceptible color hints
-  const BACKGROUND_TINTS: Record<PaintColorName, string> = {
-    blue: 'rgb(44, 51, 55)',      // Gray with barely perceptible blue tint
-    green: 'rgb(44, 52, 53)',     // Gray with barely perceptible green tint
-    red: 'rgb(46, 51, 53)',       // Gray with barely perceptible red tint
-    yellow: 'rgb(46, 52, 52)'     // Gray with barely perceptible yellow tint
+  // Base gray background color
+  const BASE_GRAY = 'rgb(45, 52, 54)';
+  
+  // Opacity for color overlay (tune this single value to adjust all tints)
+  const COLOR_OPACITY = 0.03;
+  
+  // Color overlays with tunable opacity
+  const COLOR_OVERLAYS: Record<PaintColorName, string> = {
+    blue: `rgba(59, 130, 246, ${COLOR_OPACITY})`,
+    green: `rgba(34, 197, 94, ${COLOR_OPACITY})`,
+    red: `rgba(239, 68, 68, ${COLOR_OPACITY})`,
+    yellow: `rgba(234, 179, 8, ${COLOR_OPACITY})`
   };
   
-  return BACKGROUND_TINTS[color];
+  // Create a linear-gradient that overlays the color on top of gray
+  // This allows easy tuning via the COLOR_OPACITY constant
+  return `linear-gradient(${COLOR_OVERLAYS[color]}, ${COLOR_OVERLAYS[color]}), ${BASE_GRAY}`;
 }
