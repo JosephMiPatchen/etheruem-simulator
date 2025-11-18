@@ -115,19 +115,33 @@ export class LmdGhost {
   }
   
   /**
-   * Compute GHOST-HEAD using LMD-GHOST fork choice rule
-   * Returns the block hash of the canonical chain head
+   * Compute GHOST-HEAD (fork choice)
+   * Returns the hash of the block that should be considered the chain head
    * 
    * Algorithm:
-   * 1. Start at genesis (tree root)
+   * 1. Start at finalized checkpoint (or genesis if no finalized checkpoint)
    * 2. At each fork, choose the valid child with highest attestedEth
    * 3. If tie, choose block with smallest hash (deterministic tiebreaker)
    * 4. Continue until a leaf
+   * 
+   * This ensures we never reorg past the finalized checkpoint (Casper FFG safety)
    */
-  public static computeGhostHead(tree: BlockchainTree): string | null {
+  public static computeGhostHead(tree: BlockchainTree, beaconState?: any): string | null {
     const root = tree.getRoot();
     if (!root) return null;
+    
+    // Start from finalized checkpoint if available, otherwise start from genesis
     let current = root;
+    if (beaconState?.finalizedCheckpoint?.root) {
+      const finalizedNode = tree.getNode(beaconState.finalizedCheckpoint.root);
+      if (finalizedNode) {
+        current = finalizedNode;
+        console.log(`[LMD-GHOST] Starting from finalized checkpoint: epoch ${beaconState.finalizedCheckpoint.epoch}, block ${finalizedNode.hash.slice(0, 8)}`);
+      } else {
+        console.log(`[LMD-GHOST] Finalized checkpoint block not found in tree, starting from genesis`);
+      }
+    }
+    
     const isValid = (n: any) => !n.metadata?.isInvalid;
     const getAttestedEth = (n: any) => Number(n.metadata?.attestedEth ?? 0);
   

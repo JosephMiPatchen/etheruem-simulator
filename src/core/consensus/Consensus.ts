@@ -297,7 +297,7 @@ export class Consensus {
     console.log(`[Consensus] Received proposed block for slot ${slot} from ${fromAddress.slice(0, 8)}`);
     
     // 1. Get current GHOST-HEAD before adding block
-    const oldGhostHead = this.blockchain.getTree().getGhostHead();
+    const oldGhostHead = this.blockchain.getTree().getGhostHead(this.beaconState);
     
     // 2. Add block to blockchain (handles validation, state updates, and tree management)
     const added = await this.blockchain.addBlock(block);
@@ -307,7 +307,7 @@ export class Consensus {
     }
     
     // 3. Get new GHOST-HEAD after adding block
-    const newGhostHead = this.blockchain.getTree().getGhostHead();
+    const newGhostHead = this.blockchain.getTree().getGhostHead(this.beaconState);
     
     // 4. Only attest if new GHOST-HEAD points to the block we just added
     if (newGhostHead?.hash === block.hash) {

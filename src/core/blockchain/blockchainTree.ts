@@ -269,21 +269,22 @@ export class BlockchainTree {
   
   
   /**
-   * Get the LMD-GHOST HEAD (canonical chain tip)
-   * Computed on-demand using LMD-GHOST fork choice algorithm
-   * Returns the node directly (not just the hash)
+   * Get GHOST-HEAD (fork choice)
+   * Returns the block node that should be considered the canonical chain head
    * 
    * GHOST-HEAD Movement:
    * - Moves when blocks are added (if new block extends heaviest chain)
    * - Moves when attestations update (if attestations shift weight to different fork)
    * 
    * Algorithm (via LmdGhost.computeGhostHead):
-   * 1. Start at genesis (tree root)
+   * 1. Start at finalized checkpoint (or genesis if no finalized checkpoint)
    * 2. At each fork, choose child with highest attestedEth
    * 3. Continue until reaching a leaf (chain tip)
+   * 
+   * @param beaconState - Optional BeaconState for finalized checkpoint
    */
-  getGhostHead(): BlockTreeNode | null {
-    const ghostHeadHash = LmdGhost.computeGhostHead(this);
+  getGhostHead(beaconState?: any): BlockTreeNode | null {
+    const ghostHeadHash = LmdGhost.computeGhostHead(this, beaconState);
     return ghostHeadHash ? this.getNode(ghostHeadHash) || null : null;
   }
 }

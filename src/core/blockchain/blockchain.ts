@@ -127,7 +127,7 @@ export class Blockchain {
     }
     
     // 2. Get old GHOST-HEAD before adding block
-    const oldGhostHead = this.blockTree.getGhostHead();
+    const oldGhostHead = this.blockTree.getGhostHead(this.beaconState);
     
     // 3. Add block to tree (creates tree node, doesn't validate yet)
     // and if valid, update tree decorations
@@ -152,7 +152,7 @@ export class Blockchain {
     }
     
     // 4. Get new GHOST-HEAD (recomputed via LMD-GHOST using incrementally updated attestedEth)
-    const newGhostHead = this.blockTree.getGhostHead();
+    const newGhostHead = this.blockTree.getGhostHead(this.beaconState);
     
     // 5. Check if new GHOST-HEAD would extend canonical chain
     // This happens when new GHOST-HEAD's parent is the old GHOST-HEAD
@@ -325,13 +325,13 @@ export class Blockchain {
     
     // Block exists - process attestation normally
     // Save old GHOST-HEAD to detect changes
-    const oldGhostHead = this.blockTree.getGhostHead();
+    const oldGhostHead = this.blockTree.getGhostHead(this.beaconState);
     
     // 1. Possibly update decorations as per new incoming attestation
     LmdGhost.onNewAttestations(this.beaconState, this.blockTree, [attestation]);
     
     // 2. Get new GHOST-HEAD after attestation update
-    const newGhostHead = this.blockTree.getGhostHead();
+    const newGhostHead = this.blockTree.getGhostHead(this.beaconState);
     
     // 3. Check if GHOST-HEAD changed and handle accordingly
     if (oldGhostHead?.hash !== newGhostHead?.hash) {
@@ -375,7 +375,7 @@ export class Blockchain {
       }
       
       // Invalid block encountered - GHOST-HEAD has changed, retry with new canonical chain
-      const newHead = this.blockTree.getGhostHead();
+      const newHead = this.blockTree.getGhostHead(this.beaconState);
       console.log(`[Blockchain] Invalid block (retry ${attempt + 1}/10) - new head: ${newHead?.hash?.slice(0, 8)}`);
     }
     
