@@ -191,9 +191,9 @@ const SimulatorContentInner: React.FC = () => {
       <div className="blockchain-legend">
         <h3>Blockchain Legend</h3>
         <div className="legend-items">
-          <div className="legend-item" title="Finalized Checkpoint: Block has reached finality with 2/3+ validator votes across consecutive epochs. Cannot be reverted (irreversible).">
+          <div className="legend-item" title="Casper FFG Finalized Checkpoint: Block has reached finality with 2/3+ validator votes across consecutive epochs. Cannot be reverted (irreversible).">
             <div className="legend-square finalized-square"></div>
-            <span>Finalized Checkpoint</span>
+            <span>Casper FFG Finalized</span>
           </div>
           <div className="legend-item" title="LMD-GHOST Head: The current head of the chain according to the Latest Message Driven Greedy Heaviest Observed SubTree fork choice rule.">
             <div className="legend-square ghost-square"></div>
