@@ -6,6 +6,7 @@ import { lightValidateChain } from '../validation/chainValidator';
 import { BlockchainTree, BlockTreeNode } from './blockchainTree';
 import { LmdGhost } from '../consensus/lmdGhost';
 import { RANDAO } from '../consensus/randao';
+import { CasperFFG } from '../consensus/casperFFG';
 import { SimulatorConfig } from '../../config/config';
 
 /**
@@ -282,12 +283,12 @@ export class Blockchain {
       }
       console.log(`[Blockchain] Beacon pool cleanup: ${poolSizeBefore} -> ${this.beaconState.beaconPool.length} (removed ${poolSizeBefore - this.beaconState.beaconPool.length})`);
       
+      // Apply Casper FFG finality tracking
+      CasperFFG.applyAttestationsToBeaconState(this.beaconState, block.attestations);
+      
       // Note: Tree decoration is now handled incrementally in addBlock() via LmdGhost.updateTreeDecorations()
       // No need to redecorate entire tree here
     }
-    // TODO: When implementing full PoS, also update:
-    // - Slashing records (if any slashings in block)
-    // - Finality checkpoints (update justified/finalized epochs)
   }
   
   /**

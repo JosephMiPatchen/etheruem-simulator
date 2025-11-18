@@ -48,6 +48,17 @@ export class BeaconState {
   // Latest attestations from each validator (for LMD GHOST fork choice)
   public latestAttestations: Map<string, Attestation>;
   
+  // Casper FFG finality state
+  public justifiedCheckpoint: { epoch: number; root: string | null };
+  public previousJustifiedCheckpoint: { epoch: number; root: string | null } | null;
+  public finalizedCheckpoint: { epoch: number; root: string | null } | null;
+  
+  // FFG vote tracking: epoch -> (targetRoot -> Set of validator addresses)
+  public ffgVoteCounts: Record<number, Record<string, Set<string>>>;
+  
+  // Latest attestation included in a block for each validator (for FFG vote counting)
+  public latestAttestationByValidator: Record<string, any>;
+  
   // Reference to blockchain for triggering tree updates (set after construction)
   private blockchain?: any;
   
@@ -62,6 +73,13 @@ export class BeaconState {
     
     // Initialize LMD-GHOST fork choice state
     this.latestAttestations = new Map();
+    
+    // Initialize Casper FFG finality state
+    this.justifiedCheckpoint = { epoch: -1, root: null }; // Start with genesis
+    this.previousJustifiedCheckpoint = null;
+    this.finalizedCheckpoint = null;
+    this.ffgVoteCounts = {};
+    this.latestAttestationByValidator = {};
     
     // Initialize RANDAO mixes for genesis and epoch 0
     // Epoch -1: Genesis block (slot -1)
