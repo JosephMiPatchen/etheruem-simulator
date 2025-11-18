@@ -412,3 +412,16 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Casper FFG Checkpoint Styling */
+.checkpoint-hash {
+  font-family: 'Courier New', monospace;
+  color: var(--primary-color);
+  font-weight: 500;
+  font-size: 0.9em;
+}
+
+.empty-checkpoint {
+  color: var(--text-secondary);
+  font-style: italic;
+}

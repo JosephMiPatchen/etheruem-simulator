@@ -62,6 +62,52 @@ const BeaconStateView: React.FC<BeaconStateViewProps> = ({ beaconState, blockcha
             </div>
           </div>
 
+          {/* Casper FFG Checkpoints */}
+          <div className="beacon-section">
+            <h3>Casper FFG Checkpoints</h3>
+            <div className="beacon-info-grid">
+              <div className="beacon-info-item">
+                <span className="beacon-label">Finalized:</span>
+                <span className="beacon-value">
+                  {beaconState.finalizedCheckpoint ? (
+                    <>
+                      Epoch {beaconState.finalizedCheckpoint.epoch}
+                      {beaconState.finalizedCheckpoint.root && (
+                        <span className="checkpoint-hash"> (...{beaconState.finalizedCheckpoint.root.slice(-8)})</span>
+                      )}
+                    </>
+                  ) : (
+                    <span className="empty-checkpoint">None</span>
+                  )}
+                </span>
+              </div>
+              <div className="beacon-info-item">
+                <span className="beacon-label">Justified:</span>
+                <span className="beacon-value">
+                  Epoch {beaconState.justifiedCheckpoint.epoch}
+                  {beaconState.justifiedCheckpoint.root && (
+                    <span className="checkpoint-hash"> (...{beaconState.justifiedCheckpoint.root.slice(-8)})</span>
+                  )}
+                </span>
+              </div>
+              <div className="beacon-info-item">
+                <span className="beacon-label">Prev Justified:</span>
+                <span className="beacon-value">
+                  {beaconState.previousJustifiedCheckpoint ? (
+                    <>
+                      Epoch {beaconState.previousJustifiedCheckpoint.epoch}
+                      {beaconState.previousJustifiedCheckpoint.root && (
+                        <span className="checkpoint-hash"> (...{beaconState.previousJustifiedCheckpoint.root.slice(-8)})</span>
+                      )}
+                    </>
+                  ) : (
+                    <span className="empty-checkpoint">None</span>
+                  )}
+                </span>
+              </div>
+            </div>
+          </div>
+
           {/* Validators */}
           <div className="beacon-section">
             <h3>Validators ({validators.length})</h3>
