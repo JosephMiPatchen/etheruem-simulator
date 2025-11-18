@@ -165,50 +165,52 @@ const SimulatorContentInner: React.FC = () => {
   
   return (
     <div className="app-container">
-      <header className="app-header">
-        <h1>Ethereum Simulator</h1>
-        <div className="controls-container">
-          <button 
-            className={`control-button ${isNetworkRunning ? 'active' : 'inactive'}`}
-            onClick={toggleNetwork}
-            title={isNetworkRunning ? 'Stop block production' : 'Start block production'}
-          >
-            {isNetworkRunning ? <FaPause /> : <FaPlay />}
-            <span>{isNetworkRunning ? 'Network Running' : 'Network Stopped'}</span>
-          </button>
-          <button 
-            className={`control-button ${isSyncEnabled ? 'active' : 'inactive'}`}
-            onClick={toggleSync}
-            title={isSyncEnabled ? 'Disable sync broadcasting' : 'Enable sync broadcasting'}
-          >
-            <FaSync className={isSyncEnabled ? 'spinning' : ''} />
-            <span>{isSyncEnabled ? 'Sync Enabled' : 'Sync Disabled'}</span>
-          </button>
+      {/* Unified Header Banner with Title, Controls, and Legend */}
+      <header className="unified-header-banner">
+        <div className="header-top-row">
+          <h1 className="simulator-title">Ethereum Simulator</h1>
+          <div className="controls-container">
+            <button 
+              className={`control-button ${isNetworkRunning ? 'active' : 'inactive'}`}
+              onClick={toggleNetwork}
+              title={isNetworkRunning ? 'Stop block production' : 'Start block production'}
+            >
+              {isNetworkRunning ? <FaPause /> : <FaPlay />}
+              <span>{isNetworkRunning ? 'Network Running' : 'Network Stopped'}</span>
+            </button>
+            <button 
+              className={`control-button ${isSyncEnabled ? 'active' : 'inactive'}`}
+              onClick={toggleSync}
+              title={isSyncEnabled ? 'Disable sync broadcasting' : 'Enable sync broadcasting'}
+            >
+              <FaSync className={isSyncEnabled ? 'spinning' : ''} />
+              <span>{isSyncEnabled ? 'Sync Enabled' : 'Sync Disabled'}</span>
+            </button>
+          </div>
+        </div>
+        
+        <div className="header-legend-row">
+          <div className="legend-label">Block Indicators:</div>
+          <div className="legend-items-inline">
+            <div className="legend-item-compact" title="Casper FFG Finalized Checkpoint: Block has reached finality with 2/3+ validator votes across consecutive epochs. Cannot be reverted (irreversible).">
+              <div className="legend-square finalized-square"></div>
+              <span>Casper FFG Finalized</span>
+            </div>
+            <div className="legend-item-compact" title="LMD-GHOST Head: The current head of the chain according to the Latest Message Driven Greedy Heaviest Observed SubTree fork choice rule.">
+              <div className="legend-square ghost-square"></div>
+              <span>LMD-GHOST Head</span>
+            </div>
+            <div className="legend-item-compact" title="Fork: Block is part of a fork where nodes disagree on the canonical chain. Indicates chain divergence.">
+              <div className="legend-square fork-square"></div>
+              <span>Fork Block</span>
+            </div>
+            <div className="legend-item-compact" title="Canonical Block: Block with consensus across all nodes. Part of the agreed-upon main chain.">
+              <div className="legend-square canonical-square"></div>
+              <span>Canonical Block</span>
+            </div>
+          </div>
         </div>
       </header>
-      
-      {/* Blockchain Legend */}
-      <div className="blockchain-legend">
-        <h3>Blockchain Legend</h3>
-        <div className="legend-items">
-          <div className="legend-item" title="Casper FFG Finalized Checkpoint: Block has reached finality with 2/3+ validator votes across consecutive epochs. Cannot be reverted (irreversible).">
-            <div className="legend-square finalized-square"></div>
-            <span>Casper FFG Finalized</span>
-          </div>
-          <div className="legend-item" title="LMD-GHOST Head: The current head of the chain according to the Latest Message Driven Greedy Heaviest Observed SubTree fork choice rule.">
-            <div className="legend-square ghost-square"></div>
-            <span>LMD-GHOST Head</span>
-          </div>
-          <div className="legend-item" title="Fork: Block is part of a fork where nodes disagree on the canonical chain. Indicates chain divergence.">
-            <div className="legend-square fork-square"></div>
-            <span>Fork Block</span>
-          </div>
-          <div className="legend-item" title="Canonical Block: Block with consensus across all nodes. Part of the agreed-upon main chain.">
-            <div className="legend-square canonical-square"></div>
-            <span>Canonical Block</span>
-          </div>
-        </div>
-      </div>
       
       <main className="nodes-container">
         {Object.entries(nodeStates).map(([nodeId, nodeState]) => (
