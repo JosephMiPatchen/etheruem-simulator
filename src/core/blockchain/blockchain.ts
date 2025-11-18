@@ -154,11 +154,7 @@ export class Blockchain {
     // 4. Get new GHOST-HEAD (recomputed via LMD-GHOST using incrementally updated attestedEth)
     const newGhostHead = this.blockTree.getGhostHead(this.beaconState);
     
-    // 5. Check if new GHOST-HEAD would extend canonical chain
-    // This happens when new GHOST-HEAD's parent is the old GHOST-HEAD
-    const wouldExtendCanonical = newGhostHead?.parent?.hash === oldGhostHead?.hash;
-    
-    // 6. handle GHOST-HEAD change if occured
+    // 5. handle GHOST-HEAD change if occured
     await this.handleGhostHeadChange(oldGhostHead, newGhostHead);;
     return true
   }
