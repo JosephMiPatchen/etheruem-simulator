@@ -66,13 +66,13 @@ export function getNodeColorCSS(nodeId: string): string {
 export function getNodeBackgroundTint(nodeId: string): string {
   const color = getNodePaintColor(nodeId);
   
-  // Light gray backgrounds with subtle color tints
-  // Using rgb values that mix gray (45, 52, 54) with a hint of the node color
+  // Light gray backgrounds with extremely subtle color tints
+  // Base gray is rgb(45, 52, 54) with barely perceptible color hints
   const BACKGROUND_TINTS: Record<PaintColorName, string> = {
-    blue: 'rgb(43, 50, 56)',      // Gray with subtle blue tint
-    green: 'rgb(43, 52, 52)',     // Gray with subtle green tint
-    red: 'rgb(48, 50, 52)',       // Gray with subtle red tint
-    yellow: 'rgb(48, 52, 50)'     // Gray with subtle yellow tint
+    blue: 'rgb(44, 51, 55)',      // Gray with barely perceptible blue tint
+    green: 'rgb(44, 52, 53)',     // Gray with barely perceptible green tint
+    red: 'rgb(46, 51, 53)',       // Gray with barely perceptible red tint
+    yellow: 'rgb(46, 52, 52)'     // Gray with barely perceptible yellow tint
   };
   
   return BACKGROUND_TINTS[color];
