@@ -469,62 +469,25 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
                       
                       return (
                         <div key={index} className="attestation-item">
-                          <div className="attestation-header">
+                          <div className="attestation-compact-row">
                             <span 
                               className="attestation-validator" 
-                              style={{ 
-                                color: validatorColor,
-                                fontWeight: 'bold',
-                                fontSize: '14px'
-                              }}
+                              style={{ color: validatorColor }}
                             >
                               {validatorNodeId}
                             </span>
-                            <span className="attestation-timestamp">
-                              {new Date(attestation.timestamp).toLocaleTimeString()}
+                            <span className="attestation-data">
+                              Block: ...{attestation.blockHash.slice(-6)}
                             </span>
-                          </div>
-                          
-                          <div className="attestation-details">
-                            <div className="attestation-row">
-                              <span className="attestation-label">Block Hash:</span>
-                              <span className="attestation-value hash-short">
-                                ...{attestation.blockHash.slice(-8)}
-                              </span>
-                            </div>
-                            
                             {attestation.ffgSource && (
-                              <div className="attestation-row">
-                                <span className="attestation-label">FFG Source:</span>
-                                <div className="attestation-checkpoint">
-                                  <span className="checkpoint-epoch">Epoch {attestation.ffgSource.epoch}</span>
-                                  <span className="checkpoint-block">
-                                    <div 
-                                      className="mini-block-icon" 
-                                      title={`Block: ${attestation.ffgSource.root}`}
-                                    >
-                                      ...{attestation.ffgSource.root.slice(-6)}
-                                    </div>
-                                  </span>
-                                </div>
-                              </div>
+                              <span className="attestation-data">
+                                Src: E{attestation.ffgSource.epoch} (...{attestation.ffgSource.root.slice(-4)})
+                              </span>
                             )}
-                            
                             {attestation.ffgTarget && (
-                              <div className="attestation-row">
-                                <span className="attestation-label">FFG Target:</span>
-                                <div className="attestation-checkpoint">
-                                  <span className="checkpoint-epoch">Epoch {attestation.ffgTarget.epoch}</span>
-                                  <span className="checkpoint-block">
-                                    <div 
-                                      className="mini-block-icon" 
-                                      title={`Block: ${attestation.ffgTarget.root}`}
-                                    >
-                                      ...{attestation.ffgTarget.root.slice(-6)}
-                                    </div>
-                                  </span>
-                                </div>
-                              </div>
+                              <span className="attestation-data">
+                                Tgt: E{attestation.ffgTarget.epoch} (...{attestation.ffgTarget.root.slice(-4)})
+                              </span>
                             )}
                           </div>
                         </div>
