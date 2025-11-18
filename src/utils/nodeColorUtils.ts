@@ -66,12 +66,12 @@ export function getNodeColorCSS(nodeId: string): string {
 export function getNodeBackgroundTint(nodeId: string): string {
   const color = getNodePaintColor(nodeId);
   
-  // Ultra-subtle tints with very low opacity for professional look
+  // Extremely subtle tints - barely perceptible, lighter than original gray
   const BACKGROUND_TINTS: Record<PaintColorName, string> = {
-    blue: 'rgba(59, 130, 246, 0.02)',    // Ultra-subtle blue tint
-    green: 'rgba(34, 197, 94, 0.02)',    // Ultra-subtle green tint
-    red: 'rgba(239, 68, 68, 0.02)',      // Ultra-subtle red tint
-    yellow: 'rgba(234, 179, 8, 0.02)'    // Ultra-subtle yellow tint
+    blue: 'rgba(59, 130, 246, 0.01)',    // Extremely subtle blue tint
+    green: 'rgba(34, 197, 94, 0.01)',    // Extremely subtle green tint
+    red: 'rgba(239, 68, 68, 0.01)',      // Extremely subtle red tint
+    yellow: 'rgba(234, 179, 8, 0.01)'    // Extremely subtle yellow tint
   };
   
   return BACKGROUND_TINTS[color];
