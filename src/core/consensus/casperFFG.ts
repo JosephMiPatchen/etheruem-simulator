@@ -14,17 +14,18 @@ export class CasperFFG {
    * 
    * Algorithm:
    * 1. Calculate target epoch from current slot (current epoch)
-   * 2. Calculate source epoch (previous justified epoch, for now = target - 1)
-   * 3. For each epoch, find the checkpoint slot (first slot of epoch)
-   * 4. Search canonical chain for the block at or before checkpoint slot
+   * 2. Use current justified checkpoint from BeaconState as source
+   * 3. Find the checkpoint block for target epoch
    * 
    * @param currentSlot - The current slot when creating attestation
    * @param canonicalChain - Array of blocks from genesis to current head
+   * @param beaconState - BeaconState with current justified checkpoint
    * @returns FFG source and target checkpoints with epoch and root (block hash)
    */
   static computeCheckpoints(
     currentSlot: number,
-    canonicalChain: Block[]
+    canonicalChain: Block[],
+    beaconState: any
   ): {
     source: { epoch: number; root: string };
     target: { epoch: number; root: string };
@@ -32,20 +33,20 @@ export class CasperFFG {
     // Calculate target epoch (current epoch)
     const targetEpoch = Math.floor(currentSlot / SimulatorConfig.SLOTS_PER_EPOCH);
     
-    // Calculate source epoch (previous epoch)
-    // In full Casper FFG, this would be the last justified epoch
-    // For now, we use previous epoch as a simplification
-    const sourceEpoch = Math.max(0, targetEpoch - 1);
+    // Use current justified checkpoint from BeaconState as source
+    // This is the correct Casper FFG behavior
+    const source = {
+      epoch: beaconState.justifiedCheckpoint.epoch,
+      root: beaconState.justifiedCheckpoint.root || SimulatorConfig.GENESIS_PREV_HASH
+    };
     
-    // Find checkpoint blocks for source and target epochs
-    const sourceCheckpoint = this.findCheckpointBlock(sourceEpoch, canonicalChain);
+    // Find checkpoint block for target epoch
     const targetCheckpoint = this.findCheckpointBlock(targetEpoch, canonicalChain);
     
+    console.log(`[CasperFFG] Computing checkpoints - Source: epoch ${source.epoch} (justified), Target: epoch ${targetEpoch}`);
+    
     return {
-      source: {
-        epoch: sourceEpoch,
-        root: sourceCheckpoint
-      },
+      source,
       target: {
         epoch: targetEpoch,
         root: targetCheckpoint

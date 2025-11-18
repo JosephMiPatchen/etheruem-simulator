@@ -31,7 +31,7 @@ describe('CasperFFG', () => {
   describe('computeCheckpoints', () => {
     it('should compute checkpoints for slot in middle of epoch', () => {
       // Given: SLOTS_PER_EPOCH = 4, current slot = 6 (epoch 1)
-      // Target epoch = 1 (checkpoint slot 4), Source epoch = 0 (checkpoint slot 0)
+      // Target epoch = 1 (checkpoint slot 4), Source = justified checkpoint
       const canonicalChain = [
         createBlock('genesis', -1, 0),
         createBlock('block1', 0, 1),
@@ -40,12 +40,16 @@ describe('CasperFFG', () => {
         createBlock('block4', 6, 4),
       ];
       
-      // When: Compute checkpoints for slot 6
-      const checkpoints = CasperFFG.computeCheckpoints(6, canonicalChain);
+      const mockBeaconState = {
+        justifiedCheckpoint: { epoch: 0, root: 'block1' }
+      };
       
-      // Then: Source = epoch 0 (block at slot 0), Target = epoch 1 (block at slot 4)
+      // When: Compute checkpoints for slot 6
+      const checkpoints = CasperFFG.computeCheckpoints(6, canonicalChain, mockBeaconState);
+      
+      // Then: Source = justified checkpoint, Target = epoch 1 (block at slot 4)
       expect(checkpoints.source.epoch).toBe(0);
-      expect(checkpoints.source.root).toBe('block1'); // Slot 0
+      expect(checkpoints.source.root).toBe('block1'); // Justified checkpoint
       expect(checkpoints.target.epoch).toBe(1);
       expect(checkpoints.target.root).toBe('block3'); // Slot 4
     });
@@ -59,8 +63,12 @@ describe('CasperFFG', () => {
         createBlock('block3', 6, 3),
       ];
       
+      const mockBeaconState = {
+        justifiedCheckpoint: { epoch: 0, root: 'block1' }
+      };
+      
       // When: Compute checkpoints for slot 6 (epoch 1, checkpoint slot 4)
-      const checkpoints = CasperFFG.computeCheckpoints(6, canonicalChain);
+      const checkpoints = CasperFFG.computeCheckpoints(6, canonicalChain, mockBeaconState);
       
       // Then: Target should use block at slot 3 (closest before checkpoint 4)
       expect(checkpoints.target.epoch).toBe(1);
@@ -75,8 +83,12 @@ describe('CasperFFG', () => {
         createBlock('block2', 2, 2),
       ];
       
+      const mockBeaconState = {
+        justifiedCheckpoint: { epoch: -1, root: null }
+      };
+      
       // When: Compute checkpoints for slot 2
-      const checkpoints = CasperFFG.computeCheckpoints(2, canonicalChain);
+      const checkpoints = CasperFFG.computeCheckpoints(2, canonicalChain, mockBeaconState);
       
       // Then: Both source and target should be epoch 0
       expect(checkpoints.source.epoch).toBe(0);
@@ -93,8 +105,12 @@ describe('CasperFFG', () => {
         createBlock('block2', 4, 2), // Exactly at checkpoint
       ];
       
-      // When: Compute checkpoints for slot 4
-      const checkpoints = CasperFFG.computeCheckpoints(4, canonicalChain);
+      const mockBeaconState = {
+        justifiedCheckpoint: { epoch: 1, root: 'block3' }
+      };
+      
+      // When: Compute checkpoints for slot 8 (epoch 2)
+      const checkpoints = CasperFFG.computeCheckpoints(8, canonicalChain, mockBeaconState);
       
       // Then: Target should use block at exact checkpoint slot
       expect(checkpoints.target.epoch).toBe(1);
@@ -109,8 +125,12 @@ describe('CasperFFG', () => {
         createBlock('block2', 10, 2), // Big gap
       ];
       
-      // When: Compute checkpoints for slot 10 (epoch 2, checkpoint slot 8)
-      const checkpoints = CasperFFG.computeCheckpoints(10, canonicalChain);
+      const mockBeaconState = {
+        justifiedCheckpoint: { epoch: -1, root: null }
+      };
+      
+      // When: Compute checkpoints for slot 0 (first slot of epoch 0)
+      const checkpoints = CasperFFG.computeCheckpoints(0, canonicalChain, mockBeaconState);
       
       // Then: Should use block1 for target (closest before checkpoint 8)
       expect(checkpoints.target.epoch).toBe(2);

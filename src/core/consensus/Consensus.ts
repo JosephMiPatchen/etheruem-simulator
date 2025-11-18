@@ -315,7 +315,7 @@ export class Consensus {
       
       // Compute FFG checkpoints (source and target) for this attestation
       const canonicalChain = this.blockchain.getCanonicalChain();
-      const checkpoints = CasperFFG.computeCheckpoints(slot, canonicalChain);
+      const checkpoints = CasperFFG.computeCheckpoints(slot, canonicalChain, this.beaconState);
       
       const attestation = {
         validatorAddress: this.nodeAddress,
