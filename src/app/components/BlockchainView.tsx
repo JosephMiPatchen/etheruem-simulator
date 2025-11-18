@@ -47,9 +47,20 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, rec
   };
   
   // Check if a block is the LMD-GHOST head
+  // The GHOST head is the last block in the canonical chain (highest height)
   const isGhostHead = (block: Block): boolean => {
-    if (!beaconState?.ghostHead) return false;
-    return beaconState.ghostHead === calculateBlockHeaderHash(block.header);
+    if (!blocks || blocks.length === 0) return false;
+    
+    // Find the block with the highest height (the head of the chain)
+    const maxHeight = Math.max(...blocks.map(b => b.header.height));
+    const headBlock = blocks.find(b => b.header.height === maxHeight);
+    
+    if (!headBlock) return false;
+    
+    const blockHash = calculateBlockHeaderHash(block.header);
+    const headHash = calculateBlockHeaderHash(headBlock.header);
+    
+    return blockHash === headHash;
   };
   
   // Get the last 6 characters of a hash for display
