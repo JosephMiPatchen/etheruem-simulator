@@ -163,13 +163,27 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
                   <span className="attestation-color-dot blue"></span>
                   Latest Attestations
                 </span>
-                <span className="legend-item" title="Casper FFG: Finalized blocks are irreversible">
+              </div>
+            </div>
+            <div className="stat-item legend-stat">
+              <span className="stat-label">Casper FFG:</span>
+              <div className="legend-items">
+                <span 
+                  className="legend-item" 
+                  title="Finalized Checkpoint: Block has reached finality with 2/3+ validator votes across consecutive epochs. Cannot be reverted (irreversible)."
+                >
                   <span className="checkpoint-badge finalized">Finalized</span>
                 </span>
-                <span className="legend-item" title="Casper FFG: Justified blocks are candidates for finalization">
+                <span 
+                  className="legend-item" 
+                  title="Justified Checkpoint: Block has received 2/3+ validator votes. Candidate for finalization if next epoch is also justified."
+                >
                   <span className="checkpoint-badge justified">Justified</span>
                 </span>
-                <span className="legend-item" title="Casper FFG: Previous justified checkpoint">
+                <span 
+                  className="legend-item" 
+                  title="Previous Justified Checkpoint: The justified checkpoint from the previous epoch. Used as source for new attestations."
+                >
                   <span className="checkpoint-badge prev-justified">Prev Justified</span>
                 </span>
               </div>
@@ -283,8 +297,8 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
                     
                     {/* Casper FFG Checkpoint label - purple box with white text */}
                     {checkpointLabel && (
-                      <g transform={isGhostHead ? "translate(-200, 25)" : "translate(-200, 0)"}>
-                        <foreignObject width="200" height="24">
+                      <g transform={isGhostHead ? "translate(-230, 18)" : "translate(-230, -8)"}>
+                        <foreignObject width="220" height="24">
                           <div style={{ 
                             display: 'flex', 
                             alignItems: 'center',
