@@ -198,6 +198,18 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
                 const ghostHeadNode = blockchainTree.getGhostHead();
                 const isGhostHead = ghostHeadNode && blockNode && ghostHeadNode.hash === blockNode.hash;
                 
+                // Check if this node is a Casper FFG checkpoint
+                let checkpointLabel = '';
+                if (beaconState && blockNode?.hash) {
+                  if (beaconState.finalizedCheckpoint?.root === blockNode.hash) {
+                    checkpointLabel = 'Finalized Checkpoint';
+                  } else if (beaconState.justifiedCheckpoint?.root === blockNode.hash) {
+                    checkpointLabel = 'Justified Checkpoint';
+                  } else if (beaconState.previousJustifiedCheckpoint?.root === blockNode.hash) {
+                    checkpointLabel = 'Prev Justified Checkpoint';
+                  }
+                }
+                
                 const handleClick = () => {
                   if (blockNode?.block) {
                     // If block is invalid, show error modal instead of block details
@@ -242,6 +254,27 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
                             letterSpacing: '0.5px'
                           }}>
                             LMD GHOST HEAD
+                          </div>
+                        </foreignObject>
+                      </g>
+                    )}
+                    
+                    {/* Casper FFG Checkpoint label - positioned to the left below GHOST HEAD */}
+                    {checkpointLabel && (
+                      <g transform={isGhostHead ? "translate(-180, 25)" : "translate(-180, 0)"}>
+                        <foreignObject width="150" height="20">
+                          <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'center',
+                            justifyContent: 'flex-end',
+                            gap: '4px',
+                            color: '#9b59b6',
+                            fontSize: '10px',
+                            fontWeight: 'bold',
+                            whiteSpace: 'nowrap'
+                          }}>
+                            <span>{checkpointLabel}</span>
+                            <span style={{ fontSize: '12px' }}>→</span>
                           </div>
                         </foreignObject>
                       </g>
