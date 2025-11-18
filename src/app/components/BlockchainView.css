@@ -24,7 +24,7 @@
 /* Empty slot placeholder - boring and minimal */
 .empty-slot-item {
   background-color: transparent;
-  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border: 1px dashed rgba(255, 255, 255, 0.25);
   border-radius: 4px;
   padding: 8px;
   width: 75px;
@@ -35,7 +35,7 @@
   justify-content: center;
   position: relative;
   margin-bottom: 8px;
-  opacity: 0.4;
+  opacity: 0.6;
 }
 
 .empty-slot-content {
@@ -47,7 +47,7 @@
 
 .empty-slot-label {
   font-size: 9px;
-  color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.5);
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -55,7 +55,7 @@
 
 .empty-slot-number {
   font-size: 8px;
-  color: rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.45);
   font-family: 'Courier New', monospace;
 }
 

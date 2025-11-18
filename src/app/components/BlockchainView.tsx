@@ -98,10 +98,8 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, rec
           missedSlots.push(slot);
         }
         
-        // Add empty slot placeholder for each missed slot
-        for (const slot of missedSlots) {
-          displayItems.push({ type: 'empty-slot', slots: [slot] });
-        }
+        // Add single empty slot placeholder for the entire range
+        displayItems.push({ type: 'empty-slot', slots: missedSlots });
       }
       
       // Add the actual block
@@ -125,15 +123,19 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, rec
         {sortedBlocksForDisplay.map((item, index) => {
             // Handle empty slot placeholders
             if (item.type === 'empty-slot') {
-              const slot = item.slots![0];
+              const slots = item.slots!;
+              const slotDisplay = slots.length === 1 
+                ? `Slot ${slots[0]}` 
+                : `Slots ${slots[0]}-${slots[slots.length - 1]}`;
+              
               return (
                 <div 
-                  key={`empty-slot-${slot}`}
+                  key={`empty-slot-${slots[0]}-${slots[slots.length - 1]}`}
                   className="empty-slot-item"
                 >
                   <div className="empty-slot-content">
                     <div className="empty-slot-label">EMPTY</div>
-                    <div className="empty-slot-number">Slot {slot}</div>
+                    <div className="empty-slot-number">{slotDisplay}</div>
                   </div>
                 </div>
               );
