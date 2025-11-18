@@ -525,9 +525,9 @@
   box-shadow: 0 0 8px rgba(106, 27, 154, 0.5);
 }
 
-/* LMD-GHOST Head - Orange outline (very thin, no glow) */
+/* LMD-GHOST Head - Orange outline (ultra-subtle, no glow) */
 .ghost-head-block {
-  border-color: #ff9800 !important;
+  border-color: rgba(255, 152, 0, 0.4) !important;
   border-width: 1px !important;
 }
 
