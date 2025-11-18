@@ -459,41 +459,55 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
 
               {/* Attestations Section */}
               {selectedBlock.attestations && Array.isArray(selectedBlock.attestations) && selectedBlock.attestations.length > 0 && (
-                <div className="attestations-container">
+                <div className="attestations-section">
                   <h3>Included Attestations ({selectedBlock.attestations.length})</h3>
+                  <p className="section-description">
+                    Attestations are votes from validators supporting blocks in the canonical chain and voting for Casper FFG finality checkpoints.
+                  </p>
                   
-                  <div className="attestations-list">
-                    {selectedBlock.attestations.map((attestation: any, index: number) => {
-                      const validatorNodeId = addressToNodeId.get(attestation.validatorAddress) || 'Unknown';
-                      const validatorColor = getNodeColorCSS(validatorNodeId);
-                      
-                      return (
-                        <div key={index} className="attestation-item">
-                          <div className="attestation-compact-row">
-                            <span 
-                              className="attestation-validator" 
-                              style={{ color: validatorColor }}
-                            >
-                              {validatorNodeId}
-                            </span>
-                            <span className="attestation-data">
-                              Block: ...{attestation.blockHash.slice(-6)}
-                            </span>
-                            {attestation.ffgSource && (
-                              <span className="attestation-data">
-                                Src: E{attestation.ffgSource.epoch} (...{attestation.ffgSource.root.slice(-4)})
-                              </span>
-                            )}
-                            {attestation.ffgTarget && (
-                              <span className="attestation-data">
-                                Tgt: E{attestation.ffgTarget.epoch} (...{attestation.ffgTarget.root.slice(-4)})
-                              </span>
-                            )}
+                  {selectedBlock.attestations.map((attestation: any, index: number) => {
+                    const validatorNodeId = addressToNodeId.get(attestation.validatorAddress) || 'Unknown';
+                    const validatorColor = getNodeColorCSS(validatorNodeId);
+                    
+                    return (
+                      <div key={index} className="attestation-card">
+                        <div className="attestation-validator-header">
+                          <span className="validator-label">Validator:</span>
+                          <span 
+                            className="validator-name" 
+                            style={{ color: validatorColor }}
+                          >
+                            {validatorNodeId}
+                          </span>
+                          <span className="validator-address">({attestation.validatorAddress.slice(0, 8)}...{attestation.validatorAddress.slice(-6)})</span>
+                        </div>
+                        
+                        <div className="attestation-subsection">
+                          <div className="subsection-title">LMD GHOST Vote</div>
+                          <div className="subsection-description">Block this validator is voting for as the chain head</div>
+                          <div className="attestation-field">
+                            <span className="field-label">Attested Block:</span>
+                            <span className="field-value">{attestation.blockHash}</span>
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
+                        
+                        {attestation.ffgSource && attestation.ffgTarget && (
+                          <div className="attestation-subsection">
+                            <div className="subsection-title">Casper FFG Finality Vote</div>
+                            <div className="subsection-description">Checkpoint votes for Ethereum's finality mechanism</div>
+                            <div className="attestation-field">
+                              <span className="field-label">Source Checkpoint:</span>
+                              <span className="field-value">Epoch {attestation.ffgSource.epoch} → {attestation.ffgSource.root}</span>
+                            </div>
+                            <div className="attestation-field">
+                              <span className="field-label">Target Checkpoint:</span>
+                              <span className="field-value">Epoch {attestation.ffgTarget.epoch} → {attestation.ffgTarget.root}</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>

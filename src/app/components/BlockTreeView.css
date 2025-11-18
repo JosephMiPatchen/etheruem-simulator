@@ -359,56 +359,105 @@
   }
 }
 
-/* Attestations Display in Block Modal - Simplified */
-.attestations-container {
+/* Attestations Section - Organized Layout */
+.attestations-section {
   margin-top: 1.5rem;
   padding-top: 1.5rem;
   border-top: 1px solid var(--border-color);
 }
 
-.attestations-container h3 {
-  color: var(--text-primary);
-  font-size: 1rem;
-  margin-bottom: 0.75rem;
+.attestations-section h3 {
+  color: var(--primary-color);
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
   font-weight: 600;
 }
 
-.attestations-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  max-height: none;
-  overflow-y: visible;
+.section-description {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  line-height: 1.5;
 }
 
-.attestation-item {
-  background: rgba(102, 126, 234, 0.08);
-  border-left: 3px solid rgba(102, 126, 234, 0.4);
-  border-radius: 4px;
-  padding: 0.5rem 0.75rem;
-  transition: all 0.15s ease;
+.attestation-card {
+  background: var(--overlay-background);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: 1rem;
+  margin-bottom: 1rem;
 }
 
-.attestation-item:hover {
-  background: rgba(102, 126, 234, 0.12);
-  border-left-color: rgba(102, 126, 234, 0.6);
-}
-
-.attestation-compact-row {
+.attestation-validator-header {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  font-size: 12px;
-  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
 }
 
-.attestation-validator {
-  font-weight: bold;
-  min-width: 60px;
-}
-
-.attestation-data {
+.validator-label {
   color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.validator-name {
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.validator-address {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
   font-family: 'Courier New', monospace;
-  font-size: 11px;
+}
+
+.attestation-subsection {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(102, 126, 234, 0.05);
+  border-left: 3px solid var(--primary-color);
+  border-radius: 4px;
+}
+
+.subsection-title {
+  color: var(--primary-color);
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.subsection-description {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  margin-bottom: 0.75rem;
+  font-style: italic;
+}
+
+.attestation-field {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.attestation-field:last-child {
+  margin-bottom: 0;
+}
+
+.field-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+  min-width: 140px;
+  flex-shrink: 0;
+}
+
+.field-value {
+  color: var(--text-primary);
+  font-family: 'Courier New', monospace;
+  word-break: break-all;
+  flex: 1;
 }
