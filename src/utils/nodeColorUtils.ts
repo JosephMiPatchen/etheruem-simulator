@@ -67,7 +67,7 @@ export function getNodeBackgroundTint(nodeId: string): string {
   const color = getNodePaintColor(nodeId);
   
   // Base light gray background color (lighter than the dark app background)
-  const BASE_GRAY = 'rgb(31, 31, 31)';
+  const BASE_GRAY = 'rgb(49, 49, 49)';
   
   // Opacity for color overlay (tune this single value to adjust all tints)
   const COLOR_OPACITY = 0.01;

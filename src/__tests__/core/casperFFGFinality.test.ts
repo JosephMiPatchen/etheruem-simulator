@@ -243,7 +243,7 @@ describe('CasperFFG Finality Tracking', () => {
       
       CasperFFG.applyAttestationsToBeaconState(beaconState, attestations);
       
-      // Then: Justified checkpoint stays at epoch 2 (monotonicity preserved)
+      // Then: Justified checkpoint stays at epoch 2 (monotonicity - fancy word hehehe - preserved)
       expect(beaconState.justifiedCheckpoint.epoch).toBe(2);
     });
     
