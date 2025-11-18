@@ -158,26 +158,32 @@ export class Blockchain {
     // This happens when new GHOST-HEAD's parent is the old GHOST-HEAD
     const wouldExtendCanonical = newGhostHead?.parent?.hash === oldGhostHead?.hash;
     
-    /* remove this old loigic to account fro reorgs on adding a block via sync or proposer
-    if (wouldExtendCanonical) {
-      // 6. Validate and apply block (or mark invalid if validation fails)
-      const previousHash = oldGhostHead?.hash || '';
-      const applied = await this.validateAndApplyBlock(block, previousHash);
-      
-      if (applied) {
-        console.log(`[Blockchain] Block ${block.hash?.slice(0, 8)} applied to canonical chain`);
-      }
-      return true;
-    } else {
-      // Block creates a fork - added to tree but not validated yet
-      // Will be validated later if it becomes canonical via attestations
-      console.log(`[Blockchain] Block ${block.hash?.slice(0, 8)} added as fork at height ${block.header.height}`);
-      return true;
-    }*/
-
-    // 3. Handle GHOST-HEAD change (reorg or forward progress)
-    await this.handleGhostHeadChange(oldGhostHead, newGhostHead);
+    // 6. handle GHOST-HEAD change if occured
+    await this.handleGhostHeadChange(oldGhostHead, newGhostHead);;
+    return true
   }
+
+  private async handleGhostHeadChange(
+    oldGhostHead: BlockTreeNode | null,
+    newGhostHead: BlockTreeNode | null
+  ): Promise<void> {
+    // Check if GHOST-HEAD changed
+    if (oldGhostHead?.hash !== newGhostHead?.hash) {
+      const needsRewind = !this.isDescendant(newGhostHead, oldGhostHead);
+      
+      if (needsRewind) {
+        // ❌ Reorganization: GHOST-HEAD switched to a different fork or backwards
+        console.log(`[Blockchain] REORG: ${oldGhostHead?.hash?.slice(0, 8)} → ${newGhostHead?.hash?.slice(0, 8)}`);
+        await this.handleBacktrack();
+      } else {
+        // ✅ Forward Progress: GHOST-HEAD moved down same chain
+        console.log(`[Blockchain] GHOST-HEAD moved forward: ${oldGhostHead?.hash?.slice(0, 8)} → ${newGhostHead?.hash?.slice(0, 8)}`);
+        await this.handleForwardProgress(oldGhostHead, newGhostHead);
+      }
+    }
+    // else: GHOST-HEAD stayed same - no action needed
+  }
+  
   
   /**
    * Adds a chain of blocks to the blockchain
@@ -341,39 +347,8 @@ export class Blockchain {
     await this.handleGhostHeadChange(oldGhostHead, newGhostHead);
   }
   
-  /**
-   * Handle GHOST-HEAD change detection and appropriate action
-   * Used by both addBlock and onAttestationReceived
-   * 
-   * Checks if GHOST-HEAD changed and handles accordingly:
-   * - No change → No action needed
-   * - Forward progress → Validate and apply new blocks
-   * - Reorg → Rebuild entire state from new canonical chain
-   * 
-   * @param oldGhostHead - Previous GHOST-HEAD node
-   * @param newGhostHead - New GHOST-HEAD node
-   */
-  private async handleGhostHeadChange(
-    oldGhostHead: BlockTreeNode | null,
-    newGhostHead: BlockTreeNode | null
-  ): Promise<void> {
-    // Check if GHOST-HEAD changed
-    if (oldGhostHead?.hash !== newGhostHead?.hash) {
-      const needsRewind = !this.isDescendant(newGhostHead, oldGhostHead);
-      
-      if (needsRewind) {
-        // ❌ Reorganization: GHOST-HEAD switched to a different fork or backwards
-        console.log(`[Blockchain] REORG: ${oldGhostHead?.hash?.slice(0, 8)} → ${newGhostHead?.hash?.slice(0, 8)}`);
-        await this.handleBacktrack();
-      } else {
-        // ✅ Forward Progress: GHOST-HEAD moved down same chain
-        console.log(`[Blockchain] GHOST-HEAD moved forward: ${oldGhostHead?.hash?.slice(0, 8)} → ${newGhostHead?.hash?.slice(0, 8)}`);
-        await this.handleForwardProgress(oldGhostHead, newGhostHead);
-      }
-    }
-    // else: GHOST-HEAD stayed same - no action needed
-  }
-  
+
+
   /**
    * Handle reorganization: GHOST-HEAD switched to a different fork or moved backwards
    * 
