@@ -297,8 +297,8 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
                     
                     {/* Casper FFG Checkpoint label - purple box with white text */}
                     {checkpointLabel && (
-                      <g transform={isGhostHead ? "translate(-80, 18)" : "translate(-80, -8)"}>
-                        <foreignObject x="-220" y="0" width="210" height="24">
+                      <g transform={isGhostHead ? "translate(-60, 18)" : "translate(-60, -8)"}>
+                        <foreignObject x="-180" y="0" width="210" height="24">
                           <div style={{ 
                             display: 'flex', 
                             alignItems: 'center',
