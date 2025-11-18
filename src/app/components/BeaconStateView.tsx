@@ -108,6 +108,68 @@ const BeaconStateView: React.FC<BeaconStateViewProps> = ({ beaconState, blockcha
             </div>
           </div>
 
+          {/* FFG Vote Counts - Show votes for current epoch targets */}
+          <div className="beacon-section">
+            <h3>FFG Vote Counts (Current Epoch Targets)</h3>
+            <div className="ffg-votes-container">
+              {(() => {
+                const ffgVoteCounts = beaconState.ffgVoteCounts || {};
+                const epochs = Object.keys(ffgVoteCounts).map(Number).sort((a, b) => b - a);
+                
+                if (epochs.length === 0) {
+                  return <p className="empty-message">No FFG votes yet</p>;
+                }
+                
+                return epochs.slice(0, 3).map(epoch => {
+                  const targets = ffgVoteCounts[epoch];
+                  const targetRoots = Object.keys(targets);
+                  
+                  return (
+                    <div key={epoch} className="epoch-votes">
+                      <h4 className="epoch-votes-title">Epoch {epoch}</h4>
+                      {targetRoots.map(targetRoot => {
+                        const voters = Array.from(targets[targetRoot] || []);
+                        const threshold = Math.ceil((2 * validators.length) / 3);
+                        const hasThreshold = voters.length >= threshold;
+                        
+                        return (
+                          <div key={targetRoot} className={`target-votes ${hasThreshold ? 'has-threshold' : ''}`}>
+                            <div className="target-header">
+                              <span className="target-label">Target: ...{targetRoot.slice(-8)}</span>
+                              <span className={`vote-count ${hasThreshold ? 'threshold-met' : ''}`}>
+                                {voters.length}/{threshold} votes {hasThreshold && '✓'}
+                              </span>
+                            </div>
+                            <div className="voters-list">
+                              {voters.map(voterAddress => {
+                                const nodeId = addressToNodeId[voterAddress] || 'Unknown';
+                                const nodeColor = getNodeColorCSS(nodeId);
+                                const nodeEmoji = getNodeColorEmoji(nodeId);
+                                return (
+                                  <span 
+                                    key={voterAddress} 
+                                    className="voter-badge"
+                                    style={{ 
+                                      backgroundColor: nodeColor,
+                                      borderColor: nodeColor
+                                    }}
+                                    title={`${nodeId} (${voterAddress.slice(0, 8)}...)`}
+                                  >
+                                    {nodeEmoji} {nodeId}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+          </div>
+
           {/* Validators */}
           <div className="beacon-section">
             <h3>Validators ({validators.length})</h3>

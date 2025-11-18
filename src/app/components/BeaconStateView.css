@@ -425,3 +425,92 @@
   color: var(--text-secondary);
   font-style: italic;
 }
+
+/* FFG Vote Counts Section */
+.ffg-votes-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.epoch-votes {
+  background: var(--overlay-background);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-md);
+}
+
+.epoch-votes-title {
+  color: var(--primary-color);
+  font-size: var(--font-size-md);
+  margin: 0 0 var(--spacing-sm) 0;
+  font-weight: 600;
+}
+
+.target-votes {
+  background: rgba(108, 117, 125, 0.1);
+  border-left: 3px solid var(--text-secondary);
+  border-radius: 4px;
+  padding: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+  transition: all 0.2s ease;
+}
+
+.target-votes:last-child {
+  margin-bottom: 0;
+}
+
+.target-votes.has-threshold {
+  background: rgba(102, 126, 234, 0.15);
+  border-left-color: var(--primary-color);
+}
+
+.target-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.target-label {
+  color: var(--text-primary);
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.vote-count {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.vote-count.threshold-met {
+  color: var(--success-color);
+}
+
+.voters-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.voter-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+  border: 2px solid;
+  cursor: default;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.voter-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
