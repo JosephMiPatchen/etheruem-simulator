@@ -75,7 +75,8 @@ export class BeaconState {
     this.latestAttestations = new Map();
     
     // Initialize Casper FFG finality state
-    this.justifiedCheckpoint = { epoch: -1, root: null }; // Start with genesis
+    // Use genesis hash (0x000...) as the initial justified checkpoint root
+    this.justifiedCheckpoint = { epoch: -1, root: SimulatorConfig.GENESIS_PREV_HASH };
     this.previousJustifiedCheckpoint = null;
     this.finalizedCheckpoint = null;
     this.ffgVoteCounts = {};
