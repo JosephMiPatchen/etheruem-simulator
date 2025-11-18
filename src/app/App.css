@@ -240,3 +240,23 @@
 .canonical-square {
   border-color: #667eea;
 }
+
+/* Two-line legend text for space efficiency */
+.legend-text-two-line {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.legend-line-1 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.legend-line-2 {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  opacity: 0.9;
+}

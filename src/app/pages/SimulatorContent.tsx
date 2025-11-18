@@ -193,11 +193,17 @@ const SimulatorContentInner: React.FC = () => {
         <div className="legend-items-inline">
           <div className="legend-item-compact" title="Casper FFG Finalized Checkpoint: Block has reached finality with 2/3+ validator votes across consecutive epochs. Cannot be reverted (irreversible).">
             <div className="legend-square finalized-square"></div>
-            <span>Casper FFG</span>
+            <span className="legend-text-two-line">
+              <span className="legend-line-1">Casper FFG</span>
+              <span className="legend-line-2">Finalized Checkpoint</span>
+            </span>
           </div>
           <div className="legend-item-compact" title="LMD-GHOST Head: The current head of the chain according to the Latest Message Driven Greedy Heaviest Observed SubTree fork choice rule.">
             <div className="legend-square ghost-square"></div>
-            <span>GHOST</span>
+            <span className="legend-text-two-line">
+              <span className="legend-line-1">LMD-GHOST</span>
+              <span className="legend-line-2">Head</span>
+            </span>
           </div>
           <div className="legend-item-compact" title="Fork: Block is part of a fork where nodes disagree on the canonical chain. Indicates chain divergence.">
             <div className="legend-square fork-square"></div>
