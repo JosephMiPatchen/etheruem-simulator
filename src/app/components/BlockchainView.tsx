@@ -24,6 +24,11 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, rec
   const [copied, setCopied] = useState(false);
   const { forkStartHeight, addressToNodeId } = useSimulatorContext();
   
+  // Refs for detecting rows
+  const itemRefs = React.useRef<Map<number, HTMLDivElement>>(new Map());
+  const blocksContainerRef = React.useRef<HTMLDivElement>(null);
+  const [rowEpochs, setRowEpochs] = useState<Array<{ epochRange: string; top: number }>>([]);
+  
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -117,10 +122,83 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, rec
   
   const sortedBlocksForDisplay = getBlocksForDisplay();
   
+  // Detect actual rows and calculate epochs after render
+  React.useEffect(() => {
+    if (itemRefs.current.size === 0 || !blocksContainerRef.current) return;
+    
+    const SLOTS_PER_EPOCH = 4;
+    const getEpochForSlot = (slot: number) => Math.floor(slot / SLOTS_PER_EPOCH);
+    
+    const containerRect = blocksContainerRef.current.getBoundingClientRect();
+    
+    // Group items by their vertical position (row)
+    const rowGroups = new Map<number, { indices: number[]; top: number }>(); // rowTop -> data
+    
+    itemRefs.current.forEach((element, index) => {
+      const rect = element.getBoundingClientRect();
+      const rowTop = Math.round(rect.top / 10) * 10; // Round to nearest 10px
+      
+      if (!rowGroups.has(rowTop)) {
+        rowGroups.set(rowTop, { indices: [], top: rect.top - containerRect.top });
+      }
+      rowGroups.get(rowTop)!.indices.push(index);
+    });
+    
+    // Calculate epoch range and position for each row
+    const epochs: Array<{ epochRange: string; top: number }> = [];
+    Array.from(rowGroups.keys()).sort((a, b) => a - b).forEach(rowTop => {
+      const rowData = rowGroups.get(rowTop)!;
+      const rowEpochSet = new Set<number>();
+      
+      rowData.indices.forEach(idx => {
+        const item = sortedBlocksForDisplay[idx];
+        if (item.type === 'block') {
+          rowEpochSet.add(getEpochForSlot(item.block!.header.slot));
+        } else {
+          item.slots!.forEach(slot => rowEpochSet.add(getEpochForSlot(slot)));
+        }
+      });
+      
+      const epochArray = Array.from(rowEpochSet).sort((a, b) => a - b);
+      let minEpoch = epochArray[0];
+      let maxEpoch = epochArray[epochArray.length - 1];
+      
+      // Special case: display epoch -1 as epoch 0 for simplicity
+      if (minEpoch === -1) minEpoch = 0;
+      if (maxEpoch === -1) maxEpoch = 0;
+      
+      const epochRange = minEpoch === maxEpoch ? `${minEpoch}` : `${minEpoch}-${maxEpoch}`;
+      
+      // Center the label vertically within the 75px block height
+      // Epoch label content is roughly 30px tall, so offset by (75 - 30) / 2 = 22.5px
+      epochs.push({ epochRange, top: rowData.top + 22 });
+    });
+    
+    setRowEpochs(epochs);
+  }, [sortedBlocksForDisplay]);
+  
   return (
     <div className="blockchain-container" style={{ background: nodeId ? getNodeBackgroundTint(nodeId) : undefined }}>
-      <div className="blockchain-row">
-        {sortedBlocksForDisplay.map((item, index) => {
+      {/* Epoch column on the left */}
+      <div className="epoch-column">
+        {rowEpochs.map((epochData, rowIndex) => (
+          <div 
+            key={`epoch-${rowIndex}`} 
+            className="epoch-indicator"
+            style={{ top: `${epochData.top}px` }}
+          >
+            <div className="epoch-indicator-content">
+              <div className="epoch-indicator-label">EPOCH</div>
+              <div className="epoch-indicator-value">{epochData.epochRange}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+      
+      {/* Blocks container on the right */}
+      <div className="blocks-container" ref={blocksContainerRef}>
+        <div className="blockchain-row">
+          {sortedBlocksForDisplay.map((item, index) => {
             // Handle empty slot placeholders
             if (item.type === 'empty-slot') {
               const slots = item.slots!;
@@ -145,6 +223,9 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, rec
                 <div 
                   key={`empty-slot-${firstSlot}-${lastSlot}`}
                   className="empty-slot-item"
+                  ref={(el) => {
+                    if (el) itemRefs.current.set(index, el);
+                  }}
                 >
                   <div className="empty-slot-content">
                     <div className="empty-slot-label">EMPTY</div>
@@ -167,6 +248,9 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, rec
                 key={hash} 
                 className={`block-item ${selectedBlock === block ? 'selected' : ''} ${isGenesis ? 'genesis-block' : ''} ${isLast ? 'last-in-row' : ''} ${isForked ? 'forked-block' : ''} ${isFinalized ? 'finalized-checkpoint' : ''} ${isGhost ? 'ghost-head-block' : ''}`}
                 onClick={() => setSelectedBlock(block === selectedBlock ? null : block)}
+                ref={(el) => {
+                  if (el) itemRefs.current.set(index, el);
+                }}
               >
                 <div className="block-height">{block.header.height}</div>
                 <div className="block-hash">{shortenHash(hash)}</div>
@@ -189,6 +273,7 @@ const BlockchainView: React.FC<BlockchainViewProps> = ({ blocks, worldState, rec
             );
           })}
         </div>
+      </div>
       
       {selectedBlock && (
         <div className="block-modal-overlay" onClick={() => setSelectedBlock(null)}>

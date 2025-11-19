@@ -1,9 +1,64 @@
-/* Blockchain visualization */
+/* Blockchain visualization - horizontal layout with epoch column */
 .blockchain-container {
+  display: flex;
+  flex-direction: row;
+  gap: 0;
+  width: 100%;
+  position: relative;
+}
+
+/* Epoch column - absolute positioned with full height divider */
+.epoch-column {
+  position: relative;
+  min-width: 42px;
+  max-width: 42px;
+  min-height: 100%;
+  border-right: 2px solid rgba(255, 255, 255, 0.15);
+  padding-right: 4px;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.epoch-indicator {
+  position: absolute;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+  padding-right: 0;
+}
+
+.epoch-indicator-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 1px;
+}
+
+.epoch-indicator-label {
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+.epoch-indicator-value {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.75);
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.3px;
+}
+
+/* Blocks container - wraps and creates rows */
+.blocks-container {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 0;
-  width: 100%;
 }
 
 .blockchain-row {
