@@ -214,6 +214,14 @@
   font-style: italic;
 }
 
+.setting-warning {
+  color: #ff9800;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 0.25rem;
+  display: block;
+}
+
 /* Modal Footer - Fixed at Bottom */
 .settings-modal-footer {
   position: absolute;
