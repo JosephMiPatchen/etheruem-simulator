@@ -142,7 +142,7 @@ const SimulatorSettingsModal: React.FC<SimulatorSettingsModalProps> = ({ onClose
                   onChange={(e) => handleChange('SECONDS_PER_SLOT', e.target.value)}
                 />
                 <span className="setting-description">Duration of each slot in seconds</span>
-                <span className="setting-warning">⚠️ Warning: Values other than 1 will probably break the simulator</span>
+                <span className="setting-warning">⚠️ Warning: Changing this will probably break the simulator</span>
               </div>
               <div className="setting-item">
                 <label className="setting-label">Slots Per Epoch</label>
