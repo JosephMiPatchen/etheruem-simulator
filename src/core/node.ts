@@ -2,7 +2,7 @@ import { Block, NodeState, PeerInfoMap, Account, EthereumTransaction } from '../
 import { Blockchain } from './blockchain/blockchain';
 import { Mempool } from './mempool/mempool';
 import { BeaconState, Validator } from './consensus/beaconState';
-import { Sync } from './consensus/sync';
+import { Sync } from './consensus/Sync';
 import { Consensus } from './consensus/Consensus';
 import { generatePrivateKey, derivePublicKey, generateAddress } from '../utils/cryptoUtils';
 
