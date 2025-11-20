@@ -170,10 +170,11 @@
 
 .legend-items-inline {
   display: flex;
-  gap: 2rem;
+  gap: 1rem;
   flex-wrap: wrap;
   align-items: center;
   flex: 1;
+  justify-content: space-between;
 }
 
 .legend-item-compact {
@@ -198,6 +199,26 @@
   color: var(--text-primary);
   font-weight: 500;
   white-space: nowrap;
+}
+
+/* Settings button in legend */
+.legend-settings-button {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text-color);
+  margin-left: auto;
+}
+
+.legend-settings-button:hover {
+  background: rgba(102, 126, 234, 0.15);
+  border-color: var(--primary-color);
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .legend-square {
@@ -239,6 +260,13 @@
 
 .canonical-square {
   border-color: #667eea;
+}
+
+.empty-slot-square {
+  border-color: #888;
+  border-width: 2px;
+  border-style: dashed;
+  background: transparent;
 }
 
 /* Two-line legend text for space efficiency */

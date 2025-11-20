@@ -213,6 +213,13 @@ const SimulatorContentInner: React.FC = () => {
             <div className="legend-square canonical-square"></div>
             <span>Canonical</span>
           </div>
+          <div className="legend-item-compact" title="Empty Slot: A slot in the blockchain where no block was proposed. Represents a missed block proposal opportunity.">
+            <div className="legend-square empty-slot-square"></div>
+            <span>Empty Slot</span>
+          </div>
+          <button className="legend-settings-button" title="Settings">
+            ⚙️
+          </button>
         </div>
       </header>
       
