@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { NetworkManager } from '../../network/networkManager';
 import { NodeState } from '../../types/types';
 import NodePanel from '../components/NodePanel';
+import SimulatorSettingsModal from '../components/SimulatorSettingsModal';
 import { SimulatorProvider, useSimulatorContext } from '../contexts/SimulatorContext';
 import { SimulatorConfig } from '../../config/config';
 import { FaPlay, FaPause, FaSync } from 'react-icons/fa';
@@ -18,6 +19,9 @@ const SimulatorContentInner: React.FC = () => {
   
   // State for sync enabled status
   const [isSyncEnabled, setIsSyncEnabled] = useState(true);
+  
+  // State for settings modal
+  const [showSettings, setShowSettings] = useState(false);
   
   // Get context functions
   const { detectForks, setAddressToNodeId } = useSimulatorContext();
@@ -163,6 +167,28 @@ const SimulatorContentInner: React.FC = () => {
     }
   };
   
+  // Handle saving settings
+  const handleSaveSettings = (newConfig: typeof SimulatorConfig) => {
+    // Update the config object
+    Object.assign(SimulatorConfig, newConfig);
+    console.log('[Settings] Configuration updated:', SimulatorConfig);
+    
+    // Restart intervals with new config values if network is running
+    if (isNetworkRunning && slotIntervalRef.current) {
+      clearInterval(slotIntervalRef.current);
+      slotIntervalRef.current = setInterval(() => {
+        networkManagerRef.current?.processAllSlots();
+      }, SimulatorConfig.SECONDS_PER_SLOT * 1000 + SimulatorConfig.PROPOSER_BUFFER_MS);
+    }
+    
+    if (isSyncEnabled && ghostHeadIntervalRef.current) {
+      clearInterval(ghostHeadIntervalRef.current);
+      ghostHeadIntervalRef.current = setInterval(() => {
+        networkManagerRef.current?.broadcastAllGhostHeads();
+      }, SimulatorConfig.SYNC_INTERVAL_MS);
+    }
+  };
+  
   return (
     <div className="app-container">
       {/* Unified Single-Line Header Banner */}
@@ -217,7 +243,7 @@ const SimulatorContentInner: React.FC = () => {
             <div className="legend-square empty-slot-square"></div>
             <span>Empty Slot</span>
           </div>
-          <button className="legend-settings-button" title="Settings">
+          <button className="legend-settings-button" title="Settings" onClick={() => setShowSettings(true)}>
             ⚙️
           </button>
         </div>
@@ -233,6 +259,14 @@ const SimulatorContentInner: React.FC = () => {
           />
         ))}
       </main>
+      
+      {/* Settings Modal */}
+      {showSettings && (
+        <SimulatorSettingsModal
+          onClose={() => setShowSettings(false)}
+          onSave={handleSaveSettings}
+        />
+      )}
     </div>
   );
 };

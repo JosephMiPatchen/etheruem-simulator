@@ -25,19 +25,19 @@ export const NodeSettingsModal: React.FC<NodeSettingsModalProps> = ({
   };
 
   return (
-    <div className="settings-modal-overlay" onClick={onClose}>
-      <div className="settings-modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="settings-modal-header">
+    <div className="node-settings-modal-overlay" onClick={onClose}>
+      <div className="node-settings-modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="node-settings-modal-header">
           <h3>Node Settings: {nodeId}</h3>
-          <button className="settings-modal-close-button" onClick={onClose}>×</button>
+          <button className="node-settings-modal-close-button" onClick={onClose}>×</button>
         </div>
         
-        <div className="settings-modal-body">
-          <div className="settings-modal-setting-group">
+        <div className="node-settings-modal-body">
+          <div className="node-settings-modal-setting-group">
             <label htmlFor="delay-multiplier">
               Network Delay Multiplier: {multiplier.toFixed(1)}x
             </label>
-            <p className="settings-modal-setting-description">
+            <p className="node-settings-modal-setting-description">
               Controls how slow this node's network is. Higher values increase the chance of forks.
             </p>
             <input
@@ -48,9 +48,9 @@ export const NodeSettingsModal: React.FC<NodeSettingsModalProps> = ({
               step="1"
               value={multiplier}
               onChange={(e) => setMultiplier(parseFloat(e.target.value))}
-              className="settings-modal-slider"
+              className="node-settings-modal-slider"
             />
-            <div className="settings-modal-slider-labels">
+            <div className="node-settings-modal-slider-labels">
               <span>1x (Normal)</span>
               <span>100x (Slow)</span>
               <span>10,000x (Network Partition)</span>
@@ -58,11 +58,11 @@ export const NodeSettingsModal: React.FC<NodeSettingsModalProps> = ({
           </div>
         </div>
         
-        <div className="settings-modal-footer">
-          <button className="settings-modal-button-secondary" onClick={onClose}>
+        <div className="node-settings-modal-footer">
+          <button className="node-settings-modal-button-secondary" onClick={onClose}>
             Cancel
           </button>
-          <button className="settings-modal-button-primary" onClick={handleSave}>
+          <button className="node-settings-modal-button-primary" onClick={handleSave}>
             Save
           </button>
         </div>

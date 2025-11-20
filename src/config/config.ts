@@ -3,7 +3,7 @@
  * Contains parameters that can be easily adjusted
  */
 
-export const SimulatorConfig = {
+export let SimulatorConfig = {
   // Issuance parameters
   BLOCK_REWARD: 4,           // ETH rewarded to proposers
   
