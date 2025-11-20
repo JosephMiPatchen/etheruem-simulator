@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { LuPickaxe } from "react-icons/lu";
 import { RxDividerVertical } from "react-icons/rx";
 import { FaEarthAmericas } from "react-icons/fa6";
 import { IoMdAdd } from "react-icons/io";
@@ -54,7 +53,6 @@ const NodeToolbar: React.FC<NodeToolbarProps> = ({
     <>
       <div className="node-toolbar">
         <div className={`toolbar-item node-status ${status.class}`}>
-          <LuPickaxe size={16} />
           <span>{status.text}</span>
         </div>
         
