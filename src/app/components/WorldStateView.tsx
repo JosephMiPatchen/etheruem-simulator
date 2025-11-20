@@ -188,7 +188,7 @@ const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, receipts, m
               onClick={() => setShowMempool(true)}
               title="View pending transactions in mempool"
             >
-              🔄 View Mempool
+              View Mempool
             </button>
           )}
           {receipts && (
@@ -197,7 +197,7 @@ const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, receipts, m
               onClick={() => setShowReceipts(true)}
               title="View transaction receipts"
             >
-              📋 View Receipts
+              View Receipts
             </button>
           )}
           {blockchainTree && (
@@ -206,7 +206,7 @@ const WorldStateView: React.FC<WorldStateViewProps> = ({ worldState, receipts, m
               onClick={() => setShowBlockTree(true)}
               title="View blockchain tree structure"
             >
-              🌳 View Block Tree
+              View Block Tree
             </button>
           )}
           <button 

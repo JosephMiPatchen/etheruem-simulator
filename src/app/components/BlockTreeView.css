@@ -71,8 +71,9 @@
 .block-tree-modal .tree-stats {
   display: flex;
   justify-content: flex-start;
-  align-items: center;
+  align-items: flex-start;
   gap: 2rem;
+  flex-wrap: wrap;
   margin-bottom: 0.75rem;
   padding: 0.75rem 1rem;
   background: rgba(98, 126, 234, 0.05);
@@ -85,6 +86,15 @@
   flex-direction: column;
   gap: 0.25rem;
   flex-shrink: 0;
+}
+
+/* Legends Container - groups Legend and Casper FFG together */
+.block-tree-modal .legends-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
 }
 
 .block-tree-modal .stat-label {
@@ -104,6 +114,7 @@
   flex-direction: row !important;
   align-items: center;
   gap: 0.5rem;
+  width: fit-content;
 }
 
 .block-tree-modal .legend-stat .stat-label {
@@ -115,7 +126,7 @@
   gap: 1rem;
   align-items: center;
   justify-content: flex-start;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
 }
 
 .block-tree-modal .legend-item {

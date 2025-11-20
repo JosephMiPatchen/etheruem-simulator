@@ -100,7 +100,7 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
       const isInvalid = node.metadata?.isInvalid || false;
       
       // Add ❌ to name if invalid
-      const blockName = isGenesis ? `Genesis (Block 0)` : `Block ${height}`;
+      const blockName = isGenesis ? `Genesis` : `Block ${height}`;
       const displayName = isInvalid ? `❌ ${blockName}` : blockName;
       
       return {
@@ -123,7 +123,7 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
       <div className="modal-overlay" onClick={onClose}>
         <div className="modal-content block-tree-content" onClick={(e) => e.stopPropagation()}>
           <div className="modal-header">
-            <h2>🌳 Blockchain Tree Structure</h2>
+            <h2>Blockchain Tree Structure</h2>
             <button className="modal-close" onClick={onClose}>×</button>
           </div>
           
@@ -144,48 +144,51 @@ const BlockTreeView: React.FC<BlockTreeViewProps> = ({ blockchainTree, beaconSta
               <span className="stat-label">Chain Tips:</span>
               <span className="stat-value">{stats.numberOfLeaves}</span>
             </div>
-            <div className="stat-item legend-stat">
-              <span className="stat-label">Legend:</span>
-              <div className="legend-items">
-                <span className="legend-item"><span className="legend-dot root"></span> Genesis Block</span>
-                <span className="legend-item"><span className="legend-dot canonical"></span> Canonical</span>
-                <span 
-                  className="legend-item" 
-                  title="LMD-GHOST HEAD: Latest Message Driven - Greedy Heaviest Observed SubTree. The canonical chain head chosen by following the fork with the most attested ETH at each branch."
-                >
-                  <span className="legend-dot ghost-head"></span> LMD GHOST HEAD
-                </span>
-                <span className="legend-item"><span className="legend-dot fork"></span> Fork</span>
-                <span className="legend-item legend-attestations">
-                  <span className="attestation-color-dot green"></span>
-                  <span className="attestation-color-dot yellow"></span>
-                  <span className="attestation-color-dot red"></span>
-                  <span className="attestation-color-dot blue"></span>
-                  Latest Attestations
-                </span>
+            
+            <div className="legends-container">
+              <div className="stat-item legend-stat">
+                <span className="stat-label">Legend:</span>
+                <div className="legend-items">
+                  <span className="legend-item"><span className="legend-dot root"></span> Genesis</span>
+                  <span className="legend-item"><span className="legend-dot canonical"></span> Canonical</span>
+                  <span 
+                    className="legend-item" 
+                    title="LMD-GHOST HEAD: Latest Message Driven - Greedy Heaviest Observed SubTree. The canonical chain head chosen by following the fork with the most attested ETH at each branch."
+                  >
+                    <span className="legend-dot ghost-head"></span> LMD GHOST HEAD
+                  </span>
+                  <span className="legend-item"><span className="legend-dot fork"></span> Fork</span>
+                  <span className="legend-item legend-attestations">
+                    <span className="attestation-color-dot green"></span>
+                    <span className="attestation-color-dot yellow"></span>
+                    <span className="attestation-color-dot red"></span>
+                    <span className="attestation-color-dot blue"></span>
+                    Latest Attestations
+                  </span>
+                </div>
               </div>
-            </div>
-            <div className="stat-item legend-stat">
-              <span className="stat-label">Casper FFG:</span>
-              <div className="legend-items">
-                <span 
-                  className="legend-item" 
-                  title="Finalized Checkpoint: Block has reached finality with 2/3+ validator votes across consecutive epochs. Cannot be reverted (irreversible)."
-                >
-                  <span className="checkpoint-badge finalized">Finalized</span>
-                </span>
-                <span 
-                  className="legend-item" 
-                  title="Justified Checkpoint: Block has received 2/3+ validator votes. Candidate for finalization if next epoch is also justified."
-                >
-                  <span className="checkpoint-badge justified">Justified</span>
-                </span>
-                <span 
-                  className="legend-item" 
-                  title="Previous Justified Checkpoint: The justified checkpoint from the previous epoch. Used as source for new attestations."
-                >
-                  <span className="checkpoint-badge prev-justified">Prev Justified</span>
-                </span>
+              <div className="stat-item legend-stat">
+                <span className="stat-label">Casper FFG:</span>
+                <div className="legend-items">
+                  <span 
+                    className="legend-item" 
+                    title="Finalized Checkpoint: Block has reached finality with 2/3+ validator votes across consecutive epochs. Cannot be reverted (irreversible)."
+                  >
+                    <span className="checkpoint-badge finalized">Finalized</span>
+                  </span>
+                  <span 
+                    className="legend-item" 
+                    title="Justified Checkpoint: Block has received 2/3+ validator votes. Candidate for finalization if next epoch is also justified."
+                  >
+                    <span className="checkpoint-badge justified">Justified</span>
+                  </span>
+                  <span 
+                    className="legend-item" 
+                    title="Previous Justified Checkpoint: The justified checkpoint from the previous epoch. Used as source for new attestations."
+                  >
+                    <span className="checkpoint-badge prev-justified">Prev Justified</span>
+                  </span>
+                </div>
               </div>
             </div>
           </div>
